@@ -1,0 +1,572 @@
+<?php
+
+require_once ($_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . "noteit/model/NoteItDB.php");
+
+if(isset($_SESSION['USER_ID']))
+	$userID = $_SESSION['USER_ID'];
+else
+	throw new Exception("Session expired. Please log in again.");
+
+$noteit_db = NoteItDB::login_user_id($userID);
+
+
+class ListFunctorShopListHTML
+{
+	public function iterate_row($list_id, $list_name)
+	{
+		echo "<option value=$list_id>";
+		echo $list_name;
+		echo "</option>";
+	}
+}
+
+class ListFunctorCategoryListHTML
+{
+	public function iterate_row($category_ID, $category_Name, $user_ID)
+	{
+		echo "<option value='$category_ID'>$category_Name</option>";
+	}
+}
+
+const kListHeight=20;
+?>
+
+<div id="DashboardPanels">
+	<div id="dash_shoplist" class="fltlft" style="width:23%;">
+        <fieldset class="fieldSet">
+        <legend class="fieldSetLegend">Shopping Lists</legend>
+        <span class="fieldSetField">
+        Customize to your need by creating multiple shopping lists. For example
+        you might have one list for shopping you need to do for your Mom, another
+        for your wife and yet another for your office.
+        </span>
+        </fieldset>
+        <select id="lst_shop_list" size="10" style="width:100%;"  title="Shopping Lists">
+            <?php
+            $noteit_db->get_shoplist_table()->list_all(new ListFunctorShopListHTML(), "iterate_row");
+            ?>
+        </select>
+        <div class="fltrt">
+        <input type="image" 
+        	src=<?php echo("'http://" . $_SERVER["SERVER_NAME"] . "/noteit/img/add.png'"); ?>  
+        	alt="Add Shopping List"
+        	id="cmdAddShopList">
+        <input type="image" 
+        	src=<?php echo("'http://" . $_SERVER["SERVER_NAME"] . "/noteit/img/delete.png'"); ?> 
+        	id="cmdRemoveShopList" 
+        	alt="Delete Selected Shopping List">
+        </div>
+    </div> <!-- End Shopping List -->
+    <div id="dash_shopCat" class="fltlft" style="width:23%">
+        <fieldset class="fieldSet">
+        <legend class="fieldSetLegend">Categories</legend>
+        <span class="fieldSetField">
+        Each item in your shopping list can be categorized. You might want to group all
+        medicines and cosmetics under the head "Health & Beauty" so that you can quickly
+        access all items when you stop by at a pharmacy.
+        </span>
+        </fieldset>
+        <select id="lst_categories" multiple="multiple" size="10" style="width:100%;" title="Shopping Item Categories">
+            <?php
+            $noteit_db->get_catlist_table()->list_all(TRUE, new ListFunctorCategoryListHTML(), "iterate_row");
+            ?>
+        </select>
+        <div class="fltrt">
+        <input type="image" 
+        	src=<?php echo("'http://" . $_SERVER["SERVER_NAME"] . "/noteit/img/add.png'"); ?>  
+        	alt="Add Category"
+        	id="cmdAddCategory">
+        <input type="image" 
+        	src=<?php echo("'http://" . $_SERVER["SERVER_NAME"] . "/noteit/img/delete.png'"); ?> 
+        	id="cmdRemoveCategory" 
+        	alt="Delete Selected Shopping Category">
+        </div>
+    </div> <!-- End Shopping Category -->
+    <div id="dash_shopItems" class="fltlft" style="width:23%">
+        <fieldset class="fieldSet">
+        <legend class="fieldSetLegend">Items to buy</legend>
+        <span class="fieldSetField">
+        Every thing you need to buy categorized as you like.
+        </span>
+        </fieldset>
+        <select id="lst_items" multiple="multiple" size="10" style="width:100%;" Title="Items you need to buy">
+            <?php
+            ?>
+        </select>
+        <div class="fltrt">
+        <input type="image" 
+        	src=<?php echo("'http://" . $_SERVER["SERVER_NAME"] . "/noteit/img/add.png'"); ?>  
+        	alt="Add Item"
+        	id="cmdAddItem">
+        <input type="image" 
+        	src=<?php echo("'http://" . $_SERVER["SERVER_NAME"] . "/noteit/img/delete.png'"); ?> 
+        	id="cmdRemoveItem" 
+        	alt="Delete Selected Item">
+        </div>    
+   	</div> <!-- End Shop Items -->
+    <div id="dash_item_detail" class="fltlft" style=:"width:25%">
+        <fieldset class="fieldSet">
+        <legend class="fieldSetLegend">Item Details</legend>
+        <span class="fieldSetField">
+            <table border="0">
+                <tr>
+                    <td>Item:</td>
+                    <td><input id="itemName" type="text" name="itemName" disabled="disabled" /></td>
+                </tr>
+                <tr>
+                    <td>Unit Cost:</td>
+                    <td><input id="itemUnitCost" type="text" name="itemUnitCost" disabled="disabled" /></td>
+                </tr>
+                <tr>
+                    <td>Item Quantity:</td>
+                    <td><input id="itemQuantity" type="text" name="itemQuantity" disabled="disabled" /></td>
+                </tr>
+            </table>
+        </span>
+        </fieldset>
+        <div class="fltrt">
+            <button id="cmdAddItem_OK">OK</button>
+            <button id="cmdAddItem_Cancel">Cancel</button>
+        </div>
+
+    </div>
+	<div class='clearfloat'></div>
+</div>
+
+<script type="text/javascript">
+	$(document).ready(function()
+	{
+        $('#lst_shop_list').change
+        (
+            function()
+            {
+                try
+                {
+                var selItemID = $("#lst_shop_list option:selected").val();
+                var url = "http://localhost/noteit/controller/AppController.php";
+
+                //alert("About to post to: " + url + " \nShopping List Id: " + selItemID);
+                $.post
+                (
+                    url,
+                    { command: "do_list_shop_items", arg1: "Y", arg2: selItemID, arg3: "0" },
+                    function(data)
+                    {
+                        try
+                        {
+                            var listStr = "";
+                            var JSONObject = eval('(' + data + ')'); // Incoming data is JSON encoded string
+                            if (JSONObject.JSONRetVal == 0 && JSONObject.arg1.length > 0) // Success
+                            {
+                                 $.each
+                                (
+                                    JSONObject.arg1,
+                                    function()
+                                    {
+                                        listStr = listStr + "<option value='" +
+                                                this.instanceID + "'>" + this.itemName + "</option>";
+                                    }
+                                );
+
+                            }
+                            else if (JSONObject.JSONRetVal != 0)
+                            {
+                                throw JSONObject.JSONRetMessage;
+                            }
+
+                            $("#lst_items").html(listStr);
+                        }
+                        catch(err)
+                        {
+                            txt = "There was an error on this page.\n\n";
+                            txt += "Error description: " + err.description + "\n\n";
+                            txt += "Click OK to continue.\n\n";
+                            alert(txt);
+                        }
+                    }
+                ); // $.post
+                }
+                catch(err)
+                {
+                    txt = "There was an error on this page.\n\n";
+					txt += "Error description: " + err.description + "\n\n";
+					txt += "Click OK to continue.\n\n";
+					alert(txt);
+                }
+            }
+        );
+
+        $('#lst_items').change
+        (
+            function ()
+            {
+                var item_id = $("#lst_items option:selected").val();
+                if (item_id)
+                {
+                    var url = "http://localhost/noteit/controller/AppController.php";
+                    $.post
+                    (
+                        url,
+                        { command: "do_get_shop_item", arg1: item_id},
+                        function(data)
+                        {
+                            try
+                            {
+                                var disabled = true;
+                                var JSONObject = eval('(' + data + ')'); // Incoming data is JSON encoded string
+                                if (JSONObject.JSONRetVal == 0 && JSONObject.arg1.length > 0) // Success
+                                {
+                                    disabled = false;
+                                    $('#itemName').val(JSONObject.arg1[0].itemName);
+                                    $('#itemQuantity').val(JSONObject.arg1[0].quantity);
+                                    $('#itemUnitCost').val(JSONObject.arg1[0].unitCost);
+                                }
+                                else
+                                {
+                                    alert("Unable to fetch item data: " + JSONObject.JSONRetMessage);
+                                }
+
+                                if (disabled)
+                                {
+                                    $("#itemName").attr("disabled", true);
+                                    $("#itemQuantity").attr("disabled", true);
+                                    $("#itemUnitCost").attr("disabled", true);                               }
+                                else
+                                {
+                                    $("#itemName").attr("disabled", false);
+                                    $("#itemQuantity").attr("disabled", false);
+                                    $("#itemUnitCost").attr("disabled", false);
+                                }
+                            }
+                            catch(err)
+                            {
+                                txt = "There was an error on this page.\n\n";
+                                txt += "Error description: " + err.description + "\n\n";
+                                txt += "Click OK to continue.\n\n";
+                                alert(txt);
+                            }
+                        }
+                     );
+                }
+            }
+        );
+
+		$('#cmdAddShopList').click
+		(
+			function()
+			{
+				var new_list_name = prompt("Please enter the name of the list:", "");
+				if (new_list_name != null && new_list_name != "")
+				{
+					var url = "http://localhost/noteit/controller/AppController.php";
+					
+					$.post(url,
+						{ command: "do_add_shop_list", arg1: new_list_name },
+						function(data)
+						{
+							try
+							{
+                                // [TODO]: Use of eval poses security risks. Use a JSON parser.
+                                <?php NI::TRACE("alert(\"Got back: \" + data)", __FILE__, __LINE__); ?>
+								var JSONObject = eval('(' + data + ')'); // Incoming data is JSON encoded string
+ 								if (JSONObject.JSONRetVal == 0) // Success
+								{
+                                    //get the select elements
+                                    theList = document.getElementById('lst_shop_list');
+
+                                    //create your option
+                                    yourOption = document.createElement("option");
+                                    yourOption.value = JSONObject.arg1;
+                                    yourOption.innerHTML = JSONObject.arg2;
+
+                                    //add your option
+                                    theList.appendChild(yourOption);
+
+                                    //reset the selected index to the new item
+                                    theList.selectedIndex = theList.options.length - 1;
+								}
+								else
+								{
+									throw("Unable to add: " + JSONObject.JSONRetMessage);
+								}
+							}
+							catch(err)
+							{
+								txt = "There was an error on this page.\n\n";
+								txt += "Error description: " + err.description + "\n\n";
+								txt += "Click OK to continue.\n\n";
+								alert(txt);
+							}
+						}
+					);		
+				}
+			}
+		);
+
+        $('#cmdRemoveShopList').click
+        (
+            function()
+            {
+                var selItemID = $("#lst_shop_list option:selected").val();
+                var url = "http://localhost/noteit/controller/AppController.php";
+
+                $.post(url,
+                    { command: "do_delete_shop_list", arg1: selItemID },
+                    function(data)
+                    {
+                        try
+                        {
+                            // [TODO]: Use of eval poses security risks. Use a JSON parser.
+                            //alert("Got back: " + data);
+                            var JSONObject = eval('(' + data + ')'); // Incoming data is JSON encoded string
+                            if (JSONObject.JSONRetVal == 0) // Success
+                            {
+                                theList = document.getElementById('lst_shop_list');
+                                $old_index = theList.selectedIndex;
+
+                                // Delete the selected row
+                                $("#lst_shop_list option:selected").remove();
+
+                                //reset the selected index
+                                if ($old_index <= theList.options.length - 1 )
+                                    theList.selectedIndex = $old_index;
+                                else if (theList.options.length > 0)
+                                    theList.selectedIndex = $old_index - 1;
+                            }
+                            else
+                            {
+                                throw("Unable to delete: " + JSONObject.JSONRetMessage);
+                            }
+                        }
+                        catch(err)
+                        {
+                            txt = "There was an error on this page.\n\n";
+                            txt += "Error description: " + err.description + "\n\n";
+                            txt += "Click OK to continue.\n\n";
+                            alert(txt);
+                        }
+                    }
+                );
+            }
+        );
+
+        $('#cmdAddCategory').click
+        (
+            function()
+			{
+				var new_list_name = prompt("Please enter the name of the category:", "");
+				if (new_list_name != null && new_list_name != "")
+				{
+					var url = "http://localhost/noteit/controller/AppController.php";
+
+					$.post(url,
+						{ command: "do_add_category", arg1: new_list_name },
+						function(data)
+						{
+							try
+							{
+                                // [TODO]: Use of eval poses security risks. Use a JSON parser.
+                                // alert("Got back: " + data);
+								var JSONObject = eval('(' + data + ')'); // Incoming data is JSON encoded string
+ 								if (JSONObject.JSONRetVal == 0) // Success
+								{
+                                    //get the select elements
+                                    theList = document.getElementById('lst_categories');
+
+                                    //create your option
+                                    yourOption = document.createElement("option");
+                                    yourOption.value = JSONObject.arg1;
+                                    yourOption.innerHTML = JSONObject.arg2;
+
+                                    //add your option
+                                    theList.appendChild(yourOption);
+
+                                    //reset the selected index to the new item
+                                    theList.selectedIndex = theList.options.length - 1;
+								}
+								else
+								{
+									throw("Unable to add: " + JSONObject.JSONRetMessage);
+								}
+							}
+							catch(err)
+							{
+								txt = "There was an error on this page.\n\n";
+								txt += "Error description: " + err.description + "\n\n";
+								txt += "Click OK to continue.\n\n";
+								alert(txt);
+							}
+						}
+					);
+				}
+			}
+        )
+
+        $('#cmdRemoveCategory').click
+        (
+            function()
+            {
+                var selItemID = $("#lst_categories option:selected").val();
+                var url = "http://localhost/noteit/controller/AppController.php";
+
+                $.post(url,
+                    { command: "do_delete_category", arg1: selItemID },
+                    function(data)
+                    {
+                        try
+                        {
+                            // [TODO]: Use of eval poses security risks. Use a JSON parser.
+                            //alert("Got back: " + data);
+                            var JSONObject = eval('(' + data + ')'); // Incoming data is JSON encoded string
+                            if (JSONObject.JSONRetVal == 0) // Success
+                            {
+                                theList = document.getElementById('lst_categories');
+                                $old_index = theList.selectedIndex;
+
+                                // Delete the selected row
+                                $("#lst_categories option:selected").remove();
+
+                                //reset the selected index
+                                if ($old_index <= theList.options.length - 1 )
+                                    theList.selectedIndex = $old_index;
+                                else if (theList.options.length > 0)
+                                    theList.selectedIndex = $old_index - 1;
+                            }
+                            else
+                            {
+                                throw("Unable to delete: " + JSONObject.JSONRetMessage);
+                            }
+                        }
+                        catch(err)
+                        {
+                            txt = "There was an error on this page.\n\n";
+                            txt += "Error description: " + err.description + "\n\n";
+                            txt += "Click OK to continue.\n\n";
+                            alert(txt);
+                        }
+                    }
+                );
+            }
+        );
+
+        $('#cmdAddItem').click
+        (
+            function()
+            {
+                $("#itemName").attr("disabled", false);
+                $("#itemQuantity").attr("disabled", false);
+                $("#itemUnitCost").attr("disabled", false);
+                $("#cmdAddItem_OK").show();
+                $("#cmdAddItem_Cancel").show();
+                $("#itemName").val("");
+                $("#itemQuantity").val("");
+                $("#itemUnitCost").val("");
+            }
+        );
+
+        $('#cmdRemoveItem').click
+        (
+            function()
+            {
+                var url = "http://localhost/noteit/controller/AppController.php";
+                $.post
+                (
+                    url,
+                    {
+                        command: "do_delete_item",
+                        arg1: $("#lst_items option:selected").val()
+                    },
+                    function(data)
+                    {
+                        try
+                        {
+                            var JSONObject = eval('(' + data + ')'); // Incoming data is JSON encoded string
+                            if (JSONObject.JSONRetVal == 0) // Success
+                            {
+                                theList = document.getElementById('lst_items');
+                                $old_index = theList.selectedIndex;
+
+                                // Delete the selected row
+                                $("#lst_items option:selected").remove();
+
+                                //reset the selected index
+                                if ($old_index <= theList.options.length - 1 )
+                                    theList.selectedIndex = $old_index;
+                                else if (theList.options.length > 0)
+                                    theList.selectedIndex = $old_index - 1;
+                            }
+                            else
+                                throw("Unable to delete: " + JSONObject.JSONRetMessage);
+                        }
+                        catch(err)
+                        {
+                            txt = "There was an error on this page.\n\n";
+                            txt += "Error description: " + err.description + "\n\n";
+                            txt += "Click OK to continue.\n\n";
+                            alert(txt);
+                        }
+                    }
+                );
+            }
+        );
+
+        $('#cmdAddItem_OK').click
+        (
+            function()
+            {
+
+                var url = "http://localhost/noteit/controller/AppController.php";
+                $.post
+                (
+                     url,
+                     {
+                         command: "do_add_item",
+                         arg1: $("#lst_shop_list option:selected").val(),
+                         arg2: $("#lst_categories option:selected").val(),
+                         arg3: $('#itemName').val(),
+                         arg4: $('#itemQuantity').val(),
+                         arg5: $('#itemUnitCost').val(),
+                         arg6: 1 // [TODO]: One unit for now
+                     },
+                     function(data)
+                     {
+                         try
+                         {
+                             // [TODO]: Use of eval poses security risks. Use a JSON parser.
+                             //alert("Got back: " + data);
+                             var JSONObject = eval('(' + data + ')'); // Incoming data is JSON encoded string
+                             if (JSONObject.JSONRetVal == 0) // Success
+                             {
+                                //get the select elements
+                                theList = document.getElementById('lst_items');
+
+                                //create your option
+                                yourOption = document.createElement("option");
+                                yourOption.value = JSONObject.arg1;
+                                yourOption.innerHTML = JSONObject.arg2;
+
+                                //add your option
+                                theList.appendChild(yourOption);
+
+                                //reset the selected index to the new item
+                                theList.selectedIndex = theList.options.length - 1;
+                             }
+                             else
+                             {
+                                 throw("Unable to add: " + JSONObject.JSONRetMessage);
+                             }
+                         }
+                         catch(err)
+                         {
+                             txt = "There was an error on this page.\n\n";
+                             txt += "Error description: " + err.description + "\n\n";
+                             txt += "Click OK to continue.\n\n";
+                             alert(txt);
+                         }
+                     }
+                );
+            }
+        );
+    }
+ ); // $(document).ready
+</script>
