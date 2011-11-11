@@ -1,7 +1,7 @@
 <?php
 	
-require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit/controller/ControllerDefines.php");
-require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit/model/NoteItDB.php");
+require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/controller/ControllerDefines.php");
+require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/model/NoteItDB.php");
 require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ('FirePHPCore/fb.PHP');
 
 // [TODO] : Research if there is a better way to do this
@@ -53,7 +53,7 @@ class CommandHandlerBase
     {
         global $view_map;
 
-        require_once($_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit/view/htmlHeader.tphp"));
+        require_once($_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/view/htmlHeader.tphp"));
 
         if ($handler_exit_status == HandlerExitStatus::kCommandStatus_Error)
         {
@@ -74,11 +74,14 @@ class CommandHandlerBase
             echo "</div>";
         }
 
-        require_once($_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit/view/noteitheader.tphp"));
+        require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/view/htmlHeader.tphp");
+        require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/view/noteitBodyBegin.tphp");
+        require_once($_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/view/noteitheader.tphp"));
+        require_once($_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/view/noteitheader.tphp"));
         require_once($_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ($view_map[$view_ID]));
-
-        require_once($_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit/view/noteitfooter.tphp"));
-        require_once($_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit/view/htmlfooter.tphp"));
+        require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/view/noteitfooter.tphp");
+        require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/view/noteitBodyEnd.tphp");
+        require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/view/htmlfooter.tphp");
     }
 
     public function redirect_to_url(

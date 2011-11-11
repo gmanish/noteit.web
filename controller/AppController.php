@@ -5,7 +5,7 @@
 	}
 
 	require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ('FirePHPCore/fb.PHP');
-	require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ('noteit/controller/CommandHandler.php');
+	require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ('noteit.web/controller/CommandHandler.php');
 	
 	ob_start();
 

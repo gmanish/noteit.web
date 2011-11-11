@@ -52,9 +52,9 @@
 	/* A view is that part of the screen that it displayed between the standard 
 	   header (noteitheader.tphp) and the standard footer (noteitfooter.tphp) */
 	static $view_map = array(
-		Views::kView_Home 		=> 'noteit/view/Home.tphp',
-		Views::kView_Register	=> 'noteit/view/Register.tphp',
-		Views::kView_Dashboard	=> 'noteit/view/Dashboard.tphp');
+		Views::kView_Home 		=> 'noteit.web/view/Home.tphp',
+		Views::kView_Register	=> 'noteit.web/view/Register.tphp',
+		Views::kView_Dashboard	=> 'noteit.web/view/Dashboard.tphp');
 		
 	class JSONCodes
 	{

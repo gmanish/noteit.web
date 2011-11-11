@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS `units`(
 ) ENGINE = INNODB DEFAULT CHARSET = latin1;
 
 # -----------------------------------------------------------------
-# Create the users table
+# Create the users table. Note that AUTO_INCREMENT=0 (for `root` ID=0)
 # -----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `users`(
   `userID` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Surrogate Key for User ID',
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS `users`(
   PRIMARY KEY (`userID`),
   UNIQUE KEY `userID_UNIQUE` (`userID`),
   UNIQUE KEY `emailID_UNIQUE` (`emailID`)
-) ENGINE = INNODB DEFAULT CHARSET = latin1;
+) ENGINE = INNODB AUTO_INCREMENT=0 DEFAULT CHARSET = latin1;
 
 # -----------------------------------------------------------------
 # Create the shoplists table
@@ -221,10 +221,21 @@ BEGIN
 END
 //
 
+DELIMITER ;
+
+# -----------------------------------------------------------------
+# Populate factory users into the users table. User with ID = 0 is
+# the `root` user. There are special cases throughout code for this user.
+# [TODO]: How to force `root` user to have id=0??
+# -----------------------------------------------------------------
+INSERT INTO `users` (`emailID`, `firstName`, `lastName`) VALUES ('mrmangu@hotmail.com', 'Manish', 'Gupta');
+INSERT INTO `users` (`emailID`, `firstName`, `lastName`) VALUES ('gmanish@gmail.com', 'Manish', 'Gupta');
+
 # -----------------------------------------------------------------
 # Populate factory units into the units table
+#
+# NOTE: Keep this list sorted alphabetically
 # -----------------------------------------------------------------
-
 # Common units (Have the unitType = 0)
 INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('unit', 'unit', 0);
 INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('pair', 'pair', 0);
@@ -251,3 +262,35 @@ INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALU
 INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('pint', 'pt', 2);
 INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('quart', 'qt', 2);
 INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('gallon', 'gal', 2);
+
+# -----------------------------------------------------------------
+# Populate factory categories into the shopitemcategories table. These
+# categories belong to `root` user with ID = 0 and are visible to all.
+#
+# NOTE: Keep this list sorted alphabetically
+# -----------------------------------------------------------------
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Apparel & Jewelry', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Bath & Beauty', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Baby Supplies', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Beverages', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Books & Magazines', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Breakfast & Cereals', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Condiments', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Dairy', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Electronics & Computers', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Everything Else', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Frozen Foods', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Fruits', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Furniture', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Games', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Housewares', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Meat & Fish', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Medical', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Mobiles & Cameras', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Music', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Movies', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Pet Supplies', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Snacks & Candy', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Supplies', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Toys & Hobbies', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Vegetables', 1);

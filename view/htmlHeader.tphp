@@ -3,6 +3,6 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>Untitled Document</title>
-<link rel="stylesheet" type="text/css" href="http://localhost/noteit/css/noteit.css" />
-<script src="http://localhost/noteit/js/jquery.js"></script>
+<link rel="stylesheet" type="text/css" href="http://localhost/noteit.web/css/noteit.css" />
+<script src="http://localhost/noteit.web/js/jquery.js"></script>
 </head>

@@ -1,10 +1,10 @@
 <div class="header">
 	<div class="fltlft" style="padding:10px; height:96px;">
     	<img height="96px" width="96px" src=<?php
-		echo("'http://" . $_SERVER["SERVER_NAME"] . "/noteit/img/ic_launcher.png'"); ?> />
+		echo("'http://" . $_SERVER["SERVER_NAME"] . "/noteit.web/img/ic_launcher.png'"); ?> />
 	</div>
 	<div class="fltrt loginBar loginBarText">
-		<form id="loginbar" name="formLogin" method="post" action="http://localhost/noteit/controller/AppController.php">
+		<form id="loginbar" name="formLogin" method="post" action="http://localhost/noteit.web/controller/AppController.php">
 			<input type="hidden" name=<?php echo Command::$tag ?> value=<?php echo Handler::$do_login ?> />
 			<input id="txtLoginName" name="email_ID" value="Email id" class="loginBarText" 
             	onfocus="if(this.value=='Email id')this.value='';"/>
@@ -12,7 +12,7 @@
 				<span class="loginBarText">Log In</span>
 			</button>            
 			&nbsp;
-			<a href="http://localhost/noteit/page/Register.php">Sign Up</a>
+			<a href="http://localhost/noteit.web/page/Register.php">Sign Up</a>
 		</form>
 	</div>
 	<div class="clearfloat">
