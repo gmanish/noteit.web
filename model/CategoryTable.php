@@ -21,6 +21,20 @@ class ListFunctorCategoryList
 	}
 }
 
+class Category
+{
+    public $categoryID = 0;
+    public $categoryName = "<Fill Name Here>";
+    public $userID_FK = 0;
+
+    function __construct($id, $name, $user_ID)
+    {
+        $this->categoryID = $id;
+        $this->categoryName = $name;
+        $this->categoryID = $user_ID;
+    }
+}
+
 class CategoryTable extends TableBase
 {
 	const kTableName = 'shopitemcategories';
@@ -75,6 +89,19 @@ class CategoryTable extends TableBase
         $result = $this->get_db_con()->query($sql);
         if ($result == FALSE)
             throw new Exception("Database operaion failed (" . __FILE__ . __LINE__ . "): " . $this->get_db_con()->error);
+    }
+
+    function get_category($category_ID)
+    {
+        $sql = sprintf("SELECT * FROM `shopitemcategories` WHERE `categoryID`=%d LIMIT 1", $category_ID);
+        $result = $this->get_db_con()->query($sql);
+        if ($result == FALSE)
+            throw new Exception("Database operation failed (" . __FILE__ . __LINE__ . ")" . $this->get_db_con()->error);
+
+        $row = mysqli_fetch_array($result);
+        $category = new Category($row[0], $row[1], $row[2]);
+
+        return $category;
     }
 }
 ?>

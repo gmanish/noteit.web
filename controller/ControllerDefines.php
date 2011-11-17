@@ -29,10 +29,12 @@
         public static $do_get_categories    = 'do_get_categories';
         public static $do_add_category      = 'do_add_category';
         public static $do_delete_category   = 'do_delete_category';
+        public static $do_get_category      = 'do_get_category';
 
         public static $do_list_shop_items   = 'do_list_shop_items';
         public static $do_add_shop_item     = 'do_add_shop_item';
         public static $do_delete_item       = 'do_delete_item';
+        public static $do_get_shop_item     = 'do_get_shop_item';
 	}
 	
 	class HandlerExitStatus
