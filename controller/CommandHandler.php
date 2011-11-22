@@ -209,7 +209,12 @@ class CommandHandler extends CommandHandlerBase
             if (isset($_SESSION['USER_ID']))
                 $user_ID = $_SESSION['USER_ID'];
             else
-                throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+            {
+                $user_ID = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
+                if ($user_ID == 0) {
+                    throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+                }
+            }
 
             $noteit_db = NoteItDB::login_user_id($user_ID);
             $noteit_db->get_shoplist_table()->remove_list($listID);
@@ -246,7 +251,12 @@ class CommandHandler extends CommandHandlerBase
             if (isset($_SESSION['USER_ID']))
                 $user_ID = $_SESSION['USER_ID'];
             else
-                throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+            {
+                $user_ID = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
+                if ($user_ID == 0) {
+                    throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+                }
+            }
 
             $noteit_db = NoteItDB::login_user_id($user_ID);
             $new_ID = $noteit_db->get_shoplist_table()->add_list($list_name);
@@ -285,7 +295,12 @@ class CommandHandler extends CommandHandlerBase
             if (isset($_SESSION['USER_ID']))
                 $user_ID = $_SESSION['USER_ID'];
             else
-                throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+            {
+                $user_ID = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
+                if ($user_ID == 0) {
+                    throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+                }
+            }
 
             $noteit_db = NoteItDB::login_user_id($user_ID);
             $new_ID = $noteit_db->get_catlist_table()->add_category($category_name);
@@ -325,7 +340,12 @@ class CommandHandler extends CommandHandlerBase
             if (isset($_SESSION['USER_ID']))
                 $user_ID = $_SESSION['USER_ID'];
             else
-                throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+            {
+                $user_ID = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
+                if ($user_ID == 0) {
+                    throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+                }
+            }
 
             $noteit_db = NoteItDB::login_user_id($user_ID);
             $noteit_db->get_catlist_table()->remove_category($listID);
@@ -420,7 +440,12 @@ class CommandHandler extends CommandHandlerBase
             if (isset($_SESSION['USER_ID']))
                 $user_ID = $_SESSION['USER_ID'];
             else
-                throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+            {
+                $user_ID = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
+                if ($user_ID == 0) {
+                    throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+                }
+            }
 
             $noteit_db = NoteItDB::login_user_id($user_ID);
             $shop_item = $noteit_db->get_shopitems_table()->get_item($item_ID);
@@ -473,7 +498,12 @@ class CommandHandler extends CommandHandlerBase
             if (isset($_SESSION['USER_ID']))
                 $user_ID = $_SESSION['USER_ID'];
             else
-                throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+            {
+                $user_ID = isset($_REQUEST[Command::$arg7]) ? intval($_REQUEST[Command::$arg7]) : 0;
+                if ($user_ID == 0) {
+                    throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+                }
+            }
 
             if ($item_name != "")
             {
@@ -520,7 +550,12 @@ class CommandHandler extends CommandHandlerBase
             if (isset($_SESSION['USER_ID']))
                 $user_ID = $_SESSION['USER_ID'];
             else
-                throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+            {
+                $user_ID = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
+                if ($user_ID == 0) {
+                    throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+                }
+            }
 
             $noteit_db = NoteItDB::login_user_id($user_ID);
             $new_ID = $noteit_db->get_shopitems_table()->delete_item($instance_id);

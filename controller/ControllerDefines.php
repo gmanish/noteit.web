@@ -10,6 +10,7 @@
         public static $arg4         = 'arg4';
         public static $arg5         = 'arg5';
         public static $arg6         = 'arg6';
+        public static $arg7         = 'arg7';
 	}
 
 	class Handler
