@@ -2,7 +2,6 @@
 	
 require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/controller/ControllerDefines.php");
 require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/model/NoteItDB.php");
-require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ('FirePHPCore/fb.PHP');
 
 // [TODO] : Research if there is a better way to do this
 function shopitem_obj_to_array($shop_item_obj)
@@ -146,7 +145,6 @@ class CommandHandler extends CommandHandlerBase
             // Start a session for this user and store the id in a session variable
             $_SESSION['USER_ID'] = $noteit_db->get_db_userID();
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     $_SESSION['FOO'] = 'BAR';
-            fb('Done accessing sesssion, found it valid.');
             CommandHandlerBase::redirect_to_view(
                 Views::kView_Dashboard,
                 HandlerExitStatus::kCommandStatus_OK,
@@ -217,7 +215,7 @@ class CommandHandler extends CommandHandlerBase
             }
 
             $noteit_db = NoteItDB::login_user_id($user_ID);
-            $noteit_db->get_shoplist_table()->remove_list($listID);
+                $noteit_db->get_shoplist_table()->remove_list($listID);
             $noteit_db = NULL;
 
             // Form a JSON string
@@ -281,6 +279,51 @@ class CommandHandler extends CommandHandlerBase
         }
     }
 
+    /*  This function is called asynchronously. It's important to note that all output
+        from this function should be JSON encoded. No returning HTML headers and Tags.
+    */
+	public static function do_edit_shop_list()
+	{
+        $list_ID 	= isset($_REQUEST[Command::$arg1]) ? $_REQUEST[Command::$arg1] : 0;
+		$list_name	= isset($_REQUEST[Command::$arg2]) ? $_REQUEST[Command::$arg2] : "";
+		
+        try
+        {
+            $user_ID = -1;
+
+            if (isset($_SESSION['USER_ID']))
+                $user_ID = $_SESSION['USER_ID'];
+            else
+            {
+                $user_ID = isset($_REQUEST[Command::$arg3]) ? intval($_REQUEST[Command::$arg3]) : 0;
+                if ($user_ID == 0) {
+                    throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+                }
+            }
+
+            $noteit_db = NoteItDB::login_user_id($user_ID);
+            $noteit_db->get_shoplist_table()->edit_list($list_ID, $list_name);
+            $noteit_db = NULL;
+
+            // Form a JSON string
+            $arr = array(
+                JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
+                JSONCodes::kRetMessage => "",
+                Command::$arg1 => $list_ID,
+                Command::$arg2 => $list_name);
+
+            echo(json_encode($arr));
+        }
+        catch(Exception $e)
+        {
+            $arr = array(
+                JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
+                JSONCodes::kRetMessage => $e->getMessage());
+
+            echo(json_encode($arr));
+        }
+	}
+	
     /*  This function is called asynchronously. It's important to note that all output
         from this function should be JSON encoded. No returning HTML headers and Tags.
     */

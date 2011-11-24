@@ -78,5 +78,18 @@ class ShopListTable extends TableBase
 			throw new Exception("Database operaion failed (" . __FILE__ . __LINE__ . "): " . $this->get_db_con()->error .
                 "\nActual SQL: " . $sql);
 	}
+	
+	function edit_list($list_ID, $list_name)
+	{
+		$sql = sprintf(
+				"UPDATE %s SET `listName`='%s' WHERE `listID`=%d AND `userID_FK`=%d", 
+				parent::GetTableName(),
+				$list_name,
+				$list_ID,
+				$this->GetUserID());
+		$result = $this->get_db_con()->query($sql);
+		if ($result == FALSE)
+			throw new Exception ("Failed to rename list: " . $sql);
+	}
 }
 ?>

@@ -4,7 +4,6 @@ require_once( $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . "noteit.web/mode
 require_once( $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . "noteit.web/model/ShopListTable.php");
 require_once( $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . "noteit.web/model/CategoryTable.php");
 require_once( $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . "noteit.web/model/ShopItems.php");
-require_once( $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . "FirePHPCore/fb.PHP");
 
 // Name of users Table columns
 const kTableUsers 			= 'users';

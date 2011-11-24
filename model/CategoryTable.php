@@ -10,6 +10,7 @@ class ListFunctorCategoryList
     {
         $_categoryList = & $category_list;
     }
+    
 
 	public function iterate_row($category_ID, $category_Name, $user_ID)
 	{
@@ -53,12 +54,14 @@ class CategoryTable extends TableBase
 		if ($current_user_only == TRUE)
 			$sql = $sql . " WHERE userID_FK=" . parent::GetUserID();
 
+                NI::TRACE($sql, __FILE__, __LINE__);
 		$result = $this->get_db_con()->query($sql);
 		if ($result == FALSE)
 			throw new Exception("SQL exec failed (". __FILE__ . __LINE__ . "): $this->get_db_con()->error");
 
 		while ($row = mysqli_fetch_array($result))
 		{
+                    NI::TRACE($row, __FILE__, __LINE__);
 			call_user_func(
 				array($functor_obj, $function_name), // invoke the callback function
 				$row[0], // 'categoryID 
