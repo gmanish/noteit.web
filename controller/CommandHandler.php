@@ -559,12 +559,26 @@ class CommandHandler extends CommandHandlerBase
                     $item_quantity,
                     $item_unit_id
                     );
-                
+
+				// Construct a new shop item with the details to return to caller
+				$newItem = new ShopItem(
+						$new_ID, 
+						0,
+						$user_ID,
+						$list_ID,
+						$category_ID, 
+						$item_name, 
+						$item_unit_cost, 
+						$item_quantity, 
+						$item_unit_id);
+				
+				$item_array = array();
+				$item_array[] = shopitem_obj_to_array($newItem);
+
                 $arr = array(
                     JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
                     JSONCodes::kRetMessage => "",
-                    Command::$arg1 => $new_ID,
-                    Command::$arg2 => $item_name);
+                    Command::$arg1 => $item_array);
 
                 echo(json_encode($arr));
             }
@@ -717,7 +731,7 @@ class CommandHandler extends CommandHandlerBase
                 $user_ID = $_SESSION['USER_ID'];
             else
             {
-                $user_ID = isset($_REQUEST[Command::$arg1]) ? intval($_REQUEST[Command::$arg1]) : 0;
+                $user_ID = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
                 if ($user_ID == 0) {
                     throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
                 }
@@ -744,6 +758,44 @@ class CommandHandler extends CommandHandlerBase
         }
     }
 
+	public static function do_suggest_items()
+	{
+       try
+        {
+            $user_ID = -1;
+            $substring = isset($_REQUEST[Command::$arg1]) ? $_REQUEST[Command::$arg1] : "";
+			$max_items = isset($_REQUEST[Command::$arg2]) ? $_REQUEST[Command::$arg2] : "";
+			
+            if (isset($_SESSION['USER_ID']))
+                $user_ID = $_SESSION['USER_ID'];
+            else
+            {
+                $user_ID = isset($_REQUEST[Command::$arg3]) ? intval($_REQUEST[Command::$arg3]) : 0;
+                if ($user_ID == 0) {
+                    throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+                }
+            }
+
+            $noteit_db = NoteItDB::login_user_id($user_ID);
+
+            $suggestions = array();
+            $suggestions = $noteit_db->get_shopitems_table()->suggest_item($substring, $max_items);
+            $arr = array(
+                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
+                 JSONCodes::kRetMessage => "",
+                 Command::$arg1 => $suggestions);
+
+             echo(json_encode($arr));
+        }
+        catch(Exception $e)
+        {
+            $arr = array(
+                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
+                 JSONCodes::kRetMessage => $e->getMessage());
+
+             echo(json_encode($arr));
+        }
+	}
 } // class CommandHandler
 	
 	

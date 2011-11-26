@@ -262,4 +262,30 @@ class ShopItems extends TableBase
             throw new Exception("SQL exec failed (". __FILE__ . __LINE__ . "): " . $this->get_db_con()->error);
     }
 
+
+	function suggest_item($string, $max_suggestions)
+	{
+		$sql = sprintf("SELECT `%s` FROM `shopitemscatalog`" .
+					"WHERE `%s` LIKE '%%%s%%' LIMIT %d", 
+					self::kColItemName, 
+					self::kColItemName, 
+					$string, 
+					max($max_suggestions, 10));
+
+		NI::TRACE("SQL: $sql", __FILE__, __LINE__);
+		$result = $this->get_db_con()->query($sql);
+		
+        if ($result == FALSE)
+            throw new Exception("SQL exec failed (". __FILE__ . __LINE__ . "): " . $this->get_db_con()->error);
+		
+		$suggestions = array();
+        while ($row = mysqli_fetch_array($result, MYSQL_ASSOC))
+        {
+			$suggestions[] = $row[self::kColItemName];
+        }
+		if ($result)
+			mysqli_free_result($result);
+
+		return $suggestions;
+	}
 }

@@ -37,6 +37,7 @@
         public static $do_add_shop_item     = 'do_add_shop_item';
         public static $do_delete_item       = 'do_delete_item';
         public static $do_get_shop_item     = 'do_get_shop_item';
+		public static $do_suggest_items		= 'do_suggest_items';
 	}
 	
 	class HandlerExitStatus

@@ -542,8 +542,8 @@ const kListHeight=20;
 
                                 //create your option
                                 yourOption = document.createElement("option");
-                                yourOption.value = JSONObject.arg1;
-                                yourOption.innerHTML = JSONObject.arg2;
+	                            yourOption.value = JSONObject.arg1[0].instanceID;
+                                yourOption.innerHTML = JSONObject.arg1[0].itemName;
 
                                 //add your option
                                 theList.appendChild(yourOption);
