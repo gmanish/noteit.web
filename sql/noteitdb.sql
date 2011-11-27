@@ -269,28 +269,31 @@ INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALU
 #
 # NOTE: Keep this list sorted alphabetically
 # -----------------------------------------------------------------
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Apparel & Jewelry', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Bath & Beauty', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Baby Supplies', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Beverages', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Books & Magazines', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Breakfast & Cereals', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Condiments', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Dairy', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Electronics & Computers', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Everything Else', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Frozen Foods', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Fruits', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Furniture', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Games', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Housewares', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Meat & Fish', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Medical', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Mobiles & Cameras', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Music', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Movies', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Pet Supplies', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Snacks & Candy', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Supplies', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Toys & Hobbies', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Vegetables', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`)
+VALUES
+	('Uncategorized', 1),
+	('Apparel & Jewelry', 1),
+	('Bath & Beauty', 1),
+	('Baby Supplies', 1),
+	('Beverages', 1),
+	('Books & Magazines', 1),
+	('Breakfast & Cereals', 1),
+	('Condiments', 1),
+	('Dairy', 1),
+	('Electronics & Computers', 1),
+	('Everything Else', 1),
+	('Frozen Foods', 1),
+	('Fruits', 1),
+	('Furniture', 1),
+	('Games', 1),
+	('Housewares', 1),
+	('Meat & Fish', 1),
+	('Medical', 1),
+	('Mobiles & Cameras', 1),
+	('Music', 1),
+	('Movies', 1),
+	('Pet Supplies', 1),
+	('Snacks & Candy', 1),
+	('Supplies', 1),
+	('Toys & Hobbies', 1),
+	('Vegetables', 1);
