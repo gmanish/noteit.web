@@ -32,7 +32,6 @@ class ListFunctorShopItems
         $_items = & $items_array;
     }
 
-
     function iterate_row($shop_item)
     {
         NI::TRACE("ListFunctorShopItems::iterate_row, Obect passed:" . print_r($shop_item, TRUE), __FILE__, __LINE__);
@@ -593,7 +592,104 @@ class CommandHandler extends CommandHandlerBase
         }
     }
 
-    /*  This function is called asynchronously. It's important to note that all output
+	/*  This function is called asynchronously. It's important to note that all output
+        from this function should be JSON encoded. No returning HTML headers and Tags.
+    */
+	public static function do_edit_shop_item()
+	{
+        try
+        {
+            $user_ID = -1;
+
+            if (isset($_SESSION['USER_ID']))
+                $user_ID = $_SESSION['USER_ID'];
+            else
+            {
+                $user_ID = isset($_REQUEST[Command::$arg8]) ? intval($_REQUEST[Command::$arg8]) : 0;
+                if ($user_ID == 0) {
+                    throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+                }
+            }
+
+			$edit_flags = 0;
+			$item_id = 0;
+			if (isset ($_REQUEST[Command::$arg1]))
+			{
+				$item_id = intval($_REQUEST[Command::$arg1]);
+			}
+			else 
+				throw new Exception ("Invalid Item Index");
+
+			$item = new ShopItem($item_id);
+			
+			// List ID
+			if (isset ($_REQUEST[Command::$arg2]))
+			{
+				$item->_list_id = intval($_REQUEST[Command::arg2]);
+				$edit_flags = $edit_flags | ShopItem::SHOPITEM_LISTID;
+			}
+			
+			// Category ID
+			if (isset ($_REQUEST[Command::$arg3]))
+			{
+				$item->_category_id = intval($_REQUEST[Command::$arg3]);
+				$edit_flags = $edit_flags | ShopItem::SHOPITEM_CATEGORYID;
+			}
+			
+			// Item Name
+			if (isset ($_REQUEST[Command::$arg4]))
+			{
+				$item->_item_name = $_REQUEST[Command::$arg4];
+				$edit_flags = $edit_flags | ShopItem::SHOPITEM_ITEMNAME;
+			}
+			
+			// Item Quantity
+			if (isset ($_REQUEST[Command::$arg5]))
+			{
+				$item->_quantity = floatval($_REQUEST[Command::$arg5]);
+				$edit_flags = $edit_flags | ShopItem::SHOPITEM_QUANTITY;
+			}
+			
+			// Item Unit Cost
+			if (isset ($_REQUEST[Command::$arg6]))
+			{
+				$item->_unit_cost = floatval($_REQUEST[Command::$arg6]);
+				$edit_flags = $edit_flags | ShopItem::SHOPITEM_UNITCOST;
+			}
+			
+			// Item Unit ID
+			if (isset ($_REQUEST[Command::$arg7]))
+			{
+				$item->_unit_id = intval($_REQUEST[Command::$arg7]);
+				$edit_flags = $edit_flags | ShopItem::SHOPITEM_UNITID;
+			}
+
+			if ($edit_flags == 0)
+				throw new Exception ("Nothing to Edit");
+			
+			$noteit_db = NoteItDB::login_user_id($user_ID);
+			$noteit_db->get_shopitems_table()->edit_item(
+					$item->_item_id, 
+					$item, 
+					$edit_flags);
+
+			$arr = array(
+				JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
+				JSONCodes::kRetMessage => "");
+
+			echo(json_encode($arr));
+        }
+        catch(Exception $e)
+        {
+            $arr = array(
+                JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
+                JSONCodes::kRetMessage => $e->getMessage());
+
+            echo(json_encode($arr));
+        }
+	}
+	
+	/*  This function is called asynchronously. It's important to note that all output
         from this function should be JSON encoded. No returning HTML headers and Tags.
     */
     public static function do_delete_item()

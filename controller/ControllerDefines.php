@@ -11,6 +11,8 @@
         public static $arg5         = 'arg5';
         public static $arg6         = 'arg6';
         public static $arg7         = 'arg7';
+		public static $arg8			= 'arg8';
+		public static $arg9			= 'arg9';
 	}
 
 	class Handler
@@ -34,9 +36,10 @@
         public static $do_get_category      = 'do_get_category';
 
         public static $do_list_shop_items   = 'do_list_shop_items';
-        public static $do_add_shop_item     = 'do_add_shop_item';
-        public static $do_delete_item       = 'do_delete_item';
         public static $do_get_shop_item     = 'do_get_shop_item';
+        public static $do_add_shop_item     = 'do_add_shop_item';
+		public static $do_edit_shop_item	= 'do_edit_shop_item';
+		public static $do_delete_item       = 'do_delete_item';
 		public static $do_suggest_items		= 'do_suggest_items';
 	}
 	

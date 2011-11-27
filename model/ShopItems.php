@@ -5,7 +5,7 @@ require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . "noteit.web/model
 
 class ShopItem
 {
-    const SHOPITEM_ITEMID           = 1;    // 1 << 0
+    const SHOPITEM_INSTANCEID       = 1;    // 1 << 0
     const SHOPITEM_USERID           = 2;    // 1 << 1
     const SHOPITEM_LISTID           = 4;    // 1 << 2
     const SHOPITEM_CATEGORYID       = 8;    // 1 << 3
@@ -15,6 +15,7 @@ class ShopItem
     const SHOPITEM_UNITID           = 128;  // 1 << 7
     const SHOPITEM_DATEADDED        = 256;  // 1 << 8
     const SHOPITEM_DATEPURCHASED    = 512;  // 1 << 9
+	const SHOPITEM_CLASSID			= 1024; // 1 << 10
 
     public $_instance_id = 0;
     public $_item_id = 0;
@@ -27,14 +28,14 @@ class ShopItem
     public $_unit_id = 0;
     public $_date_added;
     public $_date_purchased;
-
-    function __construct(
+	
+	function __construct(
         $instance_id,
-        $item_id,
-        $user_id,
-        $list_id,
-        $category_id,
-        $item_name,
+        $item_id = 0,
+        $user_id = 0,
+        $list_id = 0,
+        $category_id = 0,
+        $item_name = '',
         $unit_cost = 0.00,
         $quantity = 1.00,
         $unit_id = 3 /* General Unit */)
@@ -186,61 +187,65 @@ class ShopItems extends TableBase
 
     function edit_item($instance_id, $item, $item_flags /* one of SHOPITEM_* flags */)
     {
-        $sql = "UPDATE " + parent::GetTableName();
-        $sql = "SET ";
+		$sql = "UPDATE ";
+        $sql .= parent::GetTableName();
+        $sql .= " SET ";
         $prev_column_added = false;
-
-        if ($item_flags & SHOPITEM_CATEGORYID)
+		
+        if ($item_flags & ShopItem::SHOPITEM_CATEGORYID)
         {
-            $sql = " " + self::kColCategoryID + "=" + $item->_category_id;
+            $sql .= " " . self::kColCategoryID . "=" . $item->_category_id;
             $prev_column_added = true;
         }
         else
             $prev_column_added = false;
 
-        if ($item_flags & SHOPITEM_ITEMNAME)
+       if ($item_flags & ShopItem::SHOPITEM_ITEMNAME)
+        {
+		   // If the name has been updated we have to special case it as
+		   // names are stored in the `shopitemscatalog` table
+		   $item_classid = $this->create_catalog_entry($item);
+            if ($prev_column_added)
+                $sql .= ", ";
+			
+            $sql .= " " . self::kColItemID . "=" . $item_classid;
+            $prev_column_added = true;
+        }
+        else
+           $prev_column_added = false;
+
+		if ($item_flags & ShopItem::SHOPITEM_UNITCOST)
         {
             if ($prev_column_added)
-                $sql += ", ";
-            $sql += " " + self::kColItemName + "=" + $item->_item_name;
+                $sql .= ", ";
+            $sql .= " " . self::kColUnitCost . "=" . $item->_unit_cost;
             $prev_column_added = true;
         }
         else
             $prev_column_added = false;
 
-        if ($item_flags & SHOPITEM_UNITCOST)
+        if ($item_flags & ShopItem::SHOPITEM_QUANTITY)
         {
             if ($prev_column_added)
-                $sql += ", ";
-            $sql = " " + self::kColUnitCost + "=" + $item->_unit_cost;
+                 $sql .= ", ";
+            $sql .= " " . self::kColQuantity . "=" . $item->_quantity;
             $prev_column_added = true;
         }
         else
             $prev_column_added = false;
 
-        if ($item_flags & SHOPITEM_QUANTITY)
+        if ($item_flags & ShopItem::SHOPITEM_UNITID)
         {
             if ($prev_column_added)
-                 $sql += ", ";
-            $sql = " " + self::kColQuantity + "=" + $_item->_quantity;
-            $prev_column_added = true;
-        }
-        else
-            $prev_column_added = false;
-
-        if ($item_flags & SHOPITEM_UNITID)
-        {
-            if ($prev_column_added)
-                $sql += ", ";
-            $sql = " " + self::kColUnitID + "=" + $_item->_unit_id;
+                $sql .= ", ";
+            $sql .= " " . self::kColUnitID . "=" . $item->_unit_id;
             $prev_column_added = true;
         }
         else
             $prev_column_added = true;
 
-        $sql += "  WHERE " + self::kColInstanceID + "=" + $_item->_instance_id;
+        $sql .= "  WHERE " . self::kColInstanceID . "=" . $item->_instance_id;
 
-        NI::TRACE('ShopItems::edit_item SQL: ' . $sql, __FILE__, __LINE__);
         $result = $this->get_db_con()->query($sql);
         if ($result == FALSE)
             throw new Exception("SQL exec failed (". __FILE__ . __LINE__ . "): " . $this->get_db_con()->error);
@@ -287,5 +292,48 @@ class ShopItems extends TableBase
 			mysqli_free_result($result);
 
 		return $suggestions;
+	}
+	// Creates an entry for the $item->_item_name in the `shopitemscatalog` 
+	// table if it does not exist, return the id if the entry is present
+	function create_catalog_entry($item)
+	{
+		// We first check if the new name exists in the `shopitemscatalog` table
+		// if it does we simply edit the `itemID_FK` field in the `shopitems` 
+		// table. If it doesn't we have to insert a new record for the item in 
+		// the catalogs table first and then update the appropriate record in the
+		// `shopitems` table.
+		$new_itemid = 0;
+		$sql = sprintf("SELECT `itemID` from `shopitemscatalog` 
+				where `itemName`='%s' AND `userID_FK`=%d LIMIT 1", 
+				$item->_item_name, parent::GetUserID());
+		$result = $this->get_db_con()->query($sql);
+		if ($result == FALSE)
+            throw new Exception("SQL exec failed (". __FILE__ . __LINE__ . "): " . $this->get_db_con()->error);
+		
+		$row = mysqli_fetch_array($result);
+		if ($row)
+		{
+			$new_itemid = $row['itemID'];
+		}
+		else
+		{
+			// No item was found create a new record for this name
+			$sql = sprintf("INSERT INTO `shopitemscatalog` (" . 
+							"`itemName`, `itemPrice`, `userID_FK`, `categoryID_FK`)" . 
+						"VALUES (\"%s\", %f, %d, %d)", 
+						$item->_item_name, 
+						$item->_unit_cost,
+						parent::GetUserID(),
+						$item->_category_id);
+			
+			$result = $this->get_db_con()->query($sql);
+			if ($result == FALSE)
+				throw new Exception("SQL exec failed (". __FILE__ . __LINE__ . "): " . $this->get_db_con()->error);
+			
+			
+			$new_itemid = $this->get_db_con()->insert_id;
+		} 
+
+		return $new_itemid;
 	}
 }
