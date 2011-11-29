@@ -4,7 +4,7 @@ defined('kUserName') or define('kUserName', 'root');
 defined('kPassword') or define('kPassword', 'pass123');
 defined('kDatabaseName') or define('kDatabaseName', 'noteitdb');
 
-if(class_exists('DbBase') != true)
+if(class_exists('DbBase') != TRUE)
 {
     class DbBase
     {

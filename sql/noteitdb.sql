@@ -210,13 +210,22 @@ CREATE
     list_ID INT,
     user_ID INT)
 BEGIN
-  -- Delete all items contained in this list.
-  DELETE shoplists, shopitems
-  FROM shoplists
-  LEFT JOIN shopitems
-  ON shoplists.listID = shopitems.listID_FK
-    AND shoplists.userID_FK = shopitems.userID_FK
-  WHERE shoplists.listID = list_ID AND shoplists.userID_FK = user_ID;
+DELETE 
+
+FROM shopitems
+WHERE shopitems.userID_FK = user_ID AND shopitems.`listID_FK` = list_ID;
+
+DELETE 
+FROM shoplists
+WHERE shoplists.`listID` = list_ID AND shoplists.`userID_FK` = user_ID;
+
+-- Delete all items contained in this list.
+-- DELETE shopitems, shoplists
+--  FROM shopitems
+--  LEFT JOIN shoplists
+--  ON shopitems.listID_FK = shoplists.listID
+--    AND shopitems.userID_FK = shoplists.userID_FK
+--  WHERE shoplists.listID = list_ID AND shoplists.userID_FK = user_ID;
 
 END
 //

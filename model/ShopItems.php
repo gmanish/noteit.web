@@ -16,6 +16,7 @@ class ShopItem
     const SHOPITEM_DATEADDED        = 256;  // 1 << 8
     const SHOPITEM_DATEPURCHASED    = 512;  // 1 << 9
 	const SHOPITEM_CLASSID			= 1024; // 1 << 10
+	const SHOPITEM_ISPURCHASED		= 2048; // 1 << 11
 
     public $_instance_id = 0;
     public $_item_id = 0;
@@ -28,6 +29,7 @@ class ShopItem
     public $_unit_id = 0;
     public $_date_added;
     public $_date_purchased;
+	public $_is_purchased = 0; // TINYINT should be 0 or 1
 	
 	function __construct(
         $instance_id,
@@ -38,7 +40,8 @@ class ShopItem
         $item_name = '',
         $unit_cost = 0.00,
         $quantity = 1.00,
-        $unit_id = 3 /* General Unit */)
+        $unit_id = 3 /* General Unit */,
+		$is_purchased = FALSE)
     {
         NI::TRACE('ShopItem::__construct', __FILE__, __LINE__);
         $this->_instance_id = $instance_id;
@@ -50,6 +53,7 @@ class ShopItem
         $this->_unit_cost = $unit_cost;
         $this->_quantity = $quantity;
         $this->_unit_id = $unit_id;
+		$this->_is_purchased = $is_purchased;
         NI::TRACE('User ID: ' . $this->_user_id, __FILE__, __LINE__);
     }
 }
@@ -67,7 +71,8 @@ class ShopItems extends TableBase
     const kColUnitCost      = 'unitCost';
     const kColQuantity      = 'quantity';
     const kColUnitID        = 'unitID_FK';
-    const kColCategoryID= 'categoryID_FK';
+    const kColCategoryID	= 'categoryID_FK';
+	const kColIsPurchased	= 'isPurchased';
 
     function __construct($user_ID)
     {
@@ -124,7 +129,8 @@ class ShopItems extends TableBase
         NI::TRACE($sql, __FILE__, __LINE__);
         while ($row = mysqli_fetch_array($result, MYSQL_ASSOC))
         {
-            NI::TRACE('ShopItems::list_range() returned row: ' . print_r($row, true), __FILE__, __LINE__);
+            NI::TRACE('ShopItems::list_range() returned row: ' . print_r($row, TRUE), __FILE__, __LINE__);
+			
             $thisItem = new ShopItem(
                 $row[self::kColInstanceID],
                 $row[self::kColItemID],
@@ -134,7 +140,8 @@ class ShopItems extends TableBase
                 $row[self::kColItemName],
                 $row[self::kColUnitCost],  // unit cost
                 $row[self::kColQuantity],
-                $row[self::kColUnitID]);
+                $row[self::kColUnitID],
+				$row[self::kColIsPurchased]);
 
             call_user_func(
                 array($functor_obj, $function_name), // invoke the callback function
@@ -166,7 +173,7 @@ class ShopItems extends TableBase
 
         while ($row = mysqli_fetch_array($result, MYSQL_ASSOC))
         {
-            NI::TRACE('ShopItems::get_item() returned row: ' . print_r($row, true), __FILE__, __LINE__);
+            NI::TRACE('ShopItems::get_item() returned row: ' . print_r($row, TRUE), __FILE__, __LINE__);
             $thisItem = new ShopItem(
                 $row[self::kColInstanceID],
                 $row[self::kColItemID],
@@ -176,7 +183,8 @@ class ShopItems extends TableBase
                 $row[self::kColItemName],
                 $row[self::kColUnitCost],  // unit cost
                 $row[self::kColQuantity],
-                $row[self::kColUnitID]);
+                $row[self::kColUnitID],
+				$row[self::kColIsPurchased]);
 
             if ($result)
                 mysqli_free_result($result);
@@ -190,15 +198,15 @@ class ShopItems extends TableBase
 		$sql = "UPDATE ";
         $sql .= parent::GetTableName();
         $sql .= " SET ";
-        $prev_column_added = false;
+        $prev_column_added = FALSE;
 		
         if ($item_flags & ShopItem::SHOPITEM_CATEGORYID)
         {
             $sql .= " " . self::kColCategoryID . "=" . $item->_category_id;
-            $prev_column_added = true;
+            $prev_column_added = TRUE;
         }
         else
-            $prev_column_added = false;
+            $prev_column_added = FALSE;
 
        if ($item_flags & ShopItem::SHOPITEM_ITEMNAME)
         {
@@ -209,43 +217,51 @@ class ShopItems extends TableBase
                 $sql .= ", ";
 			
             $sql .= " " . self::kColItemID . "=" . $item_classid;
-            $prev_column_added = true;
+            $prev_column_added = TRUE;
         }
         else
-           $prev_column_added = false;
+           $prev_column_added = FALSE;
 
 		if ($item_flags & ShopItem::SHOPITEM_UNITCOST)
         {
             if ($prev_column_added)
                 $sql .= ", ";
             $sql .= " " . self::kColUnitCost . "=" . $item->_unit_cost;
-            $prev_column_added = true;
+            $prev_column_added = TRUE;
         }
         else
-            $prev_column_added = false;
+            $prev_column_added = FALSE;
 
         if ($item_flags & ShopItem::SHOPITEM_QUANTITY)
         {
             if ($prev_column_added)
                  $sql .= ", ";
             $sql .= " " . self::kColQuantity . "=" . $item->_quantity;
-            $prev_column_added = true;
+            $prev_column_added = TRUE;
         }
         else
-            $prev_column_added = false;
+            $prev_column_added = FALSE;
 
         if ($item_flags & ShopItem::SHOPITEM_UNITID)
         {
             if ($prev_column_added)
                 $sql .= ", ";
             $sql .= " " . self::kColUnitID . "=" . $item->_unit_id;
-            $prev_column_added = true;
+            $prev_column_added = TRUE;
         }
         else
-            $prev_column_added = true;
+            $prev_column_added = TRUE;
+		
+		if ($item_flags & ShopItem::SHOPITEM_ISPURCHASED)
+		{
+			if ($prev_column_added)
+				$sql .= ", ";
+			$sql .= " " . self::kColIsPurchased . "=" . $item->_is_purchased;
+			$prev_column_added = TRUE;
+		}
 
         $sql .= "  WHERE " . self::kColInstanceID . "=" . $item->_instance_id;
-
+//		NI::TRACE_ALWAYS($sql, __FILE__, __LINE__);
         $result = $this->get_db_con()->query($sql);
         if ($result == FALSE)
             throw new Exception("SQL exec failed (". __FILE__ . __LINE__ . "): " . $this->get_db_con()->error);

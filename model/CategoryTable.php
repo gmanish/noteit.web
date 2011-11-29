@@ -53,6 +53,7 @@ class CategoryTable extends TableBase
 		$sql = "SELECT * FROM " . parent::GetTableName();
 		if ($current_user_only == TRUE)
 			$sql = $sql . " WHERE userID_FK=" . parent::GetUserID();
+		$sql = $sql . " ORDER BY categoryName";
 
                 NI::TRACE($sql, __FILE__, __LINE__);
 		$result = $this->get_db_con()->query($sql);
@@ -61,7 +62,7 @@ class CategoryTable extends TableBase
 
 		while ($row = mysqli_fetch_array($result))
 		{
-                    NI::TRACE($row, __FILE__, __LINE__);
+            NI::TRACE($row, __FILE__, __LINE__);
 			call_user_func(
 				array($functor_obj, $function_name), // invoke the callback function
 				$row[0], // 'categoryID 

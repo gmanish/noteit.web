@@ -7,7 +7,7 @@ class ListFunctorShopList
 
     function __construct(& $shoplist_array)
     {
-        $_shoplist = & $shoplist_array;
+        $this->_shoplist = & $shoplist_array;
     }
 
     public function iterate_row($list_id, $list_name)

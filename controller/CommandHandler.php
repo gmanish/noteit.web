@@ -17,7 +17,8 @@ function shopitem_obj_to_array($shop_item_obj)
         ShopItems::kColListID           => $shop_item_obj->_list_id,
         ShopItems::kColUnitCost         => $shop_item_obj->_unit_cost,
         ShopItems::kColQuantity         => $shop_item_obj->_quantity,
-        ShopItems::kColUnitID           => $shop_item_obj->_unit_id
+        ShopItems::kColUnitID           => $shop_item_obj->_unit_id,
+		ShopItems::kColIsPurchased		=> $shop_item_obj->_is_purchased
         );
 //        $shop_item_array = (array)$shop_item_obj;
     return $shop_item_array;
@@ -532,7 +533,14 @@ class CommandHandler extends CommandHandlerBase
         $item_quantity = isset($_REQUEST[Command::$arg4]) ? floatval($_REQUEST[Command::$arg4]) : 1.00;
         $item_unit_cost = isset($_REQUEST[Command::$arg5]) ? floatval($_REQUEST[Command::$arg5]) : 0.00;
         $item_unit_id = isset($_REQUEST[Command::$arg6]) ? intval($_REQUEST[Command::$arg6]) : 1;
-
+		$item_ispurchased = isset($_REQUEST[Command::$arg8]) ? intval($_REQUEST[Command::$arg8]) : 0; // 0 or 1
+		
+			if (isset ($_REQUEST[Command::$arg9]))
+			{
+				$item->_is_purchased = intval($_REQUEST[Command::$arg9]);
+				$edit_flags = $edit_flags | ShopItem::SHOPITEM_ISPURCHASED;
+			}
+		
         try
         {
             $user_ID = -1;
@@ -562,14 +570,15 @@ class CommandHandler extends CommandHandlerBase
 				// Construct a new shop item with the details to return to caller
 				$newItem = new ShopItem(
 						$new_ID, 
-						0,
+						0, // We don't have class ID here
 						$user_ID,
 						$list_ID,
 						$category_ID, 
 						$item_name, 
 						$item_unit_cost, 
 						$item_quantity, 
-						$item_unit_id);
+						$item_unit_id,
+						$item_ispurchased);
 				
 				$item_array = array();
 				$item_array[] = shopitem_obj_to_array($newItem);
@@ -662,6 +671,12 @@ class CommandHandler extends CommandHandlerBase
 			{
 				$item->_unit_id = intval($_REQUEST[Command::$arg7]);
 				$edit_flags = $edit_flags | ShopItem::SHOPITEM_UNITID;
+			}
+			
+			if (isset ($_REQUEST[Command::$arg9]))
+			{
+				$item->_is_purchased = intval($_REQUEST[Command::$arg9]);
+				$edit_flags = $edit_flags | ShopItem::SHOPITEM_ISPURCHASED;
 			}
 
 			if ($edit_flags == 0)
