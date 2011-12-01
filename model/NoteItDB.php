@@ -154,4 +154,51 @@ class NoteItDB extends DbBase
 			throw new Exception("User email or password is incorrect");
 		}
 	}
+	
+	public static function logCountryInfo($ip_address)
+	{
+		try
+		{
+			$country_id = 0;
+//			echo('IP: ' . $ip_address);
+			$xml = simplexml_load_file('http://www.ipgp.net/api/xml/'. '122.167.174.175' .'/AZE3dafAqD'); //AZE3dafAqD = API key assigned to geekjamboree@gmail.com
+//			echo('Country Code: ' . $xml->Code);
+//			echo('Country: ' . $xml->Country);
+			//. $xml->Ip . $xml->Country . $xml->City . $xml->Code . $xml->Country . $xml->Isp . $xml->Lat . $xml->Lng;
+	        $db_con = new MySQLi(kServer, kUserName, kPassword, kDatabaseName);
+			$sql = 'SELECT `countryID` FROM `countryTable` WHERE countryName="' . $xml->Country . '"';
+			
+//			echo('SQL Search: ' . $sql);
+			$result = $db_con->query($sql);
+			if ($result && mysqli_num_rows($result) == 1)
+			{
+				// The country is present in our database
+				$row = $result->fetch_array();
+				$country_id = $row['countryID'];
+//				echo('Found country in DB. ID=' . $country_id);
+			}
+			else
+			{
+				// The country is not present in our database, enter one
+				$sql = sprintf('INSERT INTO `countryTable` ' . 
+						'(countryName, countryCC, currency, currencyCode, ' . 
+						'displayCurrencyToLeft, currencySymbol)' . 
+						' VALUES ("%s", "%s", "", "", ' .
+						'"1", "")', $xml->Country, $xml->Code);
+//				echo('SQL INSERT: ' . $sql);
+				$sql = $db_con->query($sql);
+				if ($sql == false)
+					throw new Exception ("Could not update country table");
+				
+				$country_id = $db_con->insert_id;
+//				echo('Inserted country in DB. ID=' . $country_id);
+			}
+			
+			return $country_id;
+		}
+		catch (Exception $e)
+		{
+			echo('Unknown Exception' . $e->getMessage());
+		}
+	}
 }

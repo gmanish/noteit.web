@@ -172,8 +172,14 @@ class CommandHandler extends CommandHandlerBase
         {
             $noteit_db = NoteItDB::login_user_email($email_ID);
 
-            // Start a session for this user and store the id in a session variable
-            $_SESSION['USER_ID'] = $noteit_db->get_db_userID();
+			// Log country specific information
+			$remote_address = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : "";
+			
+//			if ($remote_address != "")
+//				NoteItDB::logCountryInfo($remote_address);
+			
+			// Start a session for this user and store the id in a session variable
+			$_SESSION['USER_ID'] = $noteit_db->get_db_userID();
 
             $arr = array(
                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
