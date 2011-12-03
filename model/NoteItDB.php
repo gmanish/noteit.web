@@ -88,7 +88,7 @@ class NoteItDB extends DbBase
 					kColUserEmail, 
 					kTableUsers, 
 					kColUserEmail, 
-					mysql_escape_string($emailID));
+					mysql_real_escape_string($emailID));
 			
 			NI::TRACE("NoteItDb::register_user: sql = " . $sql, __FILE__, __LINE__);
 
@@ -96,7 +96,6 @@ class NoteItDB extends DbBase
 			if ($result ==  FALSE || mysqli_num_rows($result) > 0)
             {
                 NI::TRACE("NoteItDb::register_user: " . $db_con->error, __FILE__, __LINE__);
-				mysqli_free_result($result);
 				throw new Exception('This email ID is already registered');
             }
             
@@ -111,7 +110,7 @@ class NoteItDB extends DbBase
 					kColUserEmail, 
 					kColUserFirstName, 
 					kColUserLastName,
-					mysql_escape_string($emailID),
+					mysql_real_escape_string($emailID),
 					mysql_real_escape_string($firstName),
 					mysql_real_escape_string($lastName));
 			
