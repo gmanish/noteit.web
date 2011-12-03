@@ -50,12 +50,16 @@ class CategoryTable extends TableBase
 	
 	function list_all($current_user_only, &$functor_obj, $function_name='iterate_row')
 	{
-		$sql = "SELECT * FROM " . parent::GetTableName();
 		if ($current_user_only == TRUE)
-			$sql = $sql . " WHERE userID_FK=" . parent::GetUserID();
-		$sql = $sql . " ORDER BY categoryName";
-
-                NI::TRACE($sql, __FILE__, __LINE__);
+			$sql = sprintf(
+					"SELECT * FROM `%s` WHERE `userID_FK`=%d ORDER BY `categoryName`", 
+					parent::GetTableName(), 
+					parent::GetUserID());
+		else
+			$sql = sprintf(
+					"SELECT * FROM `%s` ORDER BY `categoryName`", 
+					parent::GetTableName());
+		
 		$result = $this->get_db_con()->query($sql);
 		if ($result == FALSE)
 			throw new Exception("SQL exec failed (". __FILE__ . __LINE__ . "): $this->get_db_con()->error");
@@ -76,7 +80,10 @@ class CategoryTable extends TableBase
 
     function add_category($category_name)
     {
-        $sql = "call add_category('" . $category_name . "'," . parent::GetUserID() . ")";
+        $sql = sprintf(
+				"call add_category('%s', %d)", 
+				mysql_escape_string($category_name), 
+				parent::GetUserID());
 
         NI::TRACE($sql, __FILE__,  __LINE__);
         $result = $this->get_db_con()->query($sql);
@@ -88,9 +95,12 @@ class CategoryTable extends TableBase
 
     function remove_category($category_ID)
     {
-        $sql = "call delete_category(" . $category_ID . ", " . $this->GetUserID() . ")";
-//        echo($sql);
-        $result = $this->get_db_con()->query($sql);
+        $sql = sprintf(
+				"call delete_category(%d, %d)",
+				$category_ID,
+				$this->GetUserID());
+
+		$result = $this->get_db_con()->query($sql);
         if ($result == FALSE)
             throw new Exception("Database operaion failed (" . __FILE__ . __LINE__ . "): " . $this->get_db_con()->error);
     }
@@ -99,12 +109,12 @@ class CategoryTable extends TableBase
     {
         $sql = sprintf("SELECT * FROM `shopitemcategories` WHERE `categoryID`=%d LIMIT 1", $category_ID);
         $result = $this->get_db_con()->query($sql);
-        if ($result == FALSE)
+        if ($result == FALSE || mysqli_num_rows($result) <= 0)
             throw new Exception("Database operation failed (" . __FILE__ . __LINE__ . ")" . $this->get_db_con()->error);
 
         $row = mysqli_fetch_array($result);
         $category = new Category($row[0], $row[1], $row[2]);
-
+		mysqli_free_result($result);
         return $category;
     }
 }

@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS `users`(
 # -----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `shoplists`(
   `listID` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `listName` VARCHAR(25) NOT NULL,
+  `listName` VARCHAR(50) NOT NULL,
   `userID_FK` INT(11) UNSIGNED NOT NULL,
   PRIMARY KEY (`listID`),
   KEY `ref_userID_FK` (`userID_FK`),
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS `shoplists`(
 # -----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `shopitemcategories`(
   `categoryID` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `categoryName` VARCHAR(25) NOT NULL,
+  `categoryName` VARCHAR(50) NOT NULL,
   `userID_FK` INT(11) UNSIGNED NOT NULL,
   PRIMARY KEY (`userID_FK`, `categoryName`),
   UNIQUE KEY `categoryID_UNIQUE` (`categoryID`),
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS `shopitemcategories`(
 # -----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `shopitemscatalog`(
   `itemID` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `itemName` VARCHAR(25) NOT NULL,
+  `itemName` VARCHAR(50) NOT NULL,
   `itemPrice` DECIMAL(11, 2) UNSIGNED DEFAULT NULL,
   `userID_FK` INT(11) UNSIGNED NOT NULL,
   `categoryID_FK` INT(11) UNSIGNED NOT NULL,

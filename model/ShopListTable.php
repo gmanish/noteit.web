@@ -35,8 +35,10 @@ class ShopListTable extends TableBase
 	
 	function list_all(&$functor_obj, $function_name='iterate_row')
 	{
-		$sql = "SELECT * FROM " . parent::GetTableName();
-		$sql = $sql . " WHERE userID_FK=" . parent::GetUserID();
+		$sql = sprintf(
+				"SELECT * FROM `%s` WHERE `userID_FK`=%d", 
+				parent::GetTableName(),
+				parent::GetUserID());
 		
 		$result = $this->get_db_con()->query($sql);
 		if ($result == FALSE)
@@ -56,9 +58,13 @@ class ShopListTable extends TableBase
 	
 	function add_list($list_name)
 	{
-		$sql = "INSERT INTO " . parent::GetTableName() . " (`";
-		$sql = $sql . self::kCol_ListName . "`, `" . self::kCol_UserID . "`) ";
-		$sql = $sql . "VALUES ('" . $list_name . "', " . parent::GetUserID() . ")";
+		$sql = sprintf(
+				"INSERT INTO `%s` (`%s` , `%s`) VALUES ('%s', %d)", 
+				parent::GetTableName(), 
+				self::kCol_ListName, 
+				self::kCol_UserID, 
+				mysql_escape_string($list_name),
+				parent::GetUserID());
 	//	echo($sql);
         
 		$result = $this->get_db_con()->query($sql);
@@ -71,8 +77,10 @@ class ShopListTable extends TableBase
 	// [TODO] : Make this a transaction
 	function remove_list($list_ID)
 	{
-        $sql = "call delete_shopping_list(" . $list_ID . ", " . $this->GetUserID() . ")";
-//        echo($sql);
+        $sql = sprintf(
+				"call delete_shopping_list(%d, %d)",
+				$list_ID, 
+				$this->GetUserID());
 		$result = $this->get_db_con()->query($sql);
 		if ($result == FALSE)
 			throw new Exception("Database operaion failed (" . __FILE__ . __LINE__ . "): " . $this->get_db_con()->error .
@@ -84,7 +92,7 @@ class ShopListTable extends TableBase
 		$sql = sprintf(
 				"UPDATE %s SET `listName`='%s' WHERE `listID`=%d AND `userID_FK`=%d", 
 				parent::GetTableName(),
-				$list_name,
+				mysql_real_escape_string($list_name),
 				$list_ID,
 				$this->GetUserID());
 		$result = $this->get_db_con()->query($sql);

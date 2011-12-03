@@ -173,7 +173,7 @@ class CommandHandler extends CommandHandlerBase
             $noteit_db = NoteItDB::login_user_email($email_ID);
 
 			// Log country specific information
-			$remote_address = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : "";
+//			$remote_address = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : "";
 			
 //			if ($remote_address != "")
 //				NoteItDB::logCountryInfo($remote_address);
@@ -203,8 +203,7 @@ class CommandHandler extends CommandHandlerBase
     */
     public static function do_delete_shop_list()
     {
-//            var_dump($_REQUEST);
-        $listID = isset($_REQUEST[Command::$arg1]) ? $_REQUEST[Command::$arg1] : "";
+        $listID = isset($_REQUEST[Command::$arg1]) ? intval($_REQUEST[Command::$arg1]) : 0;
 
         try
         {
@@ -220,8 +219,11 @@ class CommandHandler extends CommandHandlerBase
                 }
             }
 
+        	if ($listID <= 0 || $user_ID <= 0)
+				throw new Exception("Invalid List Id" . __FILE__ . __LINE__);
+			
             $noteit_db = NoteItDB::login_user_id($user_ID);
-                $noteit_db->get_shoplist_table()->remove_list($listID);
+           	$noteit_db->get_shoplist_table()->remove_list($listID);
             $noteit_db = NULL;
 
             // Form a JSON string
@@ -253,7 +255,7 @@ class CommandHandler extends CommandHandlerBase
             $user_ID = -1;
 
             if (isset($_SESSION['USER_ID']))
-                $user_ID = $_SESSION['USER_ID'];
+                $user_ID = intval($_SESSION['USER_ID']);
             else
             {
                 $user_ID = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
@@ -261,6 +263,9 @@ class CommandHandler extends CommandHandlerBase
                     throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
                 }
             }
+
+			if($user_ID <= 0)
+				throw new Exception("Error Processing Request" . __FILE__ . __LINE__ . ")");
 
             $noteit_db = NoteItDB::login_user_id($user_ID);
             $new_ID = $noteit_db->get_shoplist_table()->add_list($list_name);
@@ -290,7 +295,7 @@ class CommandHandler extends CommandHandlerBase
     */
 	public static function do_edit_shop_list()
 	{
-        $list_ID 	= isset($_REQUEST[Command::$arg1]) ? $_REQUEST[Command::$arg1] : 0;
+        $list_ID 	= isset($_REQUEST[Command::$arg1]) ? intval($_REQUEST[Command::$arg1]) : 0;
 		$list_name	= isset($_REQUEST[Command::$arg2]) ? $_REQUEST[Command::$arg2] : "";
 		
         try
@@ -298,7 +303,7 @@ class CommandHandler extends CommandHandlerBase
             $user_ID = -1;
 
             if (isset($_SESSION['USER_ID']))
-                $user_ID = $_SESSION['USER_ID'];
+                $user_ID = intval($_SESSION['USER_ID']);
             else
             {
                 $user_ID = isset($_REQUEST[Command::$arg3]) ? intval($_REQUEST[Command::$arg3]) : 0;
@@ -307,6 +312,9 @@ class CommandHandler extends CommandHandlerBase
                 }
             }
 
+			if($list_ID <= 0 || $user_ID <= 0)
+				throw new Exception("Error Processing Request" . __FILE__ . __LINE__ . ")");
+			
             $noteit_db = NoteItDB::login_user_id($user_ID);
             $noteit_db->get_shoplist_table()->edit_list($list_ID, $list_name);
             $noteit_db = NULL;
@@ -351,6 +359,9 @@ class CommandHandler extends CommandHandlerBase
                 }
             }
 
+			if ($user_ID <= 0)
+				throw new Exception("Error Processing Request" . "(" . __FILE__ . __LINE__ . ")");
+				
             $noteit_db = NoteItDB::login_user_id($user_ID);
             $new_ID = $noteit_db->get_catlist_table()->add_category($category_name);
             $noteit_db = NULL;
@@ -364,7 +375,7 @@ class CommandHandler extends CommandHandlerBase
 
             echo(json_encode($arr));
         }
-            catch(Exception $e)
+        catch(Exception $e)
         {
             $arr = array(
                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
@@ -380,7 +391,7 @@ class CommandHandler extends CommandHandlerBase
     public static function do_delete_category()
     {
 //            var_dump($_REQUEST);
-        $listID = isset($_REQUEST[Command::$arg1]) ? $_REQUEST[Command::$arg1] : "";
+        $listID = isset($_REQUEST[Command::$arg1]) ? intval($_REQUEST[Command::$arg1]) : 0;
 
         try
         {
@@ -396,6 +407,9 @@ class CommandHandler extends CommandHandlerBase
                 }
             }
 
+			if ($listID <= 0 || $user_ID <= 0)
+				throw new Exception("Error Processing Request (" . __FILE__ . __LINE__ . ")");
+			
             $noteit_db = NoteItDB::login_user_id($user_ID);
             $noteit_db->get_catlist_table()->remove_category($listID);
             $noteit_db = NULL;
@@ -440,11 +454,14 @@ class CommandHandler extends CommandHandlerBase
                 }
             }
 
+			if ($list_id <= 0 || $user_ID <= 0 || $start_at < 0)
+				throw new Exception("Error Processing Request (" . __FILE__ . __LINE__ . ")");
+			
             $items_array = array();
             $shop_item_functor = new ListFunctorShopItems($items_array);
             $noteit_db = NoteItDB::login_user_id($user_ID);
             $noteit_db->get_shopitems_table()->list_range(
-                $show_purchased_items = 'Y' ? TRUE : FALSE,
+                $show_purchased_items == 'Y' ? TRUE : FALSE,
                 $list_id,
                 $start_at,
                 20, // fetch max 20 rows for now
@@ -496,6 +513,9 @@ class CommandHandler extends CommandHandlerBase
                 }
             }
 
+			if ($user_ID <= 0 || $item_ID <= 0)
+				throw new Exception("Error Processing Request (" . __FILE__ . __LINE__ . ")");
+			
             $noteit_db = NoteItDB::login_user_id($user_ID);
             $shop_item = $noteit_db->get_shopitems_table()->get_item($item_ID);
 
@@ -541,18 +561,18 @@ class CommandHandler extends CommandHandlerBase
         $item_unit_id = isset($_REQUEST[Command::$arg6]) ? intval($_REQUEST[Command::$arg6]) : 1;
 		$item_ispurchased = isset($_REQUEST[Command::$arg8]) ? intval($_REQUEST[Command::$arg8]) : 0; // 0 or 1
 		
-			if (isset ($_REQUEST[Command::$arg9]))
-			{
-				$item->_is_purchased = intval($_REQUEST[Command::$arg9]);
-				$edit_flags = $edit_flags | ShopItem::SHOPITEM_ISPURCHASED;
-			}
+		if (isset ($_REQUEST[Command::$arg9]))
+		{
+			$item->_is_purchased = intval($_REQUEST[Command::$arg9]);
+			$edit_flags = $edit_flags | ShopItem::SHOPITEM_ISPURCHASED;
+		}
 		
         try
         {
             $user_ID = -1;
 
             if (isset($_SESSION['USER_ID']))
-                $user_ID = $_SESSION['USER_ID'];
+                $user_ID = intval($_SESSION['USER_ID']);
             else
             {
                 $user_ID = isset($_REQUEST[Command::$arg7]) ? intval($_REQUEST[Command::$arg7]) : 0;
@@ -560,6 +580,13 @@ class CommandHandler extends CommandHandlerBase
                     throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
                 }
             }
+			
+			if ($user_ID <= 0 		|| 
+				$item_name == "" 	|| 
+				$list_ID <= 0 		|| 
+				$category_ID <= 0 	|| 
+				$item_unit_id <= 0)
+				throw new Exception("Error Processing Request (" . __FILE__ . __LINE__ . ")");
 
             if ($item_name != "")
             {
@@ -617,11 +644,11 @@ class CommandHandler extends CommandHandlerBase
             $user_ID = -1;
 
             if (isset($_SESSION['USER_ID']))
-                $user_ID = $_SESSION['USER_ID'];
+                $user_ID = intval($_SESSION['USER_ID']);
             else
             {
                 $user_ID = isset($_REQUEST[Command::$arg8]) ? intval($_REQUEST[Command::$arg8]) : 0;
-                if ($user_ID == 0) {
+                if ($user_ID <= 0) {
                     throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
                 }
             }
@@ -731,6 +758,9 @@ class CommandHandler extends CommandHandlerBase
                 }
             }
 
+			if ($instance_id <= 0 || $user_ID <= 0)
+				throw new Exception("Error Processing Request");
+				
             $noteit_db = NoteItDB::login_user_id($user_ID);
             $new_ID = $noteit_db->get_shopitems_table()->delete_item($instance_id);
 
@@ -769,6 +799,9 @@ class CommandHandler extends CommandHandlerBase
                 }
             }
             
+			if ($user_ID <= 0)
+				throw new Exception("Error Processing Request");
+			
             $noteit_db = NoteItDB::login_user_id($user_ID);
             $shopList = array();
             $shoplist_functor = new ListFunctorShopList($shopList);
@@ -806,11 +839,12 @@ class CommandHandler extends CommandHandlerBase
             else
             {
                 $user_ID = isset($_REQUEST[Command::$arg1]) ? intval($_REQUEST[Command::$arg1]) : 0;
-                if ($user_ID == 0) {
-                    throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
-                }
             }
 
+            if ($user_ID <= 0) {
+                throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+            }
+			
             $noteit_db = NoteItDB::login_user_id($user_ID);
             $categories = array();
             $categories_functor = new ListFunctorCategoryList($categories);
@@ -849,9 +883,10 @@ class CommandHandler extends CommandHandlerBase
             else
             {
                 $user_ID = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
-                if ($user_ID == 0) {
-                    throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
-                }
+            }
+
+            if ($user_ID <= 0 || $category_ID <= 0) {
+                throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
             }
 
             $noteit_db = NoteItDB::login_user_id($user_ID);
@@ -888,13 +923,13 @@ class CommandHandler extends CommandHandlerBase
             else
             {
                 $user_ID = isset($_REQUEST[Command::$arg3]) ? intval($_REQUEST[Command::$arg3]) : 0;
-                if ($user_ID == 0) {
-                    throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
-                }
             }
 
+            if ($user_ID <= 0) {
+                throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+            }
+			
             $noteit_db = NoteItDB::login_user_id($user_ID);
-
             $suggestions = array();
             $suggestions = $noteit_db->get_shopitems_table()->suggest_item($substring, $max_items);
             $arr = array(

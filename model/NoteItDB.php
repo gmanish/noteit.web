@@ -12,8 +12,6 @@ const kColUserEmail 		= 'emailID';
 const kColUserFirstName		= 'firstName';
 const kColUserLastName		= 'lastName';
 
-
-
 class NoteItDB extends DbBase
 {
 	protected $db_userID;
@@ -31,13 +29,14 @@ class NoteItDB extends DbBase
 		$this->cat_list_db = new CategoryTable($userID);
 		$this->shop_items_db = new ShopItems($userID);
 
-		$sql = "SELECT * from users WHERE userID=$this->db_userID";
+		$sql = sprintf("SELECT * from users WHERE userID=%d", $this->db_userID);
 		//echo $sql;
 		$result = $this->get_db_con()->query($sql);
 		if ($result != FALSE || mysqli_num_rows($result) == 1)
 		{
 			$row = $result->fetch_array();
 			$this->db_username = $row['firstName'] . " " . $row['lastName'];
+			mysqli_free_result($result);
 		}
         else throw new Exception("Invalid user credentials: " . $this->get_db_con()->error);
  	}
@@ -84,17 +83,22 @@ class NoteItDB extends DbBase
                 NI::TRACE("NoteItDb::register_user: connected to db", __FILE__, __LINE__);
 
 			// Email ID is already registered??
-			$sql = 'SELECT ' . kColUserEmail . ' FROM ' . kTableUsers . ' WHERE (' . kColUserEmail . '=\'' . $emailID . '\')';
+			$sql = sprintf(
+					"SELECT %s FROM %s WHERE %s='%s'", 
+					kColUserEmail, 
+					kTableUsers, 
+					kColUserEmail, 
+					mysql_escape_string($emailID));
+			
 			NI::TRACE("NoteItDb::register_user: sql = " . $sql, __FILE__, __LINE__);
 
 			$result = $db_con->query($sql);
 			if ($result ==  FALSE || mysqli_num_rows($result) > 0)
             {
                 NI::TRACE("NoteItDb::register_user: " . $db_con->error, __FILE__, __LINE__);
+				mysqli_free_result($result);
 				throw new Exception('This email ID is already registered');
             }
-            else
-                NI::TRACE("NoteItDb::register_user: Found user", __FILE__, __LINE__);
             
 			if ($result)
 			{
@@ -102,8 +106,14 @@ class NoteItDB extends DbBase
 			}
 			
 			// try of register this user
-			$sql = 'INSERT INTO ' . kTableUsers . ' ' . '(' . kColUserEmail . ',' . kColUserFirstName . ',' . kColUserLastName . ') ';
-			$sql .= "VALUES ('$emailID', '$firstName', '$lastName')";
+			$sql = sprintf("INSERT INTO `%s` (`%s`,`%s`,`%s`) VALUES ('%s', '%s', '%s')", 
+					kTableUsers, 
+					kColUserEmail, 
+					kColUserFirstName, 
+					kColUserLastName,
+					mysql_escape_string($emailID),
+					mysql_real_escape_string($firstName),
+					mysql_real_escape_string($lastName));
 			
 			$result = $db_con->query($sql);
 			if ($result == FALSE)
@@ -136,10 +146,11 @@ class NoteItDB extends DbBase
          if (mysqli_connect_error())
              throw new Exception('Could not connect to Server: ' . mysqli_connect_error() . "(" . mysqli_connect_errno() . ")");
 
- //       if ($db_con->select_db(kTableUsers) == FALSE)
- //          throw new Exception("Could not connect to database: " . kTableUsers);
-        
-		$sql = 'SELECT userID FROM '. kTableUsers . ' WHERE ' . kColUserEmail . '=\'' . $user_email . '\'';
+ 		$sql = sprintf(
+				"SELECT `userID` FROM `%s` WHERE `%s`='%s'", 
+				kTableUsers, 
+				kColUserEmail, 
+				mysql_escape_string($user_email));
 		$result = $db_con->query($sql);
 		if ($result && mysqli_num_rows($result) == 1) // There should be one and only one user by this email ID
 		{

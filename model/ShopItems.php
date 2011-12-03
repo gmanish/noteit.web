@@ -1,6 +1,6 @@
 <?php
-require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . "noteit.web/lib/NoteItCommon.php";
-require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . "noteit.web/model/TableBase.php";
+require_once $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'noteit.web/lib/NoteItCommon.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'noteit.web/model/TableBase.php';
 
 
 class ShopItem
@@ -43,7 +43,6 @@ class ShopItem
         $unit_id = 3 /* General Unit */,
 		$is_purchased = FALSE)
     {
-        NI::TRACE('ShopItem::__construct', __FILE__, __LINE__);
         $this->_instance_id = $instance_id;
         $this->_item_id = $item_id;
         $this->_user_id = $user_id;
@@ -54,7 +53,6 @@ class ShopItem
         $this->_quantity = $quantity;
         $this->_unit_id = $unit_id;
 		$this->_is_purchased = $is_purchased;
-        NI::TRACE('User ID: ' . $this->_user_id, __FILE__, __LINE__);
     }
 }
 
@@ -81,20 +79,28 @@ class ShopItems extends TableBase
 
     function add_item($list_id, $category_id, $item_name, $unit_cost, $item_quantity, $unit_id)
     {
-        $sql = "select add_shop_item(" .
-               parent::GetUserID() . ", " .
-               $list_id . ", " .
-               $category_id . ", " .
-               "'" . $item_name . "', " .
-               $unit_cost . ", " .
-               $item_quantity . ", " .
-               $unit_id . ")";
+        $sql = sprintf(
+				"SELECT add_shop_item(%d, %d, %d, '%s', %.2f, %.2f, %d)", 
+				parent::GetUserID(), 
+				$list_id, 
+				$category_id, 
+				$item_name, 
+				$unit_cost, 
+				$item_quantity,
+				$unit_id);
 
         NI::TRACE($sql, __FILE__,  __LINE__);
         $result = $this->get_db_con()->query($sql);
-        if ($result == FALSE)
-            throw new Exception("SQL exec failed (" . __FILE__ . __LINE__ . "): " . $this->get_db_con()->error . " (" . $this->get_db_con()->errno . ")");
-
+        if ($result == FALSE || mysqli_num_rows($result) <= 0)
+		{
+			$str = sprintf(
+				"SQL exec failed (%s, %s) : %s (%d)",
+				__FILE__,
+				__LINE__, 
+				$this->get_db_con()->error, 
+				$this->get_db_con()->errno);
+			throw new Exception($str); 
+		}
         $row = $result->fetch_row();
         return $row[0];
     }
@@ -105,13 +111,12 @@ class ShopItems extends TableBase
         $start_at,
         $num_rows_fetch,
         & $functor_obj,
-        $function_name='iterate_row')
+        $function_name="iterate_row")
     {
-        $sql = sprintf("SELECT si.*, sic.itemName " .
-                "FROM `%s` AS si " .
-                "inner join `shopitemscatalog` AS sic " .
-                "ON si.itemID_FK = sic.itemID " .
-                "where si.userID_FK = %d and si.listID_FK = %d",
+        $sql = sprintf(
+				"SELECT si.*, sic.itemName FROM `%s` AS si " .
+				"INNER JOIN `shopitemscatalog` AS sic " .
+				"ON si.itemID_FK=sic.itemID WHERE si.userID_FK=%d AND si.listID_FK=%d",
                 parent::GetTableName(),
                 parent::GetUserID(),
                 $list_id);
@@ -119,12 +124,12 @@ class ShopItems extends TableBase
         if ($show_purchased_items == FALSE) // Hide items that have been purchased
             $sql = $sql . " AND si.datePurchased IS NULL";
 
-        $sql = $sql . " LIMIT " . $start_at . ", " . $num_rows_fetch;  // Fech 20 items starting from row $start_at
+		$sql = sprintf("%s LIMIT %d, %d", $sql, $start_at, $num_rows_fetch);
 
         NI::TRACE('ShopItems::list_range SQL: ' . $sql, __FILE__, __LINE__);
         $result = $this->get_db_con()->query($sql);
         if ($result == FALSE)
-            throw new Exception("SQL exec failed (". __FILE__ . __LINE__ . "): " . $this->get_db_con()->error);
+            throw new Exception('SQL exec failed ('. __FILE__ . __LINE__ . '): ' . $this->get_db_con()->error);
 
         NI::TRACE($sql, __FILE__, __LINE__);
         while ($row = mysqli_fetch_array($result, MYSQL_ASSOC))
@@ -133,7 +138,7 @@ class ShopItems extends TableBase
 			
             $thisItem = new ShopItem(
                 $row[self::kColInstanceID],
-                $row[self::kColItemID],
+				$row[self::kColItemID],
                 $row[self::kColUserID],
                 $row[self::kColListID],
                 $row[self::kColCategoryID],
@@ -156,12 +161,11 @@ class ShopItems extends TableBase
 
     function get_item($instance_id)
     {
-        $sql = sprintf("SELECT si.*, sic.itemName " .
-                "FROM `%s` AS si " .
-                "inner join `shopitemscatalog` AS sic " .
-                "ON si.itemID_FK = sic.itemID " .
-                "where si.userID_FK = %d and si.instanceID = %d " .
-                "LIMIT 1",
+        $sql = sprintf("SELECT si.*, sic.itemName 
+        		FROM `%s` AS si 
+        		inner join `shopitemscatalog` AS sic  
+        		ON si.itemID_FK = sic.itemID  
+        		WHERE si.userID_FK = %d and si.instanceID = %d  LIMIT 1",
                 parent::GetTableName(),
                 parent::GetUserID(),
                 $instance_id);
@@ -169,7 +173,7 @@ class ShopItems extends TableBase
         NI::TRACE('ShopItems::get_item SQL: ' . $sql, __FILE__, __LINE__);
         $result = $this->get_db_con()->query($sql);
         if ($result == FALSE)
-            throw new Exception("SQL exec failed (". __FILE__ . __LINE__ . "): " . $this->get_db_con()->error);
+            throw new Exception('SQL exec failed ('. __FILE__ . __LINE__ . '): ' . $this->get_db_con()->error);
 
         while ($row = mysqli_fetch_array($result, MYSQL_ASSOC))
         {
@@ -195,14 +199,12 @@ class ShopItems extends TableBase
 
     function edit_item($instance_id, $item, $item_flags /* one of SHOPITEM_* flags */)
     {
-		$sql = "UPDATE ";
-        $sql .= parent::GetTableName();
-        $sql .= " SET ";
+		$sql = sprintf('UPDATE %s SET', parent::GetTableName());
         $prev_column_added = FALSE;
 		
         if ($item_flags & ShopItem::SHOPITEM_CATEGORYID)
         {
-            $sql .= " " . self::kColCategoryID . "=" . $item->_category_id;
+            $sql .= ' ' . self::kColCategoryID . '=' . $item->_category_id;
             $prev_column_added = TRUE;
         }
         else
@@ -214,9 +216,9 @@ class ShopItems extends TableBase
 		   // names are stored in the `shopitemscatalog` table
 		   $item_classid = $this->create_catalog_entry($item);
             if ($prev_column_added)
-                $sql .= ", ";
+                $sql .= ', ';
 			
-            $sql .= " " . self::kColItemID . "=" . $item_classid;
+            $sql .= ' ' . self::kColItemID . '=' . $item_classid;
             $prev_column_added = TRUE;
         }
         else
@@ -225,8 +227,8 @@ class ShopItems extends TableBase
 		if ($item_flags & ShopItem::SHOPITEM_UNITCOST)
         {
             if ($prev_column_added)
-                $sql .= ", ";
-            $sql .= " " . self::kColUnitCost . "=" . $item->_unit_cost;
+                $sql .= ', ';
+            $sql .= ' ' . self::kColUnitCost . '=' . $item->_unit_cost;
             $prev_column_added = TRUE;
         }
         else
@@ -235,8 +237,8 @@ class ShopItems extends TableBase
         if ($item_flags & ShopItem::SHOPITEM_QUANTITY)
         {
             if ($prev_column_added)
-                 $sql .= ", ";
-            $sql .= " " . self::kColQuantity . "=" . $item->_quantity;
+                 $sql .= ', ';
+            $sql .= ' ' . self::kColQuantity . '=' . $item->_quantity;
             $prev_column_added = TRUE;
         }
         else
@@ -245,8 +247,8 @@ class ShopItems extends TableBase
         if ($item_flags & ShopItem::SHOPITEM_UNITID)
         {
             if ($prev_column_added)
-                $sql .= ", ";
-            $sql .= " " . self::kColUnitID . "=" . $item->_unit_id;
+                $sql .= ', ';
+            $sql .= ' ' . self::kColUnitID . '=' . $item->_unit_id;
             $prev_column_added = TRUE;
         }
         else
@@ -255,22 +257,22 @@ class ShopItems extends TableBase
 		if ($item_flags & ShopItem::SHOPITEM_ISPURCHASED)
 		{
 			if ($prev_column_added)
-				$sql .= ", ";
-			$sql .= " " . self::kColIsPurchased . "=" . $item->_is_purchased;
+				$sql .= ', ';
+			$sql .= ' ' . self::kColIsPurchased . '=' . $item->_is_purchased;
 			$prev_column_added = TRUE;
 		}
 
-        $sql .= "  WHERE " . self::kColInstanceID . "=" . $item->_instance_id;
+        $sql .= '  WHERE ' . self::kColInstanceID . '=' . $item->_instance_id;
 //		NI::TRACE_ALWAYS($sql, __FILE__, __LINE__);
         $result = $this->get_db_con()->query($sql);
         if ($result == FALSE)
-            throw new Exception("SQL exec failed (". __FILE__ . __LINE__ . "): " . $this->get_db_con()->error);
+            throw new Exception('SQL exec failed ('. __FILE__ . __LINE__ . '): ' . $this->get_db_con()->error);
     }
 
     function delete_item($instance_id)
     {
-        $sql = sprintf("DELETE FROM `%s` " .
-                "where %s = %d and %s = %d ",
+        $sql = sprintf("DELETE FROM `%s` 
+        		WHERE %s = %d AND %s = %d ",
                 parent::GetTableName(),
                 self::kColUserID,
                 parent::GetUserID(),
@@ -280,24 +282,24 @@ class ShopItems extends TableBase
         NI::TRACE('ShopItems::delete_item SQL: ' . $sql, __FILE__, __LINE__);
         $result = $this->get_db_con()->query($sql);
         if ($result == FALSE)
-            throw new Exception("SQL exec failed (". __FILE__ . __LINE__ . "): " . $this->get_db_con()->error);
+            throw new Exception('SQL exec failed ('. __FILE__ . __LINE__ . '): ' . $this->get_db_con()->error);
     }
 
 
 	function suggest_item($string, $max_suggestions)
 	{
-		$sql = sprintf("SELECT `%s` FROM `shopitemscatalog`" .
-					"WHERE `%s` LIKE '%%%s%%' LIMIT %d", 
+		$sql = sprintf("SELECT `%s` FROM `shopitemscatalog` 
+					WHERE `%s` LIKE '%%s%%' LIMIT %d", 
 					self::kColItemName, 
 					self::kColItemName, 
-					$string, 
+					mysql_real_escape_string($string), 
 					max($max_suggestions, 10));
 
-		NI::TRACE("SQL: $sql", __FILE__, __LINE__);
+		NI::TRACE('SQL: $sql', __FILE__, __LINE__);
 		$result = $this->get_db_con()->query($sql);
 		
         if ($result == FALSE)
-            throw new Exception("SQL exec failed (". __FILE__ . __LINE__ . "): " . $this->get_db_con()->error);
+            throw new Exception('SQL exec failed ('. __FILE__ . __LINE__ . '): ' . $this->get_db_con()->error);
 		
 		$suggestions = array();
         while ($row = mysqli_fetch_array($result, MYSQL_ASSOC))
@@ -319,32 +321,35 @@ class ShopItems extends TableBase
 		// the catalogs table first and then update the appropriate record in the
 		// `shopitems` table.
 		$new_itemid = 0;
-		$sql = sprintf("SELECT `itemID` from `shopitemscatalog` 
-				where `itemName`='%s' AND `userID_FK`=%d LIMIT 1", 
-				$item->_item_name, parent::GetUserID());
+		$sql = sprintf("SELECT `itemID` FROM `shopitemscatalog` 
+				WHERE `itemName`='%s' AND `userID_FK`=%d LIMIT 1", 
+				mysql_real_escape_string($item->_item_name), 
+				parent::GetUserID());
+				
 		$result = $this->get_db_con()->query($sql);
 		if ($result == FALSE)
-            throw new Exception("SQL exec failed (". __FILE__ . __LINE__ . "): " . $this->get_db_con()->error);
+            throw new Exception('SQL exec failed ('. __FILE__ . __LINE__ . '): ' . $this->get_db_con()->error);
 		
 		$row = mysqli_fetch_array($result);
 		if ($row)
 		{
 			$new_itemid = $row['itemID'];
+			mysqli_free_result($result);
 		}
 		else
 		{
 			// No item was found create a new record for this name
-			$sql = sprintf("INSERT INTO `shopitemscatalog` (" . 
-							"`itemName`, `itemPrice`, `userID_FK`, `categoryID_FK`)" . 
-						"VALUES (\"%s\", %f, %d, %d)", 
-						$item->_item_name, 
+			$sql = sprintf("INSERT INTO `shopitemscatalog` 
+							(`itemName`, `itemPrice`, `userID_FK`, `categoryID_FK`) 
+							VALUES ('%s', %.2f, %d, %d)",
+						mysql_real_escape_string($item->_item_name), 
 						$item->_unit_cost,
 						parent::GetUserID(),
 						$item->_category_id);
 			
 			$result = $this->get_db_con()->query($sql);
 			if ($result == FALSE)
-				throw new Exception("SQL exec failed (". __FILE__ . __LINE__ . "): " . $this->get_db_con()->error);
+				throw new Exception('SQL exec failed ('. __FILE__ . __LINE__ . '): ' . $this->get_db_con()->error);
 			
 			
 			$new_itemid = $this->get_db_con()->insert_id;
