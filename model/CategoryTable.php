@@ -75,21 +75,21 @@ class CategoryTable extends TableBase
 		}
 		
 		if ($result)
-			mysqli_free_result($result);
+			$result->free();
 	}
 
     function add_category($category_name)
     {
         $sql = sprintf(
 				"call add_category('%s', %d)", 
-				mysql_escape_string($category_name), 
+				$this->get_db_con()->escape_string($category_name), 
 				parent::GetUserID());
 
         NI::TRACE($sql, __FILE__,  __LINE__);
         $result = $this->get_db_con()->query($sql);
         if ($result == FALSE)
-            throw new Exception("SQL exec failed (" . __FILE__ . __LINE__ . "): " . $this->get_db_con()->error);
-
+	    	throw new Exception("SQL exec failed (" . __FILE__ . __LINE__ . "): " . $this->get_db_con()->error);
+			
         return $this->get_db_con()->insert_id;
     }
 
@@ -114,7 +114,7 @@ class CategoryTable extends TableBase
 
         $row = mysqli_fetch_array($result);
         $category = new Category($row[0], $row[1], $row[2]);
-		mysqli_free_result($result);
+		$result->free();
         return $category;
     }
 }

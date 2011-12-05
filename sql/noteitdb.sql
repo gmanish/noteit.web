@@ -85,6 +85,7 @@ CREATE TABLE IF NOT EXISTS`shopitems` (
   `unitID_FK` int(10) unsigned NOT NULL,
   `categoryID_FK` int(11) unsigned NOT NULL DEFAULT '0',
   `isPurchased` tinyint(1) DEFAULT '0',
+  `isAskLater` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`instanceID`),
   UNIQUE KEY `instanceID_UNIQUE` (`instanceID`),
   KEY `Ref_01_FK` (`userID_FK`),
@@ -97,7 +98,7 @@ CREATE TABLE IF NOT EXISTS`shopitems` (
   CONSTRAINT `Ref_03_FK` FOREIGN KEY (`listID_FK`) REFERENCES `shoplists` (`listID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `Ref_04_FK` FOREIGN KEY (`unitID_FK`) REFERENCES `units` (`unitID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `Ref_05_FK` FOREIGN KEY (`categoryID_FK`) REFERENCES `shopitemcategories` (`categoryID`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB 0 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 # -----------------------------------------------------------------
 # Create the procedure `add_category`
@@ -132,7 +133,8 @@ CREATE
     `inItemName` VARCHAR(50),
     `unitCost` DECIMAL(11, 2),
     `quantity` DECIMAL(11, 2),
-    `unitID` INT) 
+    `unitID` INT,
+    `isAskLater` TINYINT) 
   RETURNS INT(11)
   DETERMINISTIC
   COMMENT 'Adds a new item in the shopping list. Returns ID of the new Item. NOTE: The item must already be present in the shopitemscatalog or should be added there as well.'
@@ -166,8 +168,9 @@ BEGIN
       `unitCost`, 
       `quantity`, 
       `unitID_FK`, 
-      `categoryID_FK`) 
-  VALUES (userID, thisItemID, curdate(), listID, unitCost, quantity, unitID, categoryID);
+      `categoryID_FK`,
+      `isAskLater`) 
+  VALUES (userID, thisItemID, curdate(), listID, unitCost, quantity, unitID, categoryID, isAskLater);
 
   RETURN @@last_insert_id;
 END

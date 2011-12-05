@@ -13,10 +13,12 @@
         public static $arg7         = 'arg7';
 		public static $arg8			= 'arg8';
 		public static $arg9			= 'arg9';
+		public static $arg10		= 'arg10';
 	}
 
 	class Handler
 	{
+		public static $do_get_units			= 'do_get_units';
 		public static $do_register 			= 'do_register';
 		public static $do_login				= 'do_login';
 

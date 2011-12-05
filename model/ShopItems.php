@@ -17,6 +17,7 @@ class ShopItem
     const SHOPITEM_DATEPURCHASED    = 512;  // 1 << 9
 	const SHOPITEM_CLASSID			= 1024; // 1 << 10
 	const SHOPITEM_ISPURCHASED		= 2048; // 1 << 11
+	const SHOPITEM_ISASKLATER		= 4096; // 1 << 12
 
     public $_instance_id = 0;
     public $_item_id = 0;
@@ -30,6 +31,7 @@ class ShopItem
     public $_date_added;
     public $_date_purchased;
 	public $_is_purchased = 0; // TINYINT should be 0 or 1
+	public $_is_asklater = 0; // TINYINT should be 0 or 1
 	
 	function __construct(
         $instance_id,
@@ -41,7 +43,8 @@ class ShopItem
         $unit_cost = 0.00,
         $quantity = 1.00,
         $unit_id = 3 /* General Unit */,
-		$is_purchased = FALSE)
+		$is_purchased = FALSE,
+		$is_asklater = FALSE)
     {
         $this->_instance_id = $instance_id;
         $this->_item_id = $item_id;
@@ -53,6 +56,7 @@ class ShopItem
         $this->_quantity = $quantity;
         $this->_unit_id = $unit_id;
 		$this->_is_purchased = $is_purchased;
+		$this->_is_asklater = $is_asklater;
     }
 }
 
@@ -71,25 +75,26 @@ class ShopItems extends TableBase
     const kColUnitID        = 'unitID_FK';
     const kColCategoryID	= 'categoryID_FK';
 	const kColIsPurchased	= 'isPurchased';
+	const kColIsAskLater	= 'isAskLater';
 
     function __construct($user_ID)
     {
         parent::__construct(self::kTableName, $user_ID);
     }
 
-    function add_item($list_id, $category_id, $item_name, $unit_cost, $item_quantity, $unit_id)
+    function add_item($list_id, $category_id, $item_name, $unit_cost, $item_quantity, $unit_id, $is_asklater)
     {
         $sql = sprintf(
-				"SELECT add_shop_item(%d, %d, %d, '%s', %.2f, %.2f, %d)", 
+				"SELECT add_shop_item(%d, %d, %d, '%s', %.2f, %.2f, %d, %d)", 
 				parent::GetUserID(), 
 				$list_id, 
 				$category_id, 
-				$item_name, 
+				$this->get_db_con()->escape_string($item_name), 
 				$unit_cost, 
 				$item_quantity,
-				$unit_id);
+				$unit_id,
+				$is_asklater);
 
-        NI::TRACE($sql, __FILE__,  __LINE__);
         $result = $this->get_db_con()->query($sql);
         if ($result == FALSE || mysqli_num_rows($result) <= 0)
 		{
@@ -102,6 +107,7 @@ class ShopItems extends TableBase
 			throw new Exception($str); 
 		}
         $row = $result->fetch_row();
+		$result->free();
         return $row[0];
     }
 
@@ -146,7 +152,8 @@ class ShopItems extends TableBase
                 $row[self::kColUnitCost],  // unit cost
                 $row[self::kColQuantity],
                 $row[self::kColUnitID],
-				$row[self::kColIsPurchased]);
+				$row[self::kColIsPurchased],
+				$row[self::kColIsAskLater]);
 
             call_user_func(
                 array($functor_obj, $function_name), // invoke the callback function
@@ -156,7 +163,7 @@ class ShopItems extends TableBase
         }
 
         if ($result)
-            mysqli_free_result($result);
+            $result->free();
     }
 
     function get_item($instance_id)
@@ -188,10 +195,11 @@ class ShopItems extends TableBase
                 $row[self::kColUnitCost],  // unit cost
                 $row[self::kColQuantity],
                 $row[self::kColUnitID],
-				$row[self::kColIsPurchased]);
+				$row[self::kColIsPurchased],
+				$row[self::kColIsAskLater]);
 
             if ($result)
-                mysqli_free_result($result);
+                $result->free();
 
             return $thisItem;
         }
@@ -207,8 +215,6 @@ class ShopItems extends TableBase
             $sql .= ' ' . self::kColCategoryID . '=' . $item->_category_id;
             $prev_column_added = TRUE;
         }
-        else
-            $prev_column_added = FALSE;
 
        if ($item_flags & ShopItem::SHOPITEM_ITEMNAME)
         {
@@ -221,8 +227,6 @@ class ShopItems extends TableBase
             $sql .= ' ' . self::kColItemID . '=' . $item_classid;
             $prev_column_added = TRUE;
         }
-        else
-           $prev_column_added = FALSE;
 
 		if ($item_flags & ShopItem::SHOPITEM_UNITCOST)
         {
@@ -231,9 +235,15 @@ class ShopItems extends TableBase
             $sql .= ' ' . self::kColUnitCost . '=' . $item->_unit_cost;
             $prev_column_added = TRUE;
         }
-        else
-            $prev_column_added = FALSE;
 
+		if ($item_flags & ShopItem::SHOPITEM_ISASKLATER)
+		{
+			if ($prev_column_added)
+				$sql .= ',';
+			$sql .= ' ' . self::kColIsAskLater . '=' . $item->_is_asklater;
+			$prev_column_added = TRUE;
+		}
+			
         if ($item_flags & ShopItem::SHOPITEM_QUANTITY)
         {
             if ($prev_column_added)
@@ -241,8 +251,6 @@ class ShopItems extends TableBase
             $sql .= ' ' . self::kColQuantity . '=' . $item->_quantity;
             $prev_column_added = TRUE;
         }
-        else
-            $prev_column_added = FALSE;
 
         if ($item_flags & ShopItem::SHOPITEM_UNITID)
         {
@@ -251,8 +259,6 @@ class ShopItems extends TableBase
             $sql .= ' ' . self::kColUnitID . '=' . $item->_unit_id;
             $prev_column_added = TRUE;
         }
-        else
-            $prev_column_added = TRUE;
 		
 		if ($item_flags & ShopItem::SHOPITEM_ISPURCHASED)
 		{
@@ -263,7 +269,7 @@ class ShopItems extends TableBase
 		}
 
         $sql .= '  WHERE ' . self::kColInstanceID . '=' . $item->_instance_id;
-//		NI::TRACE_ALWAYS($sql, __FILE__, __LINE__);
+		
         $result = $this->get_db_con()->query($sql);
         if ($result == FALSE)
             throw new Exception('SQL exec failed ('. __FILE__ . __LINE__ . '): ' . $this->get_db_con()->error);
@@ -292,7 +298,7 @@ class ShopItems extends TableBase
 					WHERE `%s` LIKE '%%s%%' LIMIT %d", 
 					self::kColItemName, 
 					self::kColItemName, 
-					mysql_real_escape_string($string), 
+					$this->get_db_con()->escape_string($string), 
 					max($max_suggestions, 10));
 
 		NI::TRACE('SQL: $sql', __FILE__, __LINE__);
@@ -307,7 +313,7 @@ class ShopItems extends TableBase
 			$suggestions[] = $row[self::kColItemName];
         }
 		if ($result)
-			mysqli_free_result($result);
+			$result->free();
 
 		return $suggestions;
 	}
@@ -323,7 +329,7 @@ class ShopItems extends TableBase
 		$new_itemid = 0;
 		$sql = sprintf("SELECT `itemID` FROM `shopitemscatalog` 
 				WHERE `itemName`='%s' AND `userID_FK`=%d LIMIT 1", 
-				mysql_real_escape_string($item->_item_name), 
+				$this->get_db_con()->escape_string($item->_item_name), 
 				parent::GetUserID());
 				
 		$result = $this->get_db_con()->query($sql);
@@ -334,7 +340,7 @@ class ShopItems extends TableBase
 		if ($row)
 		{
 			$new_itemid = $row['itemID'];
-			mysqli_free_result($result);
+			$result->free();
 		}
 		else
 		{
@@ -342,7 +348,7 @@ class ShopItems extends TableBase
 			$sql = sprintf("INSERT INTO `shopitemscatalog` 
 							(`itemName`, `itemPrice`, `userID_FK`, `categoryID_FK`) 
 							VALUES ('%s', %.2f, %d, %d)",
-						mysql_real_escape_string($item->_item_name), 
+						$this->get_db_con()->escape_string($item->_item_name), 
 						$item->_unit_cost,
 						parent::GetUserID(),
 						$item->_category_id);

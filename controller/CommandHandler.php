@@ -18,7 +18,8 @@ function shopitem_obj_to_array($shop_item_obj)
         ShopItems::kColUnitCost         => $shop_item_obj->_unit_cost,
         ShopItems::kColQuantity         => $shop_item_obj->_quantity,
         ShopItems::kColUnitID           => $shop_item_obj->_unit_id,
-		ShopItems::kColIsPurchased		=> $shop_item_obj->_is_purchased
+		ShopItems::kColIsPurchased		=> $shop_item_obj->_is_purchased,
+		ShopItems::kColIsAskLater		=> $shop_item_obj->_is_asklater
         );
 //        $shop_item_array = (array)$shop_item_obj;
     return $shop_item_array;
@@ -30,7 +31,7 @@ class ListFunctorShopItems
 
     function __construct(& $items_array)
     {
-        $_items = & $items_array;
+        $this->_items = & $items_array;
     }
 
     function iterate_row($shop_item)
@@ -39,6 +40,21 @@ class ListFunctorShopItems
 
         $thisItem = shopitem_obj_to_array($shop_item);
         $this->_items[] = $thisItem; //append this item to the array
+    }
+}
+
+class ListFunctorUnits
+{
+    public $_units = array();
+
+    function __construct(& $units_array)
+    {
+        $this->_units = & $units_array;
+    }
+
+    function iterate_unit($unit)
+    {
+        $this->_units[] = $unit; //append this item to the array
     }
 }
 
@@ -560,14 +576,9 @@ class CommandHandler extends CommandHandlerBase
         $item_unit_cost = isset($_REQUEST[Command::$arg5]) ? floatval($_REQUEST[Command::$arg5]) : 0.00;
         $item_unit_id = isset($_REQUEST[Command::$arg6]) ? intval($_REQUEST[Command::$arg6]) : 1;
 		$item_ispurchased = isset($_REQUEST[Command::$arg8]) ? intval($_REQUEST[Command::$arg8]) : 0; // 0 or 1
+		$item_isasklater = isset($_REQUEST[Command::$arg9]) ? intval($_REQUEST[Command::$arg9]) : 0; // 0 or 1
 		
-		if (isset ($_REQUEST[Command::$arg9]))
-		{
-			$item->_is_purchased = intval($_REQUEST[Command::$arg9]);
-			$edit_flags = $edit_flags | ShopItem::SHOPITEM_ISPURCHASED;
-		}
-		
-        try
+       try
         {
             $user_ID = -1;
 
@@ -597,7 +608,8 @@ class CommandHandler extends CommandHandlerBase
                     $item_name,
                     $item_unit_cost,
                     $item_quantity,
-                    $item_unit_id
+                    $item_unit_id,
+                    $item_isasklater
                     );
 
 				// Construct a new shop item with the details to return to caller
@@ -611,7 +623,8 @@ class CommandHandler extends CommandHandlerBase
 						$item_unit_cost, 
 						$item_quantity, 
 						$item_unit_id,
-						$item_ispurchased);
+						$item_ispurchased,
+						$item_isasklater);
 				
 				$item_array = array();
 				$item_array[] = shopitem_obj_to_array($newItem);
@@ -699,6 +712,13 @@ class CommandHandler extends CommandHandlerBase
 				$edit_flags = $edit_flags | ShopItem::SHOPITEM_UNITCOST;
 			}
 			
+			// Ask Later
+			if (isset($_REQUEST[Command::$arg10]))
+			{
+				$item->_is_asklater = intval($_REQUEST[Command::$arg10]);
+				$edit_flags = $edit_flags | ShopItem::SHOPITEM_ISASKLATER;
+			}
+			
 			// Item Unit ID
 			if (isset ($_REQUEST[Command::$arg7]))
 			{
@@ -706,11 +726,14 @@ class CommandHandler extends CommandHandlerBase
 				$edit_flags = $edit_flags | ShopItem::SHOPITEM_UNITID;
 			}
 			
+			// Is Purchased?
 			if (isset ($_REQUEST[Command::$arg9]))
 			{
 				$item->_is_purchased = intval($_REQUEST[Command::$arg9]);
 				$edit_flags = $edit_flags | ShopItem::SHOPITEM_ISPURCHASED;
 			}
+			
+			
 
 			if ($edit_flags == 0)
 				throw new Exception ("Nothing to Edit");
@@ -947,6 +970,50 @@ class CommandHandler extends CommandHandlerBase
 
              echo(json_encode($arr));
         }
+	}
+
+	public static function do_get_units()
+	{
+		try
+		{
+			$user_ID = -1;
+			
+            if (isset($_SESSION['USER_ID']))
+			{
+                $user_ID = $_SESSION['USER_ID'];
+			}
+            else
+            {
+                $user_ID = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
+            }
+			
+			$unit_type = isset($_REQUEST['arg1']) ? intval($_REQUEST['arg1']) : 0;
+			
+            if ($user_ID <= 0 || $unit_type <= 0) 
+            {
+                throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+            }
+			
+            $noteit_db = NoteItDB::login_user_id($user_ID);
+			$units = array();
+			$functor = new ListFunctorUnits($units);
+			$noteit_db->list_units($unit_type, $functor, 'iterate_unit');
+			
+            $arr = array(
+                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
+                 JSONCodes::kRetMessage => "",
+                 Command::$arg1 => $units);
+			
+			echo(json_encode($arr));
+		}
+		catch (exception $e)
+		{
+            $arr = array(
+                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
+                 JSONCodes::kRetMessage => $e->getMessage());
+
+             echo(json_encode($arr));
+		}
 	}
 } // class CommandHandler
 	

@@ -53,7 +53,7 @@ class ShopListTable extends TableBase
 		}
 		
 		if ($result)
-			mysqli_free_result($result);
+			$result->free();
 	}
 	
 	function add_list($list_name)
@@ -63,7 +63,7 @@ class ShopListTable extends TableBase
 				parent::GetTableName(), 
 				self::kCol_ListName, 
 				self::kCol_UserID, 
-				mysql_escape_string($list_name),
+				$this->get_db_con()->escape_string($list_name),
 				parent::GetUserID());
 	//	echo($sql);
         
@@ -92,7 +92,7 @@ class ShopListTable extends TableBase
 		$sql = sprintf(
 				"UPDATE %s SET `listName`='%s' WHERE `listID`=%d AND `userID_FK`=%d", 
 				parent::GetTableName(),
-				mysql_real_escape_string($list_name),
+				$this->get_db_con()->escape_string($list_name),
 				$list_ID,
 				$this->GetUserID());
 		$result = $this->get_db_con()->query($sql);

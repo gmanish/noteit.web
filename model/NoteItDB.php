@@ -12,6 +12,22 @@ const kColUserEmail 		= 'emailID';
 const kColUserFirstName		= 'firstName';
 const kColUserLastName		= 'lastName';
 
+class Unit
+{
+	public $unitID = 0;
+	public $unitName = "";
+	public $unitAbbreviation = "";
+	public $unitType = 1; // Default Metric System
+	
+	public function __construct($unitID, $unitName, $unitAbbreviation, $unitType)
+	{
+		$this->unitID = $unitID;
+		$this->unitName = $unitName;
+		$this->unitAbbreviation = $unitAbbreviation;
+		$this->unitType = $unitType;
+	}
+}
+
 class NoteItDB extends DbBase
 {
 	protected $db_userID;
@@ -36,7 +52,7 @@ class NoteItDB extends DbBase
 		{
 			$row = $result->fetch_array();
 			$this->db_username = $row['firstName'] . " " . $row['lastName'];
-			mysqli_free_result($result);
+			$result->free();
 		}
         else throw new Exception("Invalid user credentials: " . $this->get_db_con()->error);
  	}
@@ -88,7 +104,7 @@ class NoteItDB extends DbBase
 					kColUserEmail, 
 					kTableUsers, 
 					kColUserEmail, 
-					mysql_real_escape_string($emailID));
+					$db_con->escape_string($emailID));
 			
 			NI::TRACE("NoteItDb::register_user: sql = " . $sql, __FILE__, __LINE__);
 
@@ -100,9 +116,7 @@ class NoteItDB extends DbBase
             }
             
 			if ($result)
-			{
-				mysqli_free_result($result);
-			}
+				$result->free();
 			
 			// try of register this user
 			$sql = sprintf("INSERT INTO `%s` (`%s`,`%s`,`%s`) VALUES ('%s', '%s', '%s')", 
@@ -110,9 +124,9 @@ class NoteItDB extends DbBase
 					kColUserEmail, 
 					kColUserFirstName, 
 					kColUserLastName,
-					mysql_real_escape_string($emailID),
-					mysql_real_escape_string($firstName),
-					mysql_real_escape_string($lastName));
+					$db_con->escape_string($emailID),
+					$db_con->escape_string($firstName),
+					$db_con->escape_string($lastName));
 			
 			$result = $db_con->query($sql);
 			if ($result == FALSE)
@@ -149,18 +163,19 @@ class NoteItDB extends DbBase
 				"SELECT `userID` FROM `%s` WHERE `%s`='%s'", 
 				kTableUsers, 
 				kColUserEmail, 
-				mysql_escape_string($user_email));
+				$db_con->escape_string($user_email));
 		$result = $db_con->query($sql);
 		if ($result && mysqli_num_rows($result) == 1) // There should be one and only one user by this email ID
 		{
 			$row = $result->fetch_array();
-
             $noteit_db = new NoteItDB($row[kColUserID]);
             $result->free();
 			return $noteit_db;
 		}
 		else
 		{
+			if ($result)
+				$result->free();
 			throw new Exception("User email or password is incorrect");
 		}
 	}
@@ -176,7 +191,7 @@ class NoteItDB extends DbBase
 //			echo('Country: ' . $xml->Country);
 			//. $xml->Ip . $xml->Country . $xml->City . $xml->Code . $xml->Country . $xml->Isp . $xml->Lat . $xml->Lng;
 	        $db_con = new MySQLi(kServer, kUserName, kPassword, kDatabaseName);
-			$sql = 'SELECT `countryID` FROM `countryTable` WHERE countryName="' . $xml->Country . '"';
+			$sql = 'SELECT `countryID` FROM `countryTable` WHERE countryName="' . $db_con->escape_string($xml->Country) . '"';
 			
 //			echo('SQL Search: ' . $sql);
 			$result = $db_con->query($sql);
@@ -185,6 +200,7 @@ class NoteItDB extends DbBase
 				// The country is present in our database
 				$row = $result->fetch_array();
 				$country_id = $row['countryID'];
+				$result->free();
 //				echo('Found country in DB. ID=' . $country_id);
 			}
 			else
@@ -209,6 +225,26 @@ class NoteItDB extends DbBase
 		catch (Exception $e)
 		{
 			echo('Unknown Exception' . $e->getMessage());
+		}
+	}
+
+	public function list_units($unit_type, &$functor_obj, $function_name='iterate_unit')
+	{
+		$sql = sprintf("SELECT * FROM `units` WHERE `unitType`=%d OR `unitType`=%d", $unit_type, 0);
+		$result = $this->get_db_con()->query($sql);
+		if ($result || mysqli_num_rows($this->get_db_con()) > 0)
+		{
+			while ($row = $result->fetch_array())
+			{
+				call_user_func(
+					array($functor_obj, $function_name), // invoke the callback function
+					new Unit($row[0], $row[1], $row[2], $row[3]));
+			}
+			$result->free();
+		}
+		else 
+		{
+			throw new Exception("Error Processing Request (" . __FILE__ . __LINE__ . ")");
 		}
 	}
 }
