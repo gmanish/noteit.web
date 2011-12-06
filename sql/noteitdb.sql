@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS `users`(
 # -----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `shoplists`(
   `listID` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `listName` VARCHAR(25) NOT NULL,
+  `listName` VARCHAR(50) NOT NULL,
   `userID_FK` INT(11) UNSIGNED NOT NULL,
   PRIMARY KEY (`listID`),
   KEY `ref_userID_FK` (`userID_FK`),
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS `shoplists`(
 # -----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `shopitemcategories`(
   `categoryID` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `categoryName` VARCHAR(25) NOT NULL,
+  `categoryName` VARCHAR(50) NOT NULL,
   `userID_FK` INT(11) UNSIGNED NOT NULL,
   PRIMARY KEY (`userID_FK`, `categoryName`),
   UNIQUE KEY `categoryID_UNIQUE` (`categoryID`),
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS `shopitemcategories`(
 # -----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `shopitemscatalog`(
   `itemID` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `itemName` VARCHAR(25) NOT NULL,
+  `itemName` VARCHAR(50) NOT NULL,
   `itemPrice` DECIMAL(11, 2) UNSIGNED DEFAULT NULL,
   `userID_FK` INT(11) UNSIGNED NOT NULL,
   `categoryID_FK` INT(11) UNSIGNED NOT NULL,
@@ -73,17 +73,19 @@ CREATE TABLE IF NOT EXISTS `shopitemscatalog`(
 # -----------------------------------------------------------------
 # Create the `shopitems` table
 # -----------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `shopitems`(
-  `instanceID` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `userID_FK` INT(11) UNSIGNED NOT NULL,
-  `itemID_FK` INT(11) UNSIGNED NOT NULL,
-  `dateAdded` DATE NOT NULL,
-  `datePurchased` DATE DEFAULT NULL,
-  `listID_FK` INT(11) UNSIGNED NOT NULL,
-  `unitCost` DECIMAL(11, 2) UNSIGNED ZEROFILL DEFAULT NULL COMMENT 'Cost per unit. So:\\n   total cost = cost  X quantity',
-  `quantity` DECIMAL(11, 2) UNSIGNED ZEROFILL DEFAULT NULL,
-  `unitID_FK` INT(10) UNSIGNED NOT NULL,
-  `categoryID_FK` INT(11) UNSIGNED NOT NULL,
+CREATE TABLE IF NOT EXISTS`shopitems` (
+  `instanceID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `userID_FK` int(11) unsigned NOT NULL,
+  `itemID_FK` int(11) unsigned NOT NULL,
+  `dateAdded` date NOT NULL,
+  `datePurchased` date DEFAULT NULL,
+  `listID_FK` int(11) unsigned NOT NULL,
+  `unitCost` decimal(11,2) unsigned zerofill DEFAULT NULL COMMENT 'Cost per unit. So:\\n   total cost = cost  X quantity',
+  `quantity` decimal(11,2) unsigned zerofill DEFAULT NULL,
+  `unitID_FK` int(10) unsigned NOT NULL,
+  `categoryID_FK` int(11) unsigned NOT NULL DEFAULT '0',
+  `isPurchased` tinyint(1) DEFAULT '0',
+  `isAskLater` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`instanceID`),
   UNIQUE KEY `instanceID_UNIQUE` (`instanceID`),
   KEY `Ref_01_FK` (`userID_FK`),
@@ -96,16 +98,18 @@ CREATE TABLE IF NOT EXISTS `shopitems`(
   CONSTRAINT `Ref_03_FK` FOREIGN KEY (`listID_FK`) REFERENCES `shoplists` (`listID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `Ref_04_FK` FOREIGN KEY (`unitID_FK`) REFERENCES `units` (`unitID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `Ref_05_FK` FOREIGN KEY (`categoryID_FK`) REFERENCES `shopitemcategories` (`categoryID`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE = INNODB DEFAULT CHARSET = latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-# -----------------------------------------------------------------
-# Create the procedure `add_category`
-# -----------------------------------------------------------------
+-- --------------------------------------------------------------------------------
+-- Routine DDL
+-- --------------------------------------------------------------------------------
 DELIMITER //
-CREATE 
-  DEFINER = `root`@`localhost` 
-  PROCEDURE `add_category`(IN `categoryName` VARCHAR(25), IN `userID` INT)
-BEGIN
+
+CREATE DEFINER=`root`@`localhost` FUNCTION `add_category`(
+  `categoryName` VARCHAR(25), 
+  `userID` INT) RETURNS int(11)
+   DETERMINISTIC
+ BEGIN
   
   DECLARE newIndex INT;
   
@@ -115,6 +119,8 @@ BEGIN
 
   INSERT INTO shopitemcategories (categoryID, categoryName, userID_FK) 
   VALUES (newIndex, categoryName, userID);
+
+  return newIndex;
 
 END
 //
@@ -131,7 +137,8 @@ CREATE
     `inItemName` VARCHAR(50),
     `unitCost` DECIMAL(11, 2),
     `quantity` DECIMAL(11, 2),
-    `unitID` INT) 
+    `unitID` INT,
+    `isAskLater` TINYINT) 
   RETURNS INT(11)
   DETERMINISTIC
   COMMENT 'Adds a new item in the shopping list. Returns ID of the new Item. NOTE: The item must already be present in the shopitemscatalog or should be added there as well.'
@@ -165,8 +172,9 @@ BEGIN
       `unitCost`, 
       `quantity`, 
       `unitID_FK`, 
-      `categoryID_FK`) 
-  VALUES (userID, thisItemID, curdate(), listID, unitCost, quantity, unitID, categoryID);
+      `categoryID_FK`,
+      `isAskLater`) 
+  VALUES (userID, thisItemID, curdate(), listID, unitCost, quantity, unitID, categoryID, isAskLater);
 
   RETURN @@last_insert_id;
 END
@@ -210,13 +218,22 @@ CREATE
     list_ID INT,
     user_ID INT)
 BEGIN
-  -- Delete all items contained in this list.
-  DELETE shoplists, shopitems
-  FROM shoplists
-  LEFT JOIN shopitems
-  ON shoplists.listID = shopitems.listID_FK
-    AND shoplists.userID_FK = shopitems.userID_FK
-  WHERE shoplists.listID = list_ID AND shoplists.userID_FK = user_ID;
+DELETE 
+
+FROM shopitems
+WHERE shopitems.userID_FK = user_ID AND shopitems.`listID_FK` = list_ID;
+
+DELETE 
+FROM shoplists
+WHERE shoplists.`listID` = list_ID AND shoplists.`userID_FK` = user_ID;
+
+-- Delete all items contained in this list.
+-- DELETE shopitems, shoplists
+--  FROM shopitems
+--  LEFT JOIN shoplists
+--  ON shopitems.listID_FK = shoplists.listID
+--    AND shopitems.userID_FK = shoplists.userID_FK
+--  WHERE shoplists.listID = list_ID AND shoplists.userID_FK = user_ID;
 
 END
 //
@@ -269,28 +286,31 @@ INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALU
 #
 # NOTE: Keep this list sorted alphabetically
 # -----------------------------------------------------------------
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Apparel & Jewelry', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Bath & Beauty', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Baby Supplies', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Beverages', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Books & Magazines', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Breakfast & Cereals', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Condiments', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Dairy', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Electronics & Computers', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Everything Else', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Frozen Foods', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Fruits', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Furniture', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Games', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Housewares', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Meat & Fish', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Medical', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Mobiles & Cameras', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Music', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Movies', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Pet Supplies', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Snacks & Candy', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Supplies', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Toys & Hobbies', 1);
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`) VALUES ('Vegetables', 1);
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`)
+VALUES
+	('Uncategorized', 1),
+	('Apparel & Jewelry', 1),
+	('Bath & Beauty', 1),
+	('Baby Supplies', 1),
+	('Beverages', 1),
+	('Books & Magazines', 1),
+	('Breakfast & Cereals', 1),
+	('Condiments', 1),
+	('Dairy', 1),
+	('Electronics & Computers', 1),
+	('Everything Else', 1),
+	('Frozen Foods', 1),
+	('Fruits', 1),
+	('Furniture', 1),
+	('Games', 1),
+	('Housewares', 1),
+	('Meat & Fish', 1),
+	('Medical', 1),
+	('Mobiles & Cameras', 1),
+	('Music', 1),
+	('Movies', 1),
+	('Pet Supplies', 1),
+	('Snacks & Candy', 1),
+	('Supplies', 1),
+	('Toys & Hobbies', 1),
+	('Vegetables', 1);

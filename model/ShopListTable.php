@@ -1,5 +1,5 @@
 <?php
-require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . "noteit.web/model/TableBase.php";
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . "TableBase.php";
 
 class ListFunctorShopList
 {
@@ -7,7 +7,7 @@ class ListFunctorShopList
 
     function __construct(& $shoplist_array)
     {
-        $_shoplist = & $shoplist_array;
+        $this->_shoplist = & $shoplist_array;
     }
 
     public function iterate_row($list_id, $list_name)
@@ -35,8 +35,10 @@ class ShopListTable extends TableBase
 	
 	function list_all(&$functor_obj, $function_name='iterate_row')
 	{
-		$sql = "SELECT * FROM " . parent::GetTableName();
-		$sql = $sql . " WHERE userID_FK=" . parent::GetUserID();
+		$sql = sprintf(
+				"SELECT * FROM `%s` WHERE `userID_FK`=%d", 
+				parent::GetTableName(),
+				parent::GetUserID());
 		
 		$result = $this->get_db_con()->query($sql);
 		if ($result == FALSE)
@@ -51,14 +53,18 @@ class ShopListTable extends TableBase
 		}
 		
 		if ($result)
-			mysqli_free_result($result);
+			$result->free();
 	}
 	
 	function add_list($list_name)
 	{
-		$sql = "INSERT INTO " . parent::GetTableName() . " (`";
-		$sql = $sql . self::kCol_ListName . "`, `" . self::kCol_UserID . "`) ";
-		$sql = $sql . "VALUES ('" . $list_name . "', " . parent::GetUserID() . ")";
+		$sql = sprintf(
+				"INSERT INTO `%s` (`%s` , `%s`) VALUES ('%s', %d)", 
+				parent::GetTableName(), 
+				self::kCol_ListName, 
+				self::kCol_UserID, 
+				$this->get_db_con()->escape_string($list_name),
+				parent::GetUserID());
 	//	echo($sql);
         
 		$result = $this->get_db_con()->query($sql);
@@ -71,12 +77,27 @@ class ShopListTable extends TableBase
 	// [TODO] : Make this a transaction
 	function remove_list($list_ID)
 	{
-        $sql = "call delete_shopping_list(" . $list_ID . ", " . $this->GetUserID() . ")";
-//        echo($sql);
+        $sql = sprintf(
+				"call delete_shopping_list(%d, %d)",
+				$list_ID, 
+				$this->GetUserID());
 		$result = $this->get_db_con()->query($sql);
 		if ($result == FALSE)
 			throw new Exception("Database operaion failed (" . __FILE__ . __LINE__ . "): " . $this->get_db_con()->error .
                 "\nActual SQL: " . $sql);
+	}
+	
+	function edit_list($list_ID, $list_name)
+	{
+		$sql = sprintf(
+				"UPDATE %s SET `listName`='%s' WHERE `listID`=%d AND `userID_FK`=%d", 
+				parent::GetTableName(),
+				$this->get_db_con()->escape_string($list_name),
+				$list_ID,
+				$this->GetUserID());
+		$result = $this->get_db_con()->query($sql);
+		if ($result == FALSE)
+			throw new Exception ("Failed to rename list: " . $sql);
 	}
 }
 ?>
