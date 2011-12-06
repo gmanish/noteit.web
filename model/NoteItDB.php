@@ -6,17 +6,18 @@ require_once( $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . "noteit.web/mode
 require_once( $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . "noteit.web/model/ShopItems.php");
 require_once( $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . "FirePHPCore/fb.PHP");
 
-// Name of users Table columns
-const kTableUsers 			= 'users';
-const kColUserID 			= 'userID';
-const kColUserEmail 		= 'emailID';
-const kColUserFirstName		= 'firstName';
-const kColUserLastName		= 'lastName';
 
 
 
 class NoteItDB extends DbBase
 {
+    // Name of users Table columns
+    const kTableUsers 			= 'users';
+    const kColUserID 			= 'userID';
+    const kColUserEmail 		= 'emailID';
+    const kColUserFirstName		= 'firstName';
+    const kColUserLastName		= 'lastName';
+
 	protected $db_userID;
 	protected $db_username;
 	protected $shop_list_db;
