@@ -1,20 +1,56 @@
+<?php 
+require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . '../lib/NoteItCommon.php'); 
+?>
+
 <div class="header">
+	
 	<div class="fltlft" style="padding:10px; height:96px;">
-    	<img height="96px" width="96px" src=<?php
-		echo("'http://" . $_SERVER["SERVER_NAME"] . "/noteit.web/img/ic_launcher.png'"); ?> />
+    	
+    	<img height="96px" 
+    		width="96px" 
+    		src="<?php echo(get_virtual_path("img/ic_launcher.png")); ?>"
+    		/>
 	</div>
+	
 	<div class="fltrt loginBar loginBarText">
-		<form id="loginbar" name="formLogin" method="post" action="http://localhost/noteit.web/controller/AppController.php">
-			<input type="hidden" name=<?php echo Command::$tag ?> value=<?php echo Handler::$do_login ?> />
-			<input id="txtLoginName" name="email_ID" value="Email id" class="loginBarText" 
+		
+		<form 
+			id="loginbar" 
+			name="formLogin" 
+			method="post" 
+			action="<?php echo(get_virtual_path("controller/AppController.php")); ?>">
+			
+			<input 
+				type="hidden" 
+				name=<?php echo Command::$tag ?> 
+				value=<?php echo Handler::$do_login ?> />
+				
+			<input 
+				id="txtLoginName" 
+				name="email_ID" 
+				value="Email id" 
+				class="loginBarText" 
             	onfocus="if(this.value=='Email id')this.value='';"/>
-			<button id="cmdLogin" tabindex="1" name="submit" type="submit">
+            	
+			<button 
+				id="cmdLogin" 
+				tabindex="1" 
+				name="submit" 
+				type="submit">
+				
 				<span class="loginBarText">Log In</span>
-			</button>            
+				
+			</button>
+			            
 			&nbsp;
-			<a href="http://localhost/noteit.web/page/Register.php">Sign Up</a>
+			
+			<a href="<?php echo(get_virtual_path("page/Register.php")); ?>">Sign Up</a>
+			
 		</form>
+		
 	</div>
+	
 	<div class="clearfloat">
 	</div>
+	
 </div> <!-- End .header -->

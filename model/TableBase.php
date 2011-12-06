@@ -1,5 +1,5 @@
 <?php
-require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . "noteit.web/model/DBBase.php";
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . "DBBase.php";
 
 class TableBase extends DBBase {
 	protected $col_count = 0;

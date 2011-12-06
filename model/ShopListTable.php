@@ -1,5 +1,5 @@
 <?php
-require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . "noteit.web/model/TableBase.php";
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . "TableBase.php";
 
 class ListFunctorShopList
 {

@@ -33,9 +33,10 @@
 		public static $do_edit_shop_list	= 'do_edit_shop_list';
 
         public static $do_get_categories    = 'do_get_categories';
+        public static $do_get_category      = 'do_get_category';
         public static $do_add_category      = 'do_add_category';
         public static $do_delete_category   = 'do_delete_category';
-        public static $do_get_category      = 'do_get_category';
+		public static $do_edit_category		= 'do_edit_category';
 
         public static $do_list_shop_items   = 'do_list_shop_items';
         public static $do_get_shop_item     = 'do_get_shop_item';
@@ -62,9 +63,9 @@
 	/* A view is that part of the screen that it displayed between the standard 
 	   header (noteitheader.tphp) and the standard footer (noteitfooter.tphp) */
 	static $view_map = array(
-		Views::kView_Home 		=> 'noteit.web/view/Home.tphp',
-		Views::kView_Register	=> 'noteit.web/view/Register.tphp',
-		Views::kView_Dashboard	=> 'noteit.web/view/Dashboard.tphp');
+		Views::kView_Home 		=> '../view/Home.tphp',
+		Views::kView_Register	=> '../view/Register.tphp',
+		Views::kView_Dashboard	=> '../view/Dashboard.tphp');
 		
 	class JSONCodes
 	{

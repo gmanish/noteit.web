@@ -1,6 +1,7 @@
 <?php
 
-require_once ($_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . "noteit.web/model/NoteItDB.php");
+require_once (dirname(__FILE__) . DIRECTORY_SEPARATOR . "../model/NoteItDB.php");
+require_once (dirname(__FILE__) . DIRECTORY_SEPARATOR . "../lib/NoteItCommon.php");
 
 if(isset($_SESSION['USER_ID']))
 	$userID = $_SESSION['USER_ID'];
@@ -48,13 +49,13 @@ const kListHeight=20;
         </select>
         <div class="fltrt">
         <input type="image" 
-        	src=<?php echo("'http://" . $_SERVER["SERVER_NAME"] . "/noteit.web/img/add.png'"); ?>
-        	alt="Add Shopping List"
+        	src="<?php echo(get_virtual_path("img/add.png"));?>"
+        	alt="Add"
         	id="cmdAddShopList">
         <input type="image" 
-        	src=<?php echo("'http://" . $_SERVER["SERVER_NAME"] . "/noteit.web/img/delete.png'"); ?>
+        	src="<?php echo(get_virtual_path("img/delete.png")); ?>"
         	id="cmdRemoveShopList" 
-        	alt="Delete Selected Shopping List">
+        	alt="Delete">
         </div>
     </div> <!-- End Shopping List -->
     <div id="dash_shopCat" class="fltlft" style="width:23%">
@@ -73,13 +74,13 @@ const kListHeight=20;
         </select>
         <div class="fltrt">
         <input type="image" 
-        	src=<?php echo("'http://" . $_SERVER["SERVER_NAME"] . "/noteit.web/img/add.png'"); ?>
-        	alt="Add Category"
+        	src="<?php echo(get_virtual_path("img/add.png")); ?>"
+        	alt="Add"
         	id="cmdAddCategory">
         <input type="image" 
-        	src=<?php echo("'http://" . $_SERVER["SERVER_NAME"] . "/noteit.web/img/delete.png'"); ?>
+        	src="<?php echo(get_virtual_path("img/delete.png")); ?>"
         	id="cmdRemoveCategory" 
-        	alt="Delete Selected Shopping Category">
+        	alt="Delete">
         </div>
     </div> <!-- End Shopping Category -->
     <div id="dash_shopItems" class="fltlft" style="width:23%">
@@ -95,13 +96,13 @@ const kListHeight=20;
         </select>
         <div class="fltrt">
         <input type="image" 
-        	src=<?php echo("'http://" . $_SERVER["SERVER_NAME"] . "/noteit.web/img/add.png'"); ?>
-        	alt="Add Item"
+        	src="<?php echo(get_virtual_path("img/add.png")); ?>"
+        	alt="Add"
         	id="cmdAddItem">
         <input type="image" 
-        	src=<?php echo("'http://" . $_SERVER["SERVER_NAME"] . "/noteit.web/img/delete.png'"); ?>
+        	src="<?php echo(get_virtual_path("img/delete.png")); ?>"
         	id="cmdRemoveItem" 
-        	alt="Delete Selected Item">
+        	alt="Delete">
         </div>    
    	</div> <!-- End Shop Items -->
     <div id="dash_item_detail" class="fltlft" style=:"width:25%">
@@ -134,6 +135,9 @@ const kListHeight=20;
 </div>
 
 <script type="text/javascript">
+	
+	var gurl = "<?php echo(get_virtual_path("controller/AppController.php")); ?>";
+	
 	$(document).ready(function()
 	{
         $('#lst_shop_list').change
@@ -143,9 +147,7 @@ const kListHeight=20;
                 try
                 {
                 var selItemID = $("#lst_shop_list option:selected").val();
-                var url = "http://localhost/noteit.web/controller/AppController.php";
-
-                //alert("About to post to: " + url + " \nShopping List Id: " + selItemID);
+				var url = gurl;
                 $.post
                 (
                     url,
@@ -203,7 +205,7 @@ const kListHeight=20;
                 var item_id = $("#lst_items option:selected").val();
                 if (item_id)
                 {
-                    var url = "http://localhost/noteit.web/controller/AppController.php";
+                    var url = gurl;
                     $.post
                     (
                         url,
@@ -258,7 +260,7 @@ const kListHeight=20;
 				var new_list_name = prompt("Please enter the name of the list:", "");
 				if (new_list_name != null && new_list_name != "")
 				{
-					var url = "http://localhost/noteit.web/controller/AppController.php";
+					var url = gurl;
 					
 					$.post(url,
 						{ command: "do_add_shop_list", arg1: new_list_name },
@@ -308,7 +310,7 @@ const kListHeight=20;
             function()
             {
                 var selItemID = $("#lst_shop_list option:selected").val();
-                var url = "http://localhost/noteit.web/controller/AppController.php";
+                var url = gurl;
 
                 $.post(url,
                     { command: "do_delete_shop_list", arg1: selItemID },
@@ -357,7 +359,7 @@ const kListHeight=20;
 				var new_list_name = prompt("Please enter the name of the category:", "");
 				if (new_list_name != null && new_list_name != "")
 				{
-					var url = "http://localhost/noteit.web/controller/AppController.php";
+					var url = gurl;
 
 					$.post(url,
 						{ command: "do_add_category", arg1: new_list_name },
@@ -407,7 +409,7 @@ const kListHeight=20;
             function()
             {
                 var selItemID = $("#lst_categories option:selected").val();
-                var url = "http://localhost/noteit.web/controller/AppController.php";
+                var url = gurl;
 
                 $.post(url,
                     { command: "do_delete_category", arg1: selItemID },
@@ -468,7 +470,7 @@ const kListHeight=20;
         (
             function()
             {
-                var url = "http://localhost/noteit.web/controller/AppController.php";
+                var url = gurl;
                 $.post
                 (
                     url,
@@ -515,7 +517,7 @@ const kListHeight=20;
             function()
             {
 
-                var url = "http://localhost/noteit.web/controller/AppController.php";
+                var url = gurl;
                 $.post
                 (
                      url,

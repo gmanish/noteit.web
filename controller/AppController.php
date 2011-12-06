@@ -1,8 +1,8 @@
 <?php
-        require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/controller/ControllerDefines.php");
-        require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/controller/CommandHandler.php");
+    require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . ("ControllerDefines.php");
+    require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . ("CommandHandler.php");
 
-        if (session_id() == "") 
+    if (session_id() == "") 
 	{
 		session_start();
 	}

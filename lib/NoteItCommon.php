@@ -1,5 +1,7 @@
 <?php
 
+require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . '../config/config.php');
+
 if (!class_exists('NI'))
 {
     class NI
@@ -17,6 +19,16 @@ if (!class_exists('NI'))
             echo($str . " (File: " . $file . " Line: " . $line . ")<br />");
         }
     }
+}
+
+if (!function_exists("base"))
+{
+	function get_virtual_path($tail = '')
+	{
+		global $config;
+		return 'http://' . $_SERVER['SERVER_NAME'] . 
+			DIRECTORY_SEPARATOR . $config['APP_DIR'] . DIRECTORY_SEPARATOR . $tail;			
+	}
 }
 
 ?>

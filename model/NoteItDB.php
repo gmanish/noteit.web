@@ -1,9 +1,11 @@
 <?php
-require_once( $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . "noteit.web/lib/NoteItCommon.php");
-require_once( $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . "noteit.web/model/DbBase.php");
-require_once( $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . "noteit.web/model/ShopListTable.php");
-require_once( $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . "noteit.web/model/CategoryTable.php");
-require_once( $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . "noteit.web/model/ShopItems.php");
+require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "../lib/NoteItCommon.php");
+if (!file_exists(dirname(__FILE__) . DIRECTORY_SEPARATOR . "DbBase.php"))
+	echo "What the fuck!";
+require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "DbBase.php");
+require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "ShopListTable.php");
+require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "CategoryTable.php");
+require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "ShopItems.php");
 
 // Name of users Table columns
 const kTableUsers 			= 'users';
@@ -248,3 +250,4 @@ class NoteItDB extends DbBase
 		}
 	}
 }
+?>

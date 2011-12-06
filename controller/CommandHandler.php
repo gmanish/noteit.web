@@ -1,7 +1,7 @@
 <?php
 	
-require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/controller/ControllerDefines.php");
-require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/model/NoteItDB.php");
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . ("ControllerDefines.php");
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../model/NoteItDB.php");
 
 // [TODO] : Research if there is a better way to do this
 function shopitem_obj_to_array($shop_item_obj)
@@ -68,7 +68,7 @@ class CommandHandlerBase
     {
         global $view_map;
 
-        require_once($_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/view/htmlHeader.tphp"));
+        require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/htmlHeader.tphp"));
 
         if ($handler_exit_status == HandlerExitStatus::kCommandStatus_Error)
         {
@@ -89,14 +89,14 @@ class CommandHandlerBase
             echo "</div>";
         }
 
-        require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/view/htmlHeader.tphp");
-        require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/view/noteitBodyBegin.tphp");
-        require_once($_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/view/noteitheader.tphp"));
-        require_once($_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/view/noteitheader.tphp"));
-        require_once($_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ($view_map[$view_ID]));
-        require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/view/noteitfooter.tphp");
-        require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/view/noteitBodyEnd.tphp");
-        require_once $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . ("noteit.web/view/htmlfooter.tphp");
+        require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/htmlHeader.tphp"));
+        require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/noteitBodyBegin.tphp"));
+        require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/noteitheader.tphp"));
+        require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/noteitheader.tphp"));
+        require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ($view_map[$view_ID]));
+        require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/noteitfooter.tphp"));
+        require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/noteitBodyEnd.tphp"));
+        require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/htmlfooter.tphp"));
     }
 
     public function redirect_to_url(
@@ -400,6 +400,52 @@ class CommandHandler extends CommandHandlerBase
             echo(json_encode($arr));
         }
     }
+
+	public static function do_edit_category()
+	{
+		try
+		{
+            $user_ID = -1;
+
+            if (isset($_SESSION['USER_ID']))
+                $user_ID = $_SESSION['USER_ID'];
+            else
+            {
+                $user_ID = isset($_REQUEST[Command::$arg3]) ? intval($_REQUEST[Command::$arg3]) : 0;
+                if ($user_ID == 0) {
+                    throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+                }
+            }
+
+			$category_id = isset($_REQUEST[Command::$arg1]) ? intval($_REQUEST[Command::$arg1]) : 0;
+			$category_name = $_REQUEST[Command::$arg2];
+			
+			if ($user_ID <= 0 || $category_id <= 0 || $category_name == "")
+				throw new Exception("Error Processing Request" . "(" . __FILE__ . __LINE__ . ")");
+				
+            $noteit_db = NoteItDB::login_user_id($user_ID);
+			$category = new Category($category_id, $user_ID, $category_name);
+
+			$noteit_db->get_catlist_table()->edit_category(Category::CATEGORY_NAME, $category);
+			
+           $noteit_db = NULL;
+
+            // Form a JSON string
+            $arr = array(
+                JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
+                JSONCodes::kRetMessage => "");
+
+            echo(json_encode($arr));
+		}
+		catch (Exception $e)
+		{
+            $arr = array(
+                JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
+                JSONCodes::kRetMessage => $e->getMessage());
+
+            echo(json_encode($arr));
+		}
+	}
 
    /*  This function is called asynchronously. It's important to note that all output
         from this function should be JSON encoded. No returning HTML headers and Tags.

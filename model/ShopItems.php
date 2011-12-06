@@ -1,6 +1,6 @@
 <?php
-require_once $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'noteit.web/lib/NoteItCommon.php';
-require_once $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'noteit.web/model/TableBase.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '../lib/NoteItCommon.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'TableBase.php';
 
 
 class ShopItem
@@ -364,3 +364,4 @@ class ShopItems extends TableBase
 		return $new_itemid;
 	}
 }
+?>
