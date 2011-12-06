@@ -100,14 +100,16 @@ CREATE TABLE IF NOT EXISTS`shopitems` (
   CONSTRAINT `Ref_05_FK` FOREIGN KEY (`categoryID_FK`) REFERENCES `shopitemcategories` (`categoryID`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-# -----------------------------------------------------------------
-# Create the procedure `add_category`
-# -----------------------------------------------------------------
+-- --------------------------------------------------------------------------------
+-- Routine DDL
+-- --------------------------------------------------------------------------------
 DELIMITER //
-CREATE 
-  DEFINER = `root`@`localhost` 
-  PROCEDURE `add_category`(IN `categoryName` VARCHAR(25), IN `userID` INT)
-BEGIN
+
+CREATE DEFINER=`root`@`localhost` FUNCTION `add_category`(
+  `categoryName` VARCHAR(25), 
+  `userID` INT) RETURNS int(11)
+   DETERMINISTIC
+ BEGIN
   
   DECLARE newIndex INT;
   
@@ -117,6 +119,8 @@ BEGIN
 
   INSERT INTO shopitemcategories (categoryID, categoryName, userID_FK) 
   VALUES (newIndex, categoryName, userID);
+
+  return newIndex;
 
 END
 //

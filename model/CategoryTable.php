@@ -81,16 +81,18 @@ class CategoryTable extends TableBase
     function add_category($category_name)
     {
         $sql = sprintf(
-				"call add_category('%s', %d)", 
+				"SELECT add_category('%s', %d)", 
 				$this->get_db_con()->escape_string($category_name), 
 				parent::GetUserID());
 
         NI::TRACE($sql, __FILE__,  __LINE__);
         $result = $this->get_db_con()->query($sql);
-        if ($result == FALSE)
+        if ($result == FALSE || mysqli_num_rows($result) <= 0)
 	    	throw new Exception("SQL exec failed (" . __FILE__ . __LINE__ . "): " . $this->get_db_con()->error);
 			
-        return $this->get_db_con()->insert_id;
+       	$row = $result->fetch_row();
+		$result->free();
+		return $row[0];
     }
 
     function remove_category($category_ID)
