@@ -1,7 +1,5 @@
 <?php
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "../lib/NoteItCommon.php");
-if (!file_exists(dirname(__FILE__) . DIRECTORY_SEPARATOR . "DbBase.php"))
-	echo "What the fuck!";
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "DbBase.php");
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "ShopListTable.php");
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "CategoryTable.php");
@@ -87,6 +85,7 @@ class NoteItDB extends DbBase
     
 	public static function register_user($userName, $emailID, $firstName, $lastName)
 	{
+        global $config;
 		if (is_null($firstName) || is_null($lastName) || is_null($emailID))
 			throw new Exception("Please fill all required fields.");
 			
@@ -94,8 +93,8 @@ class NoteItDB extends DbBase
 			throw new Exception("Please provide a valid email id");
 		
 		try
-		{	
-            $db_con = new MySQLi(kServer, kUserName, kPassword, kDatabaseName);
+		{
+            $db_con = new MySQLi($config['MYSQL_SERVER'], $config['MYSQL_USER'], $config['MYSQL_PASSWD'], $config['MYSQL_DB']);
              if ($db_con->connect_error)
                  throw new Exception('Could not connect to Server: ' . $db_con->error);
             else
@@ -104,9 +103,9 @@ class NoteItDB extends DbBase
 			// Email ID is already registered??
 			$sql = sprintf(
 					"SELECT %s FROM %s WHERE %s='%s'", 
-					kColUserEmail, 
-					kTableUsers, 
-					kColUserEmail, 
+					self::kColUserEmail,
+					self::kTableUsers,
+					self::kColUserEmail,
 					$db_con->escape_string($emailID));
 			
 			NI::TRACE("NoteItDb::register_user: sql = " . $sql, __FILE__, __LINE__);
@@ -123,10 +122,10 @@ class NoteItDB extends DbBase
 			
 			// try of register this user
 			$sql = sprintf("INSERT INTO `%s` (`%s`,`%s`,`%s`) VALUES ('%s', '%s', '%s')", 
-					kTableUsers, 
-					kColUserEmail, 
-					kColUserFirstName, 
-					kColUserLastName,
+					self::kTableUsers,
+					self::kColUserEmail,
+					self::kColUserFirstName,
+					self::kColUserLastName,
 					$db_con->escape_string($emailID),
 					$db_con->escape_string($firstName),
 					$db_con->escape_string($lastName));
@@ -151,10 +150,11 @@ class NoteItDB extends DbBase
 	// Returns self on true
 	public static function &login_user_email($user_email)
 	{
+        global $config;
 		if (!filter_var($user_email, FILTER_VALIDATE_EMAIL))
 			throw new Exception("Please provide a valid email id");
 
-        $db_con = new MySQLi(kServer, kUserName, kPassword, kDatabaseName);
+        $db_con = new MySQLi($config['MYSQL_SERVER'], $config['MYSQL_USER'], $config['MYSQL_PASSWD'], $config['MYSQL_DB']);
         /*
          * Use this instead of $db_con->connect_error if you need to ensure
          * compatibility with PHP versions prior to 5.2.9 and 5.3.0.
@@ -164,14 +164,14 @@ class NoteItDB extends DbBase
 
  		$sql = sprintf(
 				"SELECT `userID` FROM `%s` WHERE `%s`='%s'", 
-				kTableUsers, 
-				kColUserEmail, 
+				self::kTableUsers,
+				self::kColUserEmail,
 				$db_con->escape_string($user_email));
 		$result = $db_con->query($sql);
 		if ($result && mysqli_num_rows($result) == 1) // There should be one and only one user by this email ID
 		{
 			$row = $result->fetch_array();
-            $noteit_db = new NoteItDB($row[kColUserID]);
+            $noteit_db = new NoteItDB($row[self::kColUserID]);
             $result->free();
 			return $noteit_db;
 		}
@@ -193,7 +193,7 @@ class NoteItDB extends DbBase
 //			echo('Country Code: ' . $xml->Code);
 //			echo('Country: ' . $xml->Country);
 			//. $xml->Ip . $xml->Country . $xml->City . $xml->Code . $xml->Country . $xml->Isp . $xml->Lat . $xml->Lng;
-	        $db_con = new MySQLi(kServer, kUserName, kPassword, kDatabaseName);
+	        $db_con = new MySQLi($config['MYSQL_SERVER'], $config['MYSQL_USER'], $config['MYSQL_PASSWD'], $config['MYSQL_DB']);
 			$sql = 'SELECT `countryID` FROM `countryTable` WHERE countryName="' . $db_con->escape_string($xml->Country) . '"';
 			
 //			echo('SQL Search: ' . $sql);

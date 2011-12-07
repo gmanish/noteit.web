@@ -29,7 +29,6 @@ class ListFunctorCategoryListHTML
 	}
 }
 
-const kListHeight=20;
 ?>
 
 <div id="DashboardPanels" style="padding:5px;">

@@ -1,9 +1,6 @@
 <?php
-defined('kServer') or define('kServer', '127.0.0.1');
-defined('kUserName') or define('kUserName', 'root');
-defined('kPassword') or define('kPassword', 'pass123');
-defined('kDatabaseName') or define('kDatabaseName', 'noteitdb');
 
+require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . '../config/config.php');
 if(class_exists('DbBase') != TRUE)
 {
     class DbBase
@@ -28,9 +25,10 @@ if(class_exists('DbBase') != TRUE)
 
         public function get_db_con()
         {
+            global $config;
             if ($this->db_con == NULL)
             {
-                $this->db_con = new MySQLi(kServer, kUserName, kPassword, kDatabaseName);
+                $this->db_con = new MySQLi($config['MYSQL_SERVER'], $config['MYSQL_USER'], $config['MYSQL_PASSWD'], $config['MYSQL_DB']);
                 if ($this->db_con->connect_error)
                 {
                     throw new Exception('Could not connect to Server: ' . $this->db_con->error);
