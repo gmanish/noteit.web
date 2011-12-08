@@ -1,5 +1,5 @@
 <?php
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . "DBBase.php";
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . "dbbase.php";
 
 class TableBase extends DBBase {
 	protected $col_count = 0;

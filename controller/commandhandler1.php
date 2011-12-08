@@ -1,7 +1,7 @@
 <?php
 	
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . ("ControllerDefines.php");
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../model/NoteItDB.php");
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . ("controllerdefines.php");
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../model/noteitdb.php");
 
 // [TODO] : Research if there is a better way to do this
 function shopitem_obj_to_array($shop_item_obj)
@@ -68,7 +68,7 @@ class CommandHandlerBase
     {
         global $view_map;
 
-        require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/htmlHeader.tphp"));
+        require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/htmlheader.tphp"));
 
         if ($handler_exit_status == HandlerExitStatus::kCommandStatus_Error)
         {
@@ -89,13 +89,13 @@ class CommandHandlerBase
             echo "</div>";
         }
 
-        require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/htmlHeader.tphp"));
-        require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/noteitBodyBegin.tphp"));
+        require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/htmlheader.tphp"));
+        require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/noteitbodybegin.tphp"));
         require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/noteitheader.tphp"));
         require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/noteitheader.tphp"));
         require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ($view_map[$view_ID]));
         require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/noteitfooter.tphp"));
-        require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/noteitBodyEnd.tphp"));
+        require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/noteitbodyend.tphp"));
         require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/htmlfooter.tphp"));
     }
 

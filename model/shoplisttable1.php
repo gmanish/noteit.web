@@ -1,5 +1,5 @@
 <?php
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . "TableBase.php";
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . "tablebase.php";
 
 class ListFunctorShopList
 {

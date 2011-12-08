@@ -1,6 +1,6 @@
 <?php
-    require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . ("ControllerDefines.php");
-    require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . ("CommandHandler.php");
+    require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . ("controllerdefines.php");
+    require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . ("commandhandler.php");
 
     if (session_id() == "") 
 	{

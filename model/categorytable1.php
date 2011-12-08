@@ -1,6 +1,6 @@
 <?php
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . "../lib/NoteItCommon.php";
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . "TableBase.php";
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . "../lib/noteitcommon.php";
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . "tablebase.php";
 
 if(class_exists('ListFunctorCategoryList') != TRUE)
 {
