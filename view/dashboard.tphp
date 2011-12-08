@@ -10,8 +10,7 @@ else
 $noteit_db = NoteItDB::login_user_id($userID);
 
 
-class ListFunctorShopListHTML
-{
+class ListFunctorShopListHTML {
 	public function iterate_row($list_id, $list_name)
 	{
 		echo "<option value=$list_id>";
@@ -20,8 +19,7 @@ class ListFunctorShopListHTML
 	}
 }
 
-class ListFunctorCategoryListHTML
-{
+class ListFunctorCategoryListHTML {
 	public function iterate_row($category_ID, $category_Name, $user_ID)
 	{
 		echo "<option value='$category_ID'>$category_Name</option>";
