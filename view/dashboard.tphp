@@ -169,7 +169,7 @@ class ListFunctorCategoryListHTML {
                             }
                             else if (JSONObject.JSONRetVal != 0)
                             {
-                                throw JSONObject.JSONRetMessage;
+								throw new Error(JSONObject.JSONRetMessage);
                             }
 
                             $("#lst_items").html(listStr);
@@ -177,7 +177,7 @@ class ListFunctorCategoryListHTML {
                         catch(err)
                         {
                             txt = "There was an error on this page.\n\n";
-                            txt += "Error description: " + err.description + "\n\n";
+                            txt += "Error description: " + err.message + "\n\n";
                             txt += "Click OK to continue.\n\n";
                             alert(txt);
                         }
@@ -187,7 +187,7 @@ class ListFunctorCategoryListHTML {
                 catch(err)
                 {
                     txt = "There was an error on this page.\n\n";
-					txt += "Error description: " + err.description + "\n\n";
+					txt += "Error description: " + err.message + "\n\n";
 					txt += "Click OK to continue.\n\n";
 					alert(txt);
                 }
@@ -239,7 +239,7 @@ class ListFunctorCategoryListHTML {
                             catch(err)
                             {
                                 txt = "There was an error on this page.\n\n";
-                                txt += "Error description: " + err.description + "\n\n";
+                                txt += "Error description: " + err.message + "\n\n";
                                 txt += "Click OK to continue.\n\n";
                                 alert(txt);
                             }
@@ -285,13 +285,13 @@ class ListFunctorCategoryListHTML {
 								}
 								else
 								{
-									throw("Unable to add: " + JSONObject.JSONRetMessage);
+									throw new Error("Unable to add: " + JSONObject.JSONRetMessage);
 								}
 							}
 							catch(err)
 							{
 								txt = "There was an error on this page.\n\n";
-								txt += "Error description: " + err.description + "\n\n";
+								txt += "Error description: " + err.message + "\n\n";
 								txt += "Click OK to continue.\n\n";
 								alert(txt);
 							}
@@ -333,13 +333,13 @@ class ListFunctorCategoryListHTML {
                             }
                             else
                             {
-                                throw("Unable to delete: " + JSONObject.JSONRetMessage);
+								throw new Error("Unable to delete: " + JSONObject.JSONRetMessage);
                             }
                         }
                         catch(err)
                         {
                             txt = "There was an error on this page.\n\n";
-                            txt += "Error description: " + err.description + "\n\n";
+                            txt += "Error description: " + err.message + "\n\n";
                             txt += "Click OK to continue.\n\n";
                             alert(txt);
                         }
@@ -384,13 +384,14 @@ class ListFunctorCategoryListHTML {
 								}
 								else
 								{
-									throw("Unable to add: " + JSONObject.JSONRetMessage);
+									// alert("About to throw: " + JSONObject.JSONRetMessage);
+									throw new Error("Unable to add: " + JSONObject.JSONRetMessage);
 								}
 							}
 							catch(err)
 							{
 								txt = "There was an error on this page.\n\n";
-								txt += "Error description: " + err.description + "\n\n";
+								txt += "Error description: " + err.message + "\n\n";
 								txt += "Click OK to continue.\n\n";
 								alert(txt);
 							}
@@ -438,7 +439,7 @@ class ListFunctorCategoryListHTML {
                         catch(err)
                         {
                             txt = "There was an error on this page.\n\n";
-                            txt += "Error description: " + err.description + "\n\n";
+                            txt += "Error description: " + err.message + "\n\n";
                             txt += "Click OK to continue.\n\n";
                             alert(txt);
                         }
@@ -494,12 +495,12 @@ class ListFunctorCategoryListHTML {
                                     theList.selectedIndex = $old_index - 1;
                             }
                             else
-                                throw("Unable to delete: " + JSONObject.JSONRetMessage);
-                        }
+                                throw new Error("Unable to delete: " + JSONObject.JSONRetMessage);
+	                        }
                         catch(err)
                         {
                             txt = "There was an error on this page.\n\n";
-                            txt += "Error description: " + err.description + "\n\n";
+                            txt += "Error description: " + err.message + "\n\n";
                             txt += "Click OK to continue.\n\n";
                             alert(txt);
                         }
@@ -551,13 +552,13 @@ class ListFunctorCategoryListHTML {
                              }
                              else
                              {
-                                 throw("Unable to add: " + JSONObject.JSONRetMessage);
+                                 throw new Error("Unable to add: " + JSONObject.JSONRetMessage);
                              }
                          }
                          catch(err)
                          {
                              txt = "There was an error on this page.\n\n";
-                             txt += "Error description: " + err.description + "\n\n";
+                             txt += "Error description: " + err.message + "\n\n";
                              txt += "Click OK to continue.\n\n";
                              alert(txt);
                          }

@@ -4,13 +4,14 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . "tablebase.php";
 
 if(class_exists('ListFunctorCategoryList') != TRUE)
 {
+		
 	class ListFunctorCategoryList
 	{
 	    public $_categoryList;
 	
 	    function __construct(& $category_list)
 	    {
-	        $_categoryList = & $category_list;
+	        $this->_categoryList = & $category_list;
 	    }
 	    
 	
@@ -93,19 +94,45 @@ if(class_exists('CategoryTable') != TRUE)
 	
 	    function add_category($category_name)
 	    {
-	        $sql = sprintf(
-					"SELECT add_category('%s', %d)", 
-					$this->get_db_con()->escape_string($category_name), 
-					parent::GetUserID());
-	
-	        NI::TRACE($sql, __FILE__,  __LINE__);
-	        $result = $this->get_db_con()->query($sql);
-	        if ($result == FALSE || mysqli_num_rows($result) <= 0)
-		    	throw new Exception("SQL exec failed (" . __FILE__ . __LINE__ . "): " . $this->get_db_con()->error);
+			if (1) {
 				
-	       	$row = $result->fetch_row();
-			$result->free();
-			return $row[0];
+				$sql = sprintf("INSERT INTO `%s` (`%s`, `%s`) VALUES ('%s', %d)", 
+					self::kTableName,
+					self::kCol_CategoryName,
+					self::kCol_UserID,
+					$this->get_db_con()->escape_string($category_name),
+					parent::GetUserID());
+		
+				$result = $this->get_db_con()->query($sql);
+				if ($result == FALSE && $this->get_db_con()->errno == 1062)
+					throw new Exception(
+						"This Category already exists (" .
+						$this->get_db_con()->errno . ")");
+				else if ($result == FALSE)
+					throw new Exception(
+						"An error occurred. The Category could not be added (" . 
+						$this->get_db_con()->errno . ")");
+										
+				return $this->get_db_con()->insert_id;
+			
+			} else {
+					    	
+		        $sql = sprintf(
+						"SELECT add_category('%s', %d)", 
+						$this->get_db_con()->escape_string($category_name), 
+						parent::GetUserID());
+		
+		        NI::TRACE($sql, __FILE__,  __LINE__);
+		        $result = $this->get_db_con()->query($sql);
+		        if ($result == FALSE || mysqli_num_rows($result) <= 0)
+			    	throw new Exception(
+			    		"An error occurred. The category could not be added (" . 
+			    		$this->get_db_con()->errno . ")");
+					
+		       	$row = $result->fetch_row();
+				$result->free();
+				return $row[0];
+			}
 	    }
 		
 		function edit_category($bitMask, $category)
@@ -130,14 +157,40 @@ if(class_exists('CategoryTable') != TRUE)
 	
 	    function remove_category($category_ID)
 	    {
-	        $sql = sprintf(
+	    	if (1) {
+				$sql = sprintf("UPDATE `shopitemscatalog` 
+					SET categoryID_FK=0 
+					WHERE `userID_FK`=%d AND `categoryID_FK`=%d",
+					parent::GetUserID(),
+					$category_ID);
+				
+//				NI::TRACE_ALWAYS($sql, __FILE__, __LINE__);
+				$result = $this->get_db_con()->query($sql);
+				if ($result == FALSE)
+					throw new Exception("Could not delete Category");
+				
+				$sql = sprintf("DELETE `%s` FROM `%s` WHERE `%s`=%d AND `%s`=%d",
+					self::kTableName,
+					self::kTableName,
+					self::kCol_CategoryID,
+					$category_ID,
+					self::kCol_UserID,
+					parent::GetUserID());
+
+//				NI::TRACE_ALWAYS($sql, __FILE__, __LINE__);
+				$result = $this->get_db_con()->query($sql);
+				if ($result == FALSE)
+					throw new Exception("Could not delete Category");
+			} else {
+		        $sql = sprintf(
 					"call delete_category(%d, %d)",
 					$category_ID,
 					$this->GetUserID());
-	
-			$result = $this->get_db_con()->query($sql);
-	        if ($result == FALSE)
-	            throw new Exception("Database operaion failed (" . __FILE__ . __LINE__ . "): " . $this->get_db_con()->error);
+		
+				$result = $this->get_db_con()->query($sql);
+		        if ($result == FALSE)
+		            throw new Exception("Could not delete Category");
+			}
 	    }
 	
 	    function get_category($category_ID)

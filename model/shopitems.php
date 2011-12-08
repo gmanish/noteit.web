@@ -84,31 +84,91 @@ class ShopItems extends TableBase
 
     function add_item($list_id, $category_id, $item_name, $unit_cost, $item_quantity, $unit_id, $is_asklater)
     {
-        $sql = sprintf(
-				"SELECT add_shop_item(%d, %d, %d, '%s', %.2f, %.2f, %d, %d)", 
-				parent::GetUserID(), 
-				$list_id, 
-				$category_id, 
-				$this->get_db_con()->escape_string($item_name), 
-				$unit_cost, 
-				$item_quantity,
-				$unit_id,
-				$is_asklater);
+    	if (1) {
+    		$class_ID = 0;
+    		$sql = sprintf("SELECT `%s` FROM `shopitemscatalog` WHERE `%s`='%s' AND `%s`=%d LIMIT 1", 
+    				self::kColItemID,
+					self::kColItemName,
+					$this->get_db_con()->escape_string($item_name),
+					self::kColUserID,
+					parent::GetUserID());
+			//NI::TRACE_ALWAYS($sql, __FILE__, __LINE__);
+			$result = $this->get_db_con()->query($sql);
+			if ($result == FALSE || mysqli_num_rows($result) <= 0) {
+				
+				// A record of this item does not exist in the `shopitemcatelog` table; create one
+				$sql = sprintf("INSERT INTO `shopitemscatalog` (
+					`itemName`, 
+					`itemPrice`, 
+					`userID_FK`, 
+					`categoryID_FK`) 
+					VALUES ('%s', %f, %d, %d)",
+					$this->get_db_con()->escape_string($item_name),
+					$unit_cost,
+					parent::GetUserID(),
+					$category_id);
+					
+				//NI::TRACE_ALWAYS($sql, __FILE__, __LINE__);
 
-        $result = $this->get_db_con()->query($sql);
-        if ($result == FALSE || mysqli_num_rows($result) <= 0)
-		{
-			$str = sprintf(
-				"SQL exec failed (%s, %s) : %s (%d)",
-				__FILE__,
-				__LINE__, 
-				$this->get_db_con()->error, 
-				$this->get_db_con()->errno);
-			throw new Exception($str); 
+				$result = $this->get_db_con()->query($sql);
+				if ($result == FALSE)
+					throw new Exception("Item could not be added (". $this->get_db_con()->errno .")");
+				
+				$class_ID =	$this->get_db_con()->insert_id;
+			} else {
+		       	$row = $result->fetch_row();
+				$class_ID = $row[0];
+				$result->free();
+			}
+			
+			$sql = sprintf("INSERT INTO `%s` (`%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`)
+					VALUES(%d, %d, curDate(), %d, %f, %f, %d, %d, %d)",
+					self::kTableName,
+					self::kColUserID,
+					self::kColItemID,
+					self::kColDateAdded,
+					self::kColListID,
+					self::kColUnitCost,
+					self::kColQuantity,
+					self::kColUnitID,
+					self::kColCategoryID,
+					self::kColIsAskLater,
+					parent::GetUserID(),
+					$class_ID,
+					$list_id,
+					$unit_cost,
+					$item_quantity,
+					$unit_id,
+					$category_id,
+					$is_asklater);
+			
+			//NI::TRACE_ALWAYS($sql, __FILE__, __LINE__);
+			
+			$result = $this->get_db_con()->query($sql);
+			if ($result == FALSE) 
+				throw new Exception("Item could not be added.");
+			
+			return $this->get_db_con()->insert_id;
+				
+		} else {
+	        $sql = sprintf(
+					"SELECT add_shop_item(%d, %d, %d, '%s', %.2f, %.2f, %d, %d)", 
+					parent::GetUserID(), 
+					$list_id, 
+					$category_id, 
+					$this->get_db_con()->escape_string($item_name), 
+					$unit_cost, 
+					$item_quantity,
+					$unit_id,
+					$is_asklater);
+	
+	        $result = $this->get_db_con()->query($sql);
+	        if ($result == FALSE || mysqli_num_rows($result) <= 0)
+				throw new Exception("Item could not be added.");
+	        $row = $result->fetch_row();
+			$result->free();
+	        return $row[0];
 		}
-        $row = $result->fetch_row();
-		$result->free();
-        return $row[0];
     }
 
     function list_range(

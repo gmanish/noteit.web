@@ -75,16 +75,42 @@ class ShopListTable extends TableBase
 	}
 	
 	// [TODO] : Make this a transaction
-	function remove_list($list_ID)
-	{
-        $sql = sprintf(
+	function remove_list($list_ID) {
+			
+		if (1) {
+			$sql = sprintf("DELETE FROM `shopitems` WHERE `%s`=%d AND `%s`=%d",
+				self::kCol_UserID,
+				parent::GetUserID(),
+				'listID_FK',
+				$list_ID);
+		
+			NI::TRACE($sql, __FILE__, __LINE__);						
+			$result = $this->get_db_con()->query($sql);
+			if ($result == FALSE)
+				throw new Exception("Error deleting Shopping List");
+			
+			$sql = sprintf("DELETE FROM `%s` WHERE `%s`=%d AND `%s`=%d",
+				self::kTableName,
+				self::kCol_ListID,
+				$list_ID,
+				self::kCol_UserID,
+				parent::GetUserID());
+			NI::TRACE($sql, __FILE__, __LINE__);						
+			$result = $this->get_db_con()->query($sql);
+			if ($result == FALSE)
+				throw new Exception("Error deleting Shopping List");
+			
+		} else {
+			
+	        $sql = sprintf(
 				"call delete_shopping_list(%d, %d)",
 				$list_ID, 
 				$this->GetUserID());
-		$result = $this->get_db_con()->query($sql);
-		if ($result == FALSE)
-			throw new Exception("Database operaion failed (" . __FILE__ . __LINE__ . "): " . $this->get_db_con()->error .
-                "\nActual SQL: " . $sql);
+			$result = $this->get_db_con()->query($sql);
+			if ($result == FALSE)
+				throw new Exception("Database operaion failed (" . __FILE__ . __LINE__ . "): " . $this->get_db_con()->error .
+	                "\nActual SQL: " . $sql);
+		}
 	}
 	
 	function edit_list($list_ID, $list_name)
