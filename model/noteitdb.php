@@ -47,7 +47,6 @@ class NoteItDB extends DbBase
 		$this->shop_items_db = new ShopItems($userID);
 
 		$sql = sprintf("SELECT * from users WHERE userID=%d", $this->db_userID);
-		//echo $sql;
 		$result = $this->get_db_con()->query($sql);
 		if ($result != FALSE || mysqli_num_rows($result) == 1)
 		{
@@ -154,7 +153,12 @@ class NoteItDB extends DbBase
 		if (!filter_var($user_email, FILTER_VALIDATE_EMAIL))
 			throw new Exception("Please provide a valid email id");
 
-        $db_con = new MySQLi($config['MYSQL_SERVER'], $config['MYSQL_USER'], $config['MYSQL_PASSWD'], $config['MYSQL_DB']);
+        $db_con = new MySQLi(
+	        	$config['MYSQL_SERVER'], 
+	        	$config['MYSQL_USER'], 
+	        	$config['MYSQL_PASSWD'], 
+	        	$config['MYSQL_DB']);
+        	
         /*
          * Use this instead of $db_con->connect_error if you need to ensure
          * compatibility with PHP versions prior to 5.2.9 and 5.3.0.

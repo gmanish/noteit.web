@@ -28,7 +28,12 @@ if(class_exists('DbBase') != TRUE)
             global $config;
             if ($this->db_con == NULL)
             {
-                $this->db_con = new MySQLi($config['MYSQL_SERVER'], $config['MYSQL_USER'], $config['MYSQL_PASSWD'], $config['MYSQL_DB']);
+                $this->db_con = new MySQLi(
+                	$config['MYSQL_SERVER'], 
+                	$config['MYSQL_USER'], 
+                	$config['MYSQL_PASSWD'], 
+                	$config['MYSQL_DB']);
+					
                 if ($this->db_con->connect_error)
                 {
                     throw new Exception('Could not connect to Server: ' . $this->db_con->error);

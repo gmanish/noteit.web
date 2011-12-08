@@ -63,9 +63,9 @@
 	/* A view is that part of the screen that it displayed between the standard 
 	   header (noteitheader.tphp) and the standard footer (noteitfooter.tphp) */
 	static $view_map = array(
-		Views::kView_Home 		=> '../view/Home.tphp',
-		Views::kView_Register	=> '../view/Register.tphp',
-		Views::kView_Dashboard	=> '../view/Dashboard.tphp');
+		Views::kView_Home 		=> '../view/home.tphp',
+		Views::kView_Register	=> '../view/register.tphp',
+		Views::kView_Dashboard	=> '../view/dashboard.tphp');
 		
 	class JSONCodes
 	{

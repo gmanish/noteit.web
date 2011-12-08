@@ -134,7 +134,7 @@ class ListFunctorCategoryListHTML
 
 <script type="text/javascript">
 	
-	var gurl = "<?php echo(get_virtual_path("controller/AppController.php")); ?>";
+	var gurl = "<?php echo(get_virtual_path("controller/appcontroller.php")); ?>";
 	
 	$(document).ready(function()
 	{

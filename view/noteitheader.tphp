@@ -18,7 +18,7 @@ require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . '../lib/noteitcommon.php'
 			id="loginbar" 
 			name="formLogin" 
 			method="post" 
-			action="<?php echo(get_virtual_path("controller/AppController.php")); ?>">
+			action="<?php echo(get_virtual_path("controller/appcontroller.php")); ?>">
 			
 			<input 
 				type="hidden" 
@@ -44,7 +44,7 @@ require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . '../lib/noteitcommon.php'
 			            
 			&nbsp;
 			
-			<a href="<?php echo(get_virtual_path("page/Register.php")); ?>">Sign Up</a>
+			<a href="<?php echo(get_virtual_path("page/register.php")); ?>">Sign Up</a>
 			
 		</form>
 		
