@@ -1,0 +1,17 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Note It!</title>
+<?php require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . '../lib/NoteItCommon.php'); ?>	
+<link 
+	rel="stylesheet" 
+	type="text/css" 
+	href="<?php echo(get_virtual_path('css/noteit.css')); ?>" />
+
+<script 
+	type="text/javascript"
+	src="<?php echo(get_virtual_path('js/jquery.js')); ?>" >
+</script>
+	
+</head>
