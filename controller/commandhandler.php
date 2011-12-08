@@ -203,6 +203,7 @@ class CommandHandler extends CommandHandlerBase
                 Command::$arg1 => $noteit_db->get_db_userID());
 
             echo(json_encode($arr));
+            $noteit_db = NULL;
         }
         catch(Exception $e)
         {
@@ -425,10 +426,8 @@ class CommandHandler extends CommandHandlerBase
 				
             $noteit_db = NoteItDB::login_user_id($user_ID);
 			$category = new Category($category_id, $user_ID, $category_name);
-
 			$noteit_db->get_catlist_table()->edit_category(Category::CATEGORY_NAME, $category);
-			
-           $noteit_db = NULL;
+           	$noteit_db = NULL;
 
             // Form a JSON string
             $arr = array(
@@ -580,7 +579,6 @@ class CommandHandler extends CommandHandlerBase
 			
             $noteit_db = NoteItDB::login_user_id($user_ID);
             $shop_item = $noteit_db->get_shopitems_table()->get_item($item_ID);
-
             $noteit_db = NULL;
 
             NI::TRACE(print_r($shop_item, TRUE), __FILE__, __LINE__);
@@ -657,6 +655,7 @@ class CommandHandler extends CommandHandlerBase
                     $item_unit_id,
                     $item_isasklater
                     );
+	            $noteit_db = NULL;
 
 				// Construct a new shop item with the details to return to caller
 				$newItem = new ShopItem(
@@ -789,7 +788,7 @@ class CommandHandler extends CommandHandlerBase
 					$item->_item_id, 
 					$item, 
 					$edit_flags);
-
+            $noteit_db = NULL;
 			$arr = array(
 				JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
 				JSONCodes::kRetMessage => "");
@@ -832,6 +831,7 @@ class CommandHandler extends CommandHandlerBase
 				
             $noteit_db = NoteItDB::login_user_id($user_ID);
             $new_ID = $noteit_db->get_shopitems_table()->delete_item($instance_id);
+            $noteit_db = NULL;
 
             $arr = array(
                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
@@ -875,6 +875,7 @@ class CommandHandler extends CommandHandlerBase
             $shopList = array();
             $shoplist_functor = new ListFunctorShopList($shopList);
             $new_ID = $noteit_db->get_shoplist_table()->list_all($shoplist_functor, "iterate_row");
+            $noteit_db = NULL;
 
             $arr = array(
                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
@@ -918,6 +919,7 @@ class CommandHandler extends CommandHandlerBase
             $categories = array();
             $categories_functor = new ListFunctorCategoryList($categories);
             $new_ID = $noteit_db->get_catlist_table()->list_all(TRUE, $categories_functor, "iterate_row");
+            $noteit_db = NULL;
 
             $arr = array(
                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
@@ -959,9 +961,9 @@ class CommandHandler extends CommandHandlerBase
             }
 
             $noteit_db = NoteItDB::login_user_id($user_ID);
-
             $category = array();
             $category = $noteit_db->get_catlist_table()->get_category($category_ID);
+            $noteit_db = NULL;
             $arr = array(
                  JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
                  JSONCodes::kRetMessage => "",
@@ -1001,7 +1003,8 @@ class CommandHandler extends CommandHandlerBase
             $noteit_db = NoteItDB::login_user_id($user_ID);
             $suggestions = array();
             $suggestions = $noteit_db->get_shopitems_table()->suggest_item($substring, $max_items);
-            $arr = array(
+         	$noteit_db = NULL;
+        	$arr = array(
                  JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
                  JSONCodes::kRetMessage => "",
                  Command::$arg1 => $suggestions);
@@ -1044,6 +1047,7 @@ class CommandHandler extends CommandHandlerBase
 			$units = array();
 			$functor = new ListFunctorUnits($units);
 			$noteit_db->list_units($unit_type, $functor, 'iterate_unit');
+            $noteit_db = NULL;
 			
             $arr = array(
                  JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,

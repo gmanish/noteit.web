@@ -56,9 +56,9 @@ if(class_exists('CategoryTable') != TRUE)
 	    const kCol_CategoryName = 'categoryName';
 	    const kCol_UserID = 'userID_FK';
 	
-		function __construct($user_ID)
+		function __construct($db_base, $user_ID)
 		{
-			parent::__construct(self::kTableName, $user_ID);
+			parent::__construct($db_base, $user_ID);
 		}
 		
 		function list_all($current_user_only, &$functor_obj, $function_name='iterate_row')
@@ -66,12 +66,12 @@ if(class_exists('CategoryTable') != TRUE)
 			if ($current_user_only == TRUE)
 				$sql = sprintf(
 						"SELECT * FROM `%s` WHERE `userID_FK`=%d ORDER BY `categoryName`", 
-						parent::GetTableName(), 
+						self::kTableName, 
 						parent::GetUserID());
 			else
 				$sql = sprintf(
 						"SELECT * FROM `%s` ORDER BY `categoryName`", 
-						parent::GetTableName());
+						self::kTableName);
 			
 			$result = $this->get_db_con()->query($sql);
 			if ($result == FALSE)
@@ -110,7 +110,7 @@ if(class_exists('CategoryTable') != TRUE)
 		
 		function edit_category($bitMask, $category)
 		{
-			$sql = sprintf("UPDATE `%s` SET ", parent::GetTableName());
+			$sql = sprintf("UPDATE `%s` SET ", self::kTableName);
 			$prev_col_added = FALSE;
 			if ($bitMask & Category::CATEGORY_NAME)
 			{

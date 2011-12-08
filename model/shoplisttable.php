@@ -28,16 +28,16 @@ class ShopListTable extends TableBase
 	const kCol_ListName = 'listName';
 	const kCol_UserID = 'userID_FK';
 	
-	function __construct($user_ID)
+	function __construct($db_base, $user_ID)
 	{
-		parent::__construct('shoplists', $user_ID);
+		parent::__construct($db_base, $user_ID);
 	}
 	
 	function list_all(&$functor_obj, $function_name='iterate_row')
 	{
 		$sql = sprintf(
 				"SELECT * FROM `%s` WHERE `userID_FK`=%d", 
-				parent::GetTableName(),
+				self::kTableName,
 				parent::GetUserID());
 		
 		$result = $this->get_db_con()->query($sql);
@@ -60,7 +60,7 @@ class ShopListTable extends TableBase
 	{
 		$sql = sprintf(
 				"INSERT INTO `%s` (`%s` , `%s`) VALUES ('%s', %d)", 
-				parent::GetTableName(), 
+				self::kTableName, 
 				self::kCol_ListName, 
 				self::kCol_UserID, 
 				$this->get_db_con()->escape_string($list_name),
@@ -91,7 +91,7 @@ class ShopListTable extends TableBase
 	{
 		$sql = sprintf(
 				"UPDATE %s SET `listName`='%s' WHERE `listID`=%d AND `userID_FK`=%d", 
-				parent::GetTableName(),
+				self::kTableName,
 				$this->get_db_con()->escape_string($list_name),
 				$list_ID,
 				$this->GetUserID());

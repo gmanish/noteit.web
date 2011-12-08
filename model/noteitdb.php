@@ -42,47 +42,47 @@ class NoteItDB extends DbBase
         parent::__construct();
 
 		$this->db_userID = $userID;
-		$this->shop_list_db = new ShopListTable($userID);
-		$this->cat_list_db = new CategoryTable($userID);
-		$this->shop_items_db = new ShopItems($userID);
-
 		$sql = sprintf("SELECT * from users WHERE userID=%d", $this->db_userID);
 		$result = $this->get_db_con()->query($sql);
-		if ($result != FALSE || mysqli_num_rows($result) == 1)
-		{
+		
+		if ($result != FALSE || mysqli_num_rows($result) == 1) {
 			$row = $result->fetch_array();
 			$this->db_username = $row['firstName'] . " " . $row['lastName'];
 			$result->free();
 		}
-        else throw new Exception("Invalid user credentials: " . $this->get_db_con()->error);
+        else 
+        	throw new Exception("Invalid User Credentials: " . $this->get_db_con()->error);
+
+		$this->shop_list_db = new ShopListTable($this, $userID);
+		$this->cat_list_db = new CategoryTable($this, $userID);
+		$this->shop_items_db = new ShopItems($this, $userID);
  	}
 	
-	public function get_db_userID()
-	{
+	public function get_db_userID() {
 		return $this->db_userID;
 	}
 	
-	public function get_db_username()
-	{
+	public function get_db_username() {
 		return $this->db_username;
 	}
 	
-	public function &get_shoplist_table()
-	{
+	public function &get_shoplist_table() {
 		return $this->shop_list_db;
 	}
 	
-	public function &get_catlist_table()
-	{
+	public function &get_catlist_table() {
 		return $this->cat_list_db;
 	}
 
-    public function &get_shopitems_table()
-    {
+    public function &get_shopitems_table() {
         return $this->shop_items_db;
     }
     
-	public static function register_user($userName, $emailID, $firstName, $lastName)
+	public static function register_user(
+								$userName, 
+								$emailID, 
+								$firstName, 
+								$lastName)
 	{
         global $config;
 		if (is_null($firstName) || is_null($lastName) || is_null($emailID))
@@ -91,24 +91,27 @@ class NoteItDB extends DbBase
 		if (!filter_var($emailID, FILTER_VALIDATE_EMAIL))
 			throw new Exception("Please provide a valid email id");
 		
+		$db_con = NULL;
+		
 		try
-		{
-            $db_con = new MySQLi($config['MYSQL_SERVER'], $config['MYSQL_USER'], $config['MYSQL_PASSWD'], $config['MYSQL_DB']);
+		{			
+            $db_con = new MySQLi(
+            	$config['MYSQL_SERVER'], 
+            	$config['MYSQL_USER'], 
+            	$config['MYSQL_PASSWD'], 
+            	$config['MYSQL_DB']);
+            	
              if ($db_con->connect_error)
                  throw new Exception('Could not connect to Server: ' . $db_con->error);
-            else
-                NI::TRACE("NoteItDb::register_user: connected to db", __FILE__, __LINE__);
 
 			// Email ID is already registered??
 			$sql = sprintf(
-					"SELECT %s FROM %s WHERE %s='%s'", 
-					self::kColUserEmail,
-					self::kTableUsers,
-					self::kColUserEmail,
-					$db_con->escape_string($emailID));
+				"SELECT %s FROM %s WHERE %s='%s'", 
+				self::kColUserEmail,
+				self::kTableUsers,
+				self::kColUserEmail,
+				$db_con->escape_string($emailID));
 			
-			NI::TRACE("NoteItDb::register_user: sql = " . $sql, __FILE__, __LINE__);
-
 			$result = $db_con->query($sql);
 			if ($result ==  FALSE || mysqli_num_rows($result) > 0)
             {
@@ -120,45 +123,52 @@ class NoteItDB extends DbBase
 				$result->free();
 			
 			// try of register this user
-			$sql = sprintf("INSERT INTO `%s` (`%s`,`%s`,`%s`) VALUES ('%s', '%s', '%s')", 
-					self::kTableUsers,
-					self::kColUserEmail,
-					self::kColUserFirstName,
-					self::kColUserLastName,
-					$db_con->escape_string($emailID),
-					$db_con->escape_string($firstName),
-					$db_con->escape_string($lastName));
+			$sql = sprintf(
+				"INSERT INTO `%s` (`%s`,`%s`,`%s`) 
+				VALUES ('%s', '%s', '%s')", 
+				self::kTableUsers,
+				self::kColUserEmail,
+				self::kColUserFirstName,
+				self::kColUserLastName,
+				$db_con->escape_string($emailID),
+				$db_con->escape_string($firstName),
+				$db_con->escape_string($lastName));
 			
 			$result = $db_con->query($sql);
 			if ($result == FALSE)
 				throw new Exception('Could not register given user: ' . mysql_error());
-
+			
+			$db_con->close();
+			$db_con = NULL;
 		}
 		catch(Exception $e)
 		{
+			if ($db_con != NULL) { 
+				$db_con->close();
+				$db_con = NULL;
+			}
 			throw $e;
 		}
 	}
 	
-	public static function &login_user_id($user_id)
-	{
+	public static function &login_user_id($user_id) {
         $noteit_db = new NoteItDB($user_id);
         return $noteit_db;
 	}
 	
 	// Returns self on true
-	public static function &login_user_email($user_email)
-	{
+	public static function &login_user_email($user_email) {
+        	
         global $config;
 		if (!filter_var($user_email, FILTER_VALIDATE_EMAIL))
 			throw new Exception("Please provide a valid email id");
 
         $db_con = new MySQLi(
-	        	$config['MYSQL_SERVER'], 
-	        	$config['MYSQL_USER'], 
-	        	$config['MYSQL_PASSWD'], 
-	        	$config['MYSQL_DB']);
-        	
+        	$config['MYSQL_SERVER'], 
+        	$config['MYSQL_USER'], 
+        	$config['MYSQL_PASSWD'], 
+        	$config['MYSQL_DB']);
+    	
         /*
          * Use this instead of $db_con->connect_error if you need to ensure
          * compatibility with PHP versions prior to 5.2.9 and 5.3.0.
@@ -167,30 +177,34 @@ class NoteItDB extends DbBase
              throw new Exception('Could not connect to Server: ' . mysqli_connect_error() . "(" . mysqli_connect_errno() . ")");
 
  		$sql = sprintf(
-				"SELECT `userID` FROM `%s` WHERE `%s`='%s'", 
-				self::kTableUsers,
-				self::kColUserEmail,
-				$db_con->escape_string($user_email));
+			"SELECT `userID` FROM `%s` WHERE `%s`='%s'", 
+			self::kTableUsers,
+			self::kColUserEmail,
+			$db_con->escape_string($user_email));
+				
 		$result = $db_con->query($sql);
-		if ($result && mysqli_num_rows($result) == 1) // There should be one and only one user by this email ID
-		{
+		
+		 // There should be one and only one user by this email ID
+		if ($result && mysqli_num_rows($result) == 1) {
 			$row = $result->fetch_array();
             $noteit_db = new NoteItDB($row[self::kColUserID]);
             $result->free();
+			$db_con->close();
+			$db_con = NULL;
 			return $noteit_db;
 		}
-		else
-		{
-			if ($result)
+		else {
+			if ($result) 
 				$result->free();
+			$db_con->close();
+			$db_con = NULL;
 			throw new Exception("User email or password is incorrect");
 		}
 	}
 	
 	public static function logCountryInfo($ip_address)
 	{
-		try
-		{
+		try {
 			$country_id = 0;
 //			echo('IP: ' . $ip_address);
 			$xml = simplexml_load_file('http://www.ipgp.net/api/xml/'. '122.167.174.175' .'/AZE3dafAqD'); //AZE3dafAqD = API key assigned to geekjamboree@gmail.com

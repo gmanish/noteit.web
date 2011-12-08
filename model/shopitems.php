@@ -77,9 +77,9 @@ class ShopItems extends TableBase
 	const kColIsPurchased	= 'isPurchased';
 	const kColIsAskLater	= 'isAskLater';
 
-    function __construct($user_ID)
+    function __construct($db_base, $user_ID)
     {
-        parent::__construct(self::kTableName, $user_ID);
+        parent::__construct($db_base, $user_ID);
     }
 
     function add_item($list_id, $category_id, $item_name, $unit_cost, $item_quantity, $unit_id, $is_asklater)
@@ -123,7 +123,7 @@ class ShopItems extends TableBase
 				"SELECT si.*, sic.itemName FROM `%s` AS si " .
 				"INNER JOIN `shopitemscatalog` AS sic " .
 				"ON si.itemID_FK=sic.itemID WHERE si.userID_FK=%d AND si.listID_FK=%d",
-                parent::GetTableName(),
+                self::kTableName,
                 parent::GetUserID(),
                 $list_id);
 
@@ -173,7 +173,7 @@ class ShopItems extends TableBase
         		inner join `shopitemscatalog` AS sic  
         		ON si.itemID_FK = sic.itemID  
         		WHERE si.userID_FK = %d and si.instanceID = %d  LIMIT 1",
-                parent::GetTableName(),
+                self::kTableName,
                 parent::GetUserID(),
                 $instance_id);
 
@@ -207,7 +207,7 @@ class ShopItems extends TableBase
 
     function edit_item($instance_id, $item, $item_flags /* one of SHOPITEM_* flags */)
     {
-		$sql = sprintf('UPDATE %s SET', parent::GetTableName());
+		$sql = sprintf('UPDATE %s SET', self::kTableName);
         $prev_column_added = FALSE;
 		
         if ($item_flags & ShopItem::SHOPITEM_CATEGORYID)
@@ -279,7 +279,7 @@ class ShopItems extends TableBase
     {
         $sql = sprintf("DELETE FROM `%s` 
         		WHERE %s = %d AND %s = %d ",
-                parent::GetTableName(),
+                self::kTableName,
                 self::kColUserID,
                 parent::GetUserID(),
                 self::kColInstanceID,

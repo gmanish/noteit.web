@@ -14,8 +14,10 @@
 	
 	try
 	{
-		if ($command == "")
+		if ($command == "") {
+			NI::TRACE_ALWAYS("Handler Not Found: " . print_r($_REQUEST, TRUE), __FILE__, __LINE__);
 			throw new Exception("Handler Not Found: Please implement the CommandHandler::$command Handler in CommandHandler.php");
+		}
 			
 		CommandHandler::$command();	
 	}
