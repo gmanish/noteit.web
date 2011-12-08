@@ -1,5 +1,5 @@
 <div align="center">
-<form method="post" action="../controller/AppController.php">
+<form method="post" action="../controller/appcontroller.php">
 	<input type="hidden" name=<?php echo Command::$tag ?> value=<?php echo Handler::$do_register ?> />
 	<table>
 		<tr>

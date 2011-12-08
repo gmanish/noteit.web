@@ -1,9 +1,9 @@
 <?php
-require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "../lib/NoteItCommon.php");
-require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "DbBase.php");
-require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "ShopListTable.php");
-require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "CategoryTable.php");
-require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "ShopItems.php");
+require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "../lib/noteitcommon.php");
+require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "dbbase.php");
+require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "shoplisttable.php");
+require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "categorytable.php");
+require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "shopitems.php");
 
 
 class Unit
