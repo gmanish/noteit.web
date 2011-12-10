@@ -86,13 +86,12 @@ class ShopItems extends TableBase
     {
     	if (1) {
     		$class_ID = 0;
-    		$sql = sprintf("SELECT `%s` FROM `shopitemscatalog` WHERE `%s`='%s' AND `%s`=%d LIMIT 1", 
-    				self::kColItemID,
+    		$sql = sprintf("SELECT `itemID` FROM `shopitemscatalog` WHERE `%s`='%s' AND `%s`=%d LIMIT 1", 
 					self::kColItemName,
 					$this->get_db_con()->escape_string($item_name),
 					self::kColUserID,
 					parent::GetUserID());
-			//NI::TRACE_ALWAYS($sql, __FILE__, __LINE__);
+//			NI::TRACE_ALWAYS($sql, __FILE__, __LINE__);
 			$result = $this->get_db_con()->query($sql);
 			if ($result == FALSE || mysqli_num_rows($result) <= 0) {
 				
@@ -112,7 +111,7 @@ class ShopItems extends TableBase
 
 				$result = $this->get_db_con()->query($sql);
 				if ($result == FALSE)
-					throw new Exception("Item could not be added (". $this->get_db_con()->errno .")");
+					throw new Exception("Item could not be added to Catalog (". $this->get_db_con()->errno .")");
 				
 				$class_ID =	$this->get_db_con()->insert_id;
 			} else {
