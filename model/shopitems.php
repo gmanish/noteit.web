@@ -354,13 +354,13 @@ class ShopItems extends TableBase
 	function suggest_item($string, $max_suggestions)
 	{
 		$sql = sprintf("SELECT `%s` FROM `shopitemscatalog` 
-					WHERE `%s` LIKE '%%s%%' LIMIT %d", 
+					WHERE `%s` LIKE '%%%s%%' LIMIT %d", 
 					self::kColItemName, 
 					self::kColItemName, 
 					$this->get_db_con()->escape_string($string), 
 					max($max_suggestions, 10));
 
-		NI::TRACE('SQL: $sql', __FILE__, __LINE__);
+		NI::TRACE("SQL: " . $sql, __FILE__, __LINE__);
 		$result = $this->get_db_con()->query($sql);
 		
         if ($result == FALSE)

@@ -987,7 +987,7 @@ class CommandHandler extends CommandHandlerBase
         {
             $user_ID = -1;
             $substring = isset($_REQUEST[Command::$arg1]) ? $_REQUEST[Command::$arg1] : "";
-			$max_items = isset($_REQUEST[Command::$arg2]) ? $_REQUEST[Command::$arg2] : "";
+			$max_items = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 10;
 			
             if (isset($_SESSION['USER_ID']))
                 $user_ID = $_SESSION['USER_ID'];
