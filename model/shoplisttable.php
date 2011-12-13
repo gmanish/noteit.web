@@ -34,15 +34,23 @@ class ShopListTable extends TableBase
 		parent::__construct($db_base, $user_ID);
 	}
 	
-	function list_all(&$functor_obj, $function_name='iterate_row')
+	function list_all($fetch_count, &$functor_obj, $function_name='iterate_row')
 	{
-		$sql = sprintf("
-				SELECT sl.listID, sl.listName, count(si.listID_FK) AS itemCount
-				FROM shoplists sl
-				LEFT JOIN shopitems si ON sl.`listID`=si.`listID_FK`
-				WHERE sl.`userID_FK`=%d AND si.`isPurchased` <= 0
-				GROUP BY sl.listID",
-				parent::GetUserID());	
+		if ($fetch_count > 0) {
+			$sql = sprintf("
+					SELECT sl.listID, sl.listName, count(si.listID_FK) AS itemCount
+					FROM shoplists sl
+					LEFT JOIN shopitems si ON sl.`listID`=si.`listID_FK`
+					WHERE sl.`userID_FK`=%d AND si.`isPurchased` <= 0
+					GROUP BY sl.listID",
+					parent::GetUserID());
+		} else {
+			$sql = sprintf("
+					SELECT shoplists.listID, shoplists.listName
+					FROM shoplists
+					WHERE shoplists.userID_FK=%d",
+					parent::GetUserID());
+		}	
 		
 		$result = $this->get_db_con()->query($sql);
 		if ($result == FALSE)
@@ -50,11 +58,18 @@ class ShopListTable extends TableBase
 			
 		while ($row = mysqli_fetch_array($result))
 		{
-			call_user_func(
-				array($functor_obj, $function_name), // invoke the callback function
-				$row[0], // 'listID' 
-				$row[1], // 'listName'		
-				$row[2]);// 'itemCount'
+			if ($fetch_count > 0)
+				call_user_func(
+					array($functor_obj, $function_name), // invoke the callback function
+					$row[0], // 'listID' 
+					$row[1], // 'listName'		
+					$row[2]);// 'itemCount'
+			else
+				call_user_func(
+					array($functor_obj, $function_name), // invoke the callback function
+					$row[0], // 'listID' 
+					$row[1], // 'listName'		
+					0);// 'itemCount'
 		}
 		
 		if ($result)

@@ -186,8 +186,8 @@ class ShopItems extends TableBase
                 parent::GetUserID(),
                 $list_id);
 
-        if ($show_purchased_items == FALSE) // Hide items that have been purchased
-            $sql = $sql . " AND si.datePurchased IS NULL";
+        if ($show_purchased_items <= 0) // Hide items that have been purchased
+            $sql = $sql . " AND si.isPurchased <= 0";
 
 		$sql = sprintf("%s LIMIT %d, %d", $sql, $start_at, $num_rows_fetch);
 

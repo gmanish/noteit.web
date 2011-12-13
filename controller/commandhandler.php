@@ -497,7 +497,7 @@ class CommandHandler extends CommandHandlerBase
     */
     public static function do_list_shop_items()
     {
-        $show_purchased_items = isset($_REQUEST[Command::$arg1]) ? $_REQUEST[Command::$arg1] : 'N';
+        $show_purchased_items = isset($_REQUEST[Command::$arg1]) ? intval($_REQUEST[Command::$arg1]) : 1;
         $list_id = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0; //Show All default
         $start_at = isset($_REQUEST[Command::$arg3]) ? intval($_REQUEST[Command::$arg3]) : 0;
 
@@ -522,7 +522,7 @@ class CommandHandler extends CommandHandlerBase
             $shop_item_functor = new ListFunctorShopItems($items_array);
             $noteit_db = NoteItDB::login_user_id($user_ID);
             $noteit_db->get_shopitems_table()->list_range(
-                $show_purchased_items == 'Y' ? TRUE : FALSE,
+                $show_purchased_items,
                 $list_id,
                 $start_at,
                 20, // fetch max 20 rows for now
@@ -871,10 +871,11 @@ class CommandHandler extends CommandHandlerBase
 			if ($user_ID <= 0)
 				throw new Exception("Error Processing Request");
 			
+			$fetch_count = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
             $noteit_db = NoteItDB::login_user_id($user_ID);
             $shopList = array();
             $shoplist_functor = new ListFunctorShopList($shopList);
-            $new_ID = $noteit_db->get_shoplist_table()->list_all($shoplist_functor, "iterate_row");
+            $new_ID = $noteit_db->get_shoplist_table()->list_all($fetch_count, $shoplist_functor, "iterate_row");
             $noteit_db = NULL;
 
             $arr = array(
