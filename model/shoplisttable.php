@@ -10,12 +10,12 @@ class ListFunctorShopList
         $this->_shoplist = & $shoplist_array;
     }
 
-    public function iterate_row($list_id, $list_name)
+    public function iterate_row($list_id, $list_name, $item_count)
     {
         $thisItem = array(
             ShopListTable::kCol_ListID => $list_id,
-            ShopListTable::kCol_ListName => $list_name
-            );
+            ShopListTable::kCol_ListName => $list_name,
+            ShopListTable::kCol_ItemCount => $item_count);
 
         $this->_shoplist[] = $thisItem;
     }
@@ -27,6 +27,7 @@ class ShopListTable extends TableBase
 	const kCol_ListID = 'listID';
 	const kCol_ListName = 'listName';
 	const kCol_UserID = 'userID_FK';
+	const kCol_ItemCount = 'itemCount';
 	
 	function __construct($db_base, $user_ID)
 	{
@@ -35,10 +36,13 @@ class ShopListTable extends TableBase
 	
 	function list_all(&$functor_obj, $function_name='iterate_row')
 	{
-		$sql = sprintf(
-				"SELECT * FROM `%s` WHERE `userID_FK`=%d", 
-				self::kTableName,
-				parent::GetUserID());
+		$sql = sprintf("
+				SELECT sl.listID, sl.listName, count(si.listID_FK) AS itemCount
+				FROM shoplists sl
+				LEFT JOIN shopitems si ON sl.`listID`=si.`listID_FK`
+				WHERE sl.`userID_FK`=%d AND si.`isPurchased` <= 0
+				GROUP BY sl.listID",
+				parent::GetUserID());	
 		
 		$result = $this->get_db_con()->query($sql);
 		if ($result == FALSE)
@@ -48,8 +52,9 @@ class ShopListTable extends TableBase
 		{
 			call_user_func(
 				array($functor_obj, $function_name), // invoke the callback function
-				$row[0], // 'listID 
-				$row[1]); // 'listName		}
+				$row[0], // 'listID' 
+				$row[1], // 'listName'		
+				$row[2]);// 'itemCount'
 		}
 		
 		if ($result)
