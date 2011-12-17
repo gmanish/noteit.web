@@ -5,68 +5,65 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . "tablebase.php";
 if(class_exists('ListFunctorCategoryList') != TRUE)
 {
 		
-	class ListFunctorCategoryList
-	{
+	class ListFunctorCategoryList {
 	    public $_categoryList;
 	
-	    function __construct(& $category_list)
-	    {
+	    function __construct(& $category_list)  {
 	        $this->_categoryList = & $category_list;
 	    }
 	    
 	
-		public function iterate_row($category_ID, $category_Name, $user_ID)
-		{
+		public function iterate_row($category_ID, $category_Name, $user_ID, $rank) {
 	        $this->_categoryList[] = array(
 	            ShopListTable::kCol_ListID => $category_ID,
 	            ShopListTable::kCol_ListName => $category_Name,
-	            ShopListTable::kCol_UserID => $user_ID);
-	
+	            ShopListTable::kCol_UserID => $user_ID,
+				CategoryTable::kCol_CategoryRank => $rank);
 		}
 	}
 }
 
 if(class_exists('Category') != TRUE)
 {
-	class Category
-	{
+	class Category {
 	    const CATEGORY_NAME = 1;    // 1 << 0
 	
 	    public $categoryID = 0;
 	    public $userID_FK = 0;
 	    public $_categoryName;
+		public $rank = 0;
 	
 	    public function __construct(
 	    	$id, 
 	    	$user_ID = 0,
-			$name = '')
-	    {
+			$name = '',
+			$rank = 0) {
 	        $this->categoryID = $id;
 	        $this->_categoryName = $name;
 	        $this->userID_FK = $user_ID;
+			$this->rank = $rank;
 	    }
 	}
 }
 
 if(class_exists('CategoryTable') != TRUE)
 {
-	class CategoryTable extends TableBase
-	{
-		const kTableName = 'shopitemcategories';
-	    const kCol_CategoryID = 'categoryID';
+	class CategoryTable extends TableBase {
+			
+		const kTableName 		= 'shopitemcategories';
+	    const kCol_CategoryID 	= 'categoryID';
 	    const kCol_CategoryName = 'categoryName';
-	    const kCol_UserID = 'userID_FK';
-	
-		function __construct($db_base, $user_ID)
-		{
+	    const kCol_UserID 		= 'userID_FK';
+		const kCol_CategoryRank = 'categoryRank';
+		
+		function __construct($db_base, $user_ID) {
 			parent::__construct($db_base, $user_ID);
 		}
 		
-		function list_all($current_user_only, &$functor_obj, $function_name='iterate_row')
-		{
+		function list_all($current_user_only, &$functor_obj, $function_name='iterate_row') {
 			if ($current_user_only == TRUE)
 				$sql = sprintf(
-						"SELECT * FROM `%s` WHERE `userID_FK`=%d ORDER BY `categoryName`", 
+						"SELECT * FROM `%s` WHERE `userID_FK`=%d ORDER BY `categoryRank`", 
 						self::kTableName, 
 						parent::GetUserID());
 			else
@@ -85,15 +82,15 @@ if(class_exists('CategoryTable') != TRUE)
 					array($functor_obj, $function_name), // invoke the callback function
 					$row[0], // 'categoryID 
 					$row[1], // 'categoryName
-					$row[2]); // 'userID_FK
+					$row[2], // 'userID_FK
+					$row[3]);// 'categoryRank 
 			}
 			
 			if ($result)
 				$result->free();
 		}
 	
-	    function add_category($category_name)
-	    {
+	    function add_category($category_name) {
 			if (1) {
 				
 				$sql = sprintf("INSERT INTO `%s` (`%s`, `%s`) VALUES ('%s', %d)", 
@@ -135,8 +132,7 @@ if(class_exists('CategoryTable') != TRUE)
 			}
 	    }
 		
-		function edit_category($bitMask, $category)
-		{
+		function edit_category($bitMask, $category) {
 			$sql = sprintf("UPDATE `%s` SET ", self::kTableName);
 			$prev_col_added = FALSE;
 			if ($bitMask & Category::CATEGORY_NAME)
@@ -155,11 +151,21 @@ if(class_exists('CategoryTable') != TRUE)
 				throw new Exception("SQL exec failed (" . __FILE__ . __LINE__ . ")" . $this->get_db_con()->error);			
 		}
 	
-	    function remove_category($category_ID)
-	    {
+	    function remove_category($category_ID) {
 	    	if (1) {
 				$sql = sprintf("UPDATE `shopitemscatalog` 
-					SET categoryID_FK=0 
+					SET categoryID_FK=1 
+					WHERE `userID_FK`=%d AND `categoryID_FK`=%d",
+					parent::GetUserID(),
+					$category_ID);
+				
+//				NI::TRACE_ALWAYS($sql, __FILE__, __LINE__);
+				$result = $this->get_db_con()->query($sql);
+				if ($result == FALSE)
+					throw new Exception("Could not delete Category");
+
+				$sql = sprintf("UPDATE `shopitems` 
+					SET categoryID_FK=1 
 					WHERE `userID_FK`=%d AND `categoryID_FK`=%d",
 					parent::GetUserID(),
 					$category_ID);
@@ -193,18 +199,58 @@ if(class_exists('CategoryTable') != TRUE)
 			}
 	    }
 	
-	    function get_category($category_ID)
-	    {
+	    function get_category($category_ID) {
+	    	
 	        $sql = sprintf("SELECT * FROM `shopitemcategories` WHERE `categoryID`=%d LIMIT 1", $category_ID);
 	        $result = $this->get_db_con()->query($sql);
 	        if ($result == FALSE || mysqli_num_rows($result) <= 0)
 	            throw new Exception("Database operation failed (" . __FILE__ . __LINE__ . ")" . $this->get_db_con()->error);
 	
 	        $row = mysqli_fetch_array($result);
-	        $category = new Category($row[0], $row[1], $row[2]);
+	        $category = new Category($row[0], $row[1], $row[2], $row[3]);
 			$result->free();
 	        return $category;
 	    }
+		
+		function reorder_category($category_ID, $old_rank, $new_rank) {
+			
+			$sql = "";
+			if ($old_rank < $new_rank) {
+				$sql = sprintf("UPDATE `shopitemcategories`
+								JOIN (
+					  				SELECT categoryID, (`categoryRank` - 1) as new_rank
+		  							FROM shopitemcategories
+		  							WHERE `categoryRank` between %d + 1 AND %d
+		  							UNION ALL
+		  							SELECT %d as categoryID, %d as new_rank
+								) as r
+								USING (categoryID)
+								SET `categoryRank` = new_rank", 
+								$old_rank,
+								$new_rank,
+								$category_ID,
+								$new_rank);
+			} else if ($old_rank > $new_rank) {
+				$sql = sprintf("UPDATE `shopitemcategories` 
+								JOIN ( 
+									SELECT categoryID, (`categoryRank` + 1) as new_rank 
+									FROM shopitemcategories 
+									WHERE `categoryRank` between %d AND %d - 1 
+									UNION ALL 
+									SELECT %d as categoryID, %d as new_rank 
+								) as r USING (categoryID) 
+								SET `categoryRank` = new_rank",
+								$new_rank,
+								$old_rank,
+								$category_ID, 
+								$new_rank);
+			}
+			
+			//NI::TRACE_ALWAYS($sql, __FILE__, __LINE__);
+			$result = $this->get_db_con()->query($sql);
+			if ($result == FALSE)
+				throw new Exception("Database operation failed :" . $this->get_db_con()->error . $this->get_db_con()->errno);
+		}
 	}
 }
 ?>

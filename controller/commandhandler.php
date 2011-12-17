@@ -449,6 +449,50 @@ class CommandHandler extends CommandHandlerBase
    /*  This function is called asynchronously. It's important to note that all output
         from this function should be JSON encoded. No returning HTML headers and Tags.
     */
+	public static function do_reorder_category() {
+
+		$category_id = isset($_REQUEST[Command::$arg1]) ? intval($_REQUEST[Command::$arg1]) : 0;
+		$old_rank = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
+		$new_rank = isset($_REQUEST[Command::$arg3]) ? intval($_REQUEST[Command::$arg3]) : 0;
+		
+		try {
+           $user_ID = -1;
+
+            if (isset($_SESSION['USER_ID']))
+                $user_ID = $_SESSION['USER_ID'];
+            else
+            {
+                $user_ID = isset($_REQUEST[Command::$arg4]) ? intval($_REQUEST[Command::$arg4]) : 0;
+                if ($user_ID == 0) {
+                    throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+                }
+            }
+
+			if ($category_id <= 0 || $user_ID <= 0 || $old_rank < 0 || $new_rank < 0)
+				throw new Exception("Error Processing Request");
+			
+            $noteit_db = NoteItDB::login_user_id($user_ID);
+            $noteit_db->get_catlist_table()->reorder_category($category_id, $old_rank, $new_rank);
+            $noteit_db = NULL;
+
+            // Form a JSON string
+            $arr = array(
+                JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
+                JSONCodes::kRetMessage => "");
+
+            echo(json_encode($arr));
+		} catch (Exception $e){
+            $arr = array(
+                JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
+                JSONCodes::kRetMessage => $e->getMessage());
+
+            echo(json_encode($arr));
+		}			
+	}
+	
+   /*  This function is called asynchronously. It's important to note that all output
+        from this function should be JSON encoded. No returning HTML headers and Tags.
+    */
     public static function do_delete_category()
     {
 //            var_dump($_REQUEST);

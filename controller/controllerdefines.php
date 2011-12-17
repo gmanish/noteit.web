@@ -37,6 +37,7 @@
         public static $do_add_category      = 'do_add_category';
         public static $do_delete_category   = 'do_delete_category';
 		public static $do_edit_category		= 'do_edit_category';
+		public static $do_reorder_category	= 'do_reorder_category';
 
         public static $do_list_shop_items   = 'do_list_shop_items';
         public static $do_get_shop_item     = 'do_get_shop_item';
