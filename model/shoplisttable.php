@@ -37,6 +37,7 @@ class ShopListTable extends TableBase
 	function list_all($fetch_count, &$functor_obj, $function_name='iterate_row')
 	{
 		if ($fetch_count > 0) {
+/*			
 			$sql = sprintf("
 					SELECT sl.listID, sl.listName, count(si.listID_FK) AS itemCount
 					FROM shoplists sl
@@ -44,6 +45,15 @@ class ShopListTable extends TableBase
 					WHERE sl.`userID_FK`=%d AND si.`isPurchased` <= 0
 					GROUP BY sl.listID",
 					parent::GetUserID());
+ */
+			$sql = sprintf("SELECT sl.listID, sl.listName, (
+						SELECT COUNT(`listID_FK`) 
+						FROM `shopitems` si 
+						where si.`listID_FK`=sl.`listID` AND si.`isPurchased` <= 0) AS itemCount
+					FROM shoplists sl
+					WHERE sl.`userID_FK`=%d",
+					parent::GetUserID());
+ 
 		} else {
 			$sql = sprintf("
 					SELECT shoplists.listID, shoplists.listName

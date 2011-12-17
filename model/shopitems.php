@@ -286,6 +286,12 @@ class ShopItems extends TableBase
 		$sql = sprintf('UPDATE %s SET', self::kTableName);
         $prev_column_added = FALSE;
 		
+        if ($item_flags & ShopItem::SHOPITEM_LISTID)
+        {
+            $sql .= ' ' . self::kColListID . '=' . $item->_list_id;
+            $prev_column_added = TRUE;
+        }
+
         if ($item_flags & ShopItem::SHOPITEM_CATEGORYID)
         {
             $sql .= ' ' . self::kColCategoryID . '=' . $item->_category_id;
@@ -367,7 +373,43 @@ class ShopItems extends TableBase
             throw new Exception('SQL exec failed ('. __FILE__ . __LINE__ . '): ' . $this->get_db_con()->error);
     }
 
-
+	function copy_item($instance_id, $target_list_id)
+	{
+		$sql = sprintf("insert into shopitems (
+						`userID_FK`,
+						`itemID_FK`,
+						`dateAdded`,
+						`listID_FK`,
+						`unitCost`,
+						`quantity`,
+						`unitID_FK`,
+						`categoryID_FK`,
+						`isPurchased`,
+						`isAskLater`)
+							select `userID_FK`,
+									`itemID_FK`,
+									curDate(),
+									%d,
+									`unitCost`,
+									`quantity`,
+									`unitID_FK`,
+									`categoryID_FK`,
+									`isPurchased`,
+									`isAskLater`
+							from shopitems as si
+							where instanceID=%d and `userID_FK`=%d",
+						$target_list_id,
+						$instance_id,
+						parent::GetUserID());
+		
+		$result = $this->get_db_con()->query($sql);
+		
+        if ($result == FALSE)
+            throw new Exception('The copy operation failed (' . $this->get_db_con()->errorno . ')');
+		
+		return $this->get_db_con()->insert_id;
+	}
+	
 	function suggest_item($string, $max_suggestions)
 	{
 		$sql = sprintf("SELECT `%s` FROM `shopitemscatalog` 

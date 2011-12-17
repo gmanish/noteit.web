@@ -63,13 +63,13 @@ if(class_exists('CategoryTable') != TRUE)
 		function list_all($current_user_only, &$functor_obj, $function_name='iterate_row') {
 			if ($current_user_only == TRUE)
 				$sql = sprintf(
-						"SELECT * FROM `%s` WHERE `userID_FK`=%d ORDER BY `categoryRank`", 
-						self::kTableName, 
-						parent::GetUserID());
+					"SELECT * FROM `%s` WHERE `userID_FK`=%d ORDER BY `categoryRank`", 
+					self::kTableName, 
+					parent::GetUserID());
 			else
 				$sql = sprintf(
-						"SELECT * FROM `%s` ORDER BY `categoryName`", 
-						self::kTableName);
+					"SELECT * FROM `%s` ORDER BY `categoryName`", 
+					self::kTableName);
 			
 			$result = $this->get_db_con()->query($sql);
 			if ($result == FALSE)

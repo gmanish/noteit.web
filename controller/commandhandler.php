@@ -771,7 +771,7 @@ class CommandHandler extends CommandHandlerBase
 			// List ID
 			if (isset ($_REQUEST[Command::$arg2]))
 			{
-				$item->_list_id = intval($_REQUEST[Command::arg2]);
+				$item->_list_id = intval($_REQUEST[Command::$arg2]);
 				$edit_flags = $edit_flags | ShopItem::SHOPITEM_LISTID;
 			}
 			
@@ -824,8 +824,6 @@ class CommandHandler extends CommandHandlerBase
 				$edit_flags = $edit_flags | ShopItem::SHOPITEM_ISPURCHASED;
 			}
 			
-			
-
 			if ($edit_flags == 0)
 				throw new Exception ("Nothing to Edit");
 			
@@ -895,6 +893,51 @@ class CommandHandler extends CommandHandlerBase
         }
     }
 
+    /*  This function is called asynchronously. It's important to note that all output
+        from this function should be JSON encoded. No returning HTML headers and Tags.
+    */
+	public static function do_copy_item()
+	{
+        $instance_id = isset($_REQUEST[Command::$arg1]) ? intval($_REQUEST[Command::$arg1]) : 0;
+        $target_list = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
+		
+        try
+        {
+            $user_ID = -1;
+
+            if (isset($_SESSION['USER_ID']))
+                $user_ID = $_SESSION['USER_ID'];
+            else
+            {
+                $user_ID = isset($_REQUEST[Command::$arg3]) ? intval($_REQUEST[Command::$arg3]) : 0;
+                if ($user_ID == 0) {
+                    throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+                }
+            }
+
+			if ($instance_id <= 0 || $user_ID <= 0 || $target_list <= 0)
+				throw new Exception("Error Processing Request");
+				
+            $noteit_db = NoteItDB::login_user_id($user_ID);
+            $new_ID = $noteit_db->get_shopitems_table()->copy_item($instance_id, $target_list);
+            $noteit_db = NULL;
+
+            $arr = array(
+                JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
+                JSONCodes::kRetMessage => "");
+
+            echo(json_encode($arr));
+        }
+        catch(Exception $e)
+        {
+            $arr = array(
+                JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
+                JSONCodes::kRetMessage => $e->getMessage());
+
+            echo(json_encode($arr));
+        }
+	}
+	
     /*  This function is called asynchronously. It's important to note that all output
         from this function should be JSON encoded. No returning HTML headers and Tags.
     */

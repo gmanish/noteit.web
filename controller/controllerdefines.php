@@ -45,6 +45,7 @@
 		public static $do_edit_shop_item	= 'do_edit_shop_item';
 		public static $do_delete_item       = 'do_delete_item';
 		public static $do_suggest_items		= 'do_suggest_items';
+		public static $do_copy_item			= 'do_copy_item';
 	}
 	
 	class HandlerExitStatus

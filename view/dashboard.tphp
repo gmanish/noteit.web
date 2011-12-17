@@ -40,7 +40,7 @@ class ListFunctorCategoryListHTML {
         </fieldset>
         <select id="lst_shop_list" size="10" style="width:100%;"  title="Shopping Lists">
             <?php
-            $noteit_db->get_shoplist_table()->list_all(new ListFunctorShopListHTML(), "iterate_row");
+            $noteit_db->get_shoplist_table()->list_all(false, new ListFunctorShopListHTML(), "iterate_row");
             ?>
         </select>
         <div class="fltrt">
