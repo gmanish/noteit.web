@@ -172,25 +172,39 @@ class ShopItems extends TableBase
 
     function list_range(
         $show_purchased_items,
+        $move_purchased_items_to_bottom,
         $list_id,
         $start_at,
         $num_rows_fetch,
         & $functor_obj,
         $function_name="iterate_row")
     {
-        $sql = sprintf(
-				"SELECT si.*, sic.itemName FROM `%s` AS si " .
-				"INNER JOIN `shopitemscatalog` AS sic " .
-				"INNER JOIN `shopitemcategories` AS sicg " .
-				"ON si.itemID_FK=sic.itemID AND si.`categoryID_FK`=sicg.`categoryID` " .
-				"WHERE si.userID_FK=%d AND si.listID_FK=%d " . 
-				"ORDER BY sicg.`categoryRank` ASC",
-                self::kTableName,
-                parent::GetUserID(),
-                $list_id);
-
-        if ($show_purchased_items <= 0) // Hide items that have been purchased
-            $sql = $sql . " AND si.isPurchased <= 0";
+    	$sql = "";
+    	if ($show_purchased_items <= 0) {
+	        $sql = sprintf(
+					"SELECT si.*, sic.itemName FROM `%s` AS si " .
+					"INNER JOIN `shopitemscatalog` AS sic " .
+					"INNER JOIN `shopitemcategories` AS sicg " .
+					"ON si.itemID_FK=sic.itemID AND si.`categoryID_FK`=sicg.`categoryID` " .
+					"WHERE si.userID_FK=%d AND si.listID_FK=%d AND si.isPurchased <= 0 " . 
+					"ORDER BY sicg.`categoryRank` ASC",
+	                self::kTableName,
+	                parent::GetUserID(),
+	                $list_id);
+		} else {
+	        $sql = sprintf(
+					"SELECT si.*, sic.itemName FROM `%s` AS si " .
+					"INNER JOIN `shopitemscatalog` AS sic " .
+					"INNER JOIN `shopitemcategories` AS sicg " .
+					"ON si.itemID_FK=sic.itemID AND si.`categoryID_FK`=sicg.`categoryID` " .
+					"WHERE si.userID_FK=%d AND si.listID_FK=%d " . 
+					"ORDER BY sicg.`categoryRank` ASC",
+	                self::kTableName,
+	                parent::GetUserID(),
+	                $list_id);
+	        if ($move_purchased_items_to_bottom)
+				$sql .= ", isPurchased asc";
+		}
 
 		$sql = sprintf("%s LIMIT %d, %d", $sql, $start_at, $num_rows_fetch);
 

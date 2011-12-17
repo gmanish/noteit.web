@@ -544,7 +544,8 @@ class CommandHandler extends CommandHandlerBase
         $show_purchased_items = isset($_REQUEST[Command::$arg1]) ? intval($_REQUEST[Command::$arg1]) : 1;
         $list_id = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0; //Show All default
         $start_at = isset($_REQUEST[Command::$arg3]) ? intval($_REQUEST[Command::$arg3]) : 0;
-
+		$move_purchased_to_bottom = isset($_REQUEST[Command::$arg5]) ? intval($_REQUEST[Command::$arg5]) : 1;
+		
         try
         {
             $user_ID = -1;
@@ -567,6 +568,7 @@ class CommandHandler extends CommandHandlerBase
             $noteit_db = NoteItDB::login_user_id($user_ID);
             $noteit_db->get_shopitems_table()->list_range(
                 $show_purchased_items,
+                $move_purchased_to_bottom,
                 $list_id,
                 $start_at,
                 20, // fetch max 20 rows for now
