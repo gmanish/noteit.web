@@ -43,15 +43,16 @@ CREATE TABLE IF NOT EXISTS `shoplists`(
 # -----------------------------------------------------------------
 # Create the shopitemcategories table
 # -----------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `shopitemcategories`(
-  `categoryID` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `categoryName` VARCHAR(50) NOT NULL,
-  `userID_FK` INT(11) UNSIGNED NOT NULL,
-  PRIMARY KEY (`userID_FK`, `categoryName`),
+CREATE TABLE `shopitemcategories` (
+  `categoryID` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `categoryName` varchar(50) NOT NULL,
+  `userID_FK` int(11) unsigned NOT NULL,
+  `categoryRank` int(11) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`userID_FK`,`categoryName`),
   UNIQUE KEY `categoryID_UNIQUE` (`categoryID`),
   KEY `Ref_07` (`userID_FK`),
   CONSTRAINT `ref_userID` FOREIGN KEY (`userID_FK`) REFERENCES `users` (`userID`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE = INNODB DEFAULT CHARSET = latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 # -----------------------------------------------------------------
 # Create the `shopitemscatalog` table
@@ -286,31 +287,31 @@ INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALU
 #
 # NOTE: Keep this list sorted alphabetically
 # -----------------------------------------------------------------
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`)
+INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`, `categoryRank`)
 VALUES
-	('Uncategorized', 1),
-	('Apparel & Jewelry', 1),
-	('Bath & Beauty', 1),
-	('Baby Supplies', 1),
-	('Beverages', 1),
-	('Books & Magazines', 1),
-	('Breakfast & Cereals', 1),
-	('Condiments', 1),
-	('Dairy', 1),
-	('Electronics & Computers', 1),
-	('Everything Else', 1),
-	('Frozen Foods', 1),
-	('Fruits', 1),
-	('Furniture', 1),
-	('Games', 1),
-	('Housewares', 1),
-	('Meat & Fish', 1),
-	('Medical', 1),
-	('Mobiles & Cameras', 1),
-	('Music', 1),
-	('Movies', 1),
-	('Pet Supplies', 1),
-	('Snacks & Candy', 1),
-	('Supplies', 1),
-	('Toys & Hobbies', 1),
-	('Vegetables', 1);
+	('Uncategorized', 1, 1),
+	('Apparel & Jewelry', 1, 2),
+	('Bath & Beauty', 1, 3),
+	('Baby Supplies', 1, 4),
+	('Beverages', 1, 5),
+	('Books & Magazines', 1, 6),
+	('Breakfast & Cereals', 1, 7),
+	('Condiments', 1, 8),
+	('Dairy', 1, 9),
+	('Electronics & Computers', 1, 10),
+	('Everything Else', 1, 11),
+	('Frozen Foods', 1, 12),
+	('Fruits', 1, 13),
+	('Furniture', 1, 14),
+	('Games', 1, 15),
+	('Housewares', 1, 16),
+	('Meat & Fish', 1, 17),
+	('Medical', 1, 18),
+	('Mobiles & Cameras', 1, 19),
+	('Music', 1, 20),
+	('Movies', 1, 21),
+	('Pet Supplies', 1, 22),
+	('Snacks & Candy', 1, 23),
+	('Supplies', 1, 24),
+	('Toys & Hobbies', 1, 25),
+	('Vegetables', 1, 26);
