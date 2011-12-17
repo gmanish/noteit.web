@@ -181,7 +181,10 @@ class ShopItems extends TableBase
         $sql = sprintf(
 				"SELECT si.*, sic.itemName FROM `%s` AS si " .
 				"INNER JOIN `shopitemscatalog` AS sic " .
-				"ON si.itemID_FK=sic.itemID WHERE si.userID_FK=%d AND si.listID_FK=%d",
+				"INNER JOIN `shopitemcategories` AS sicg " .
+				"ON si.itemID_FK=sic.itemID AND si.`categoryID_FK`=sicg.`categoryID` " .
+				"WHERE si.userID_FK=%d AND si.listID_FK=%d " . 
+				"ORDER BY sicg.`categoryRank` ASC",
                 self::kTableName,
                 parent::GetUserID(),
                 $list_id);
