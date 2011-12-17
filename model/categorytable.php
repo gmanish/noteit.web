@@ -93,13 +93,22 @@ if(class_exists('CategoryTable') != TRUE)
 	    function add_category($category_name) {
 			if (1) {
 				
-				$sql = sprintf("INSERT INTO `%s` (`%s`, `%s`) VALUES ('%s', %d)", 
+				$sql = sprintf("INSERT INTO `%s` (`%s`, `%s`, `%s`) 
+								SELECT '%s', %d, (MAX(`%s`) + 1) AS rank
+								FROM `%s`
+								WHERE `%s`=%d", 
 					self::kTableName,
 					self::kCol_CategoryName,
 					self::kCol_UserID,
+					self::kCol_CategoryRank,
 					$this->get_db_con()->escape_string($category_name),
+					parent::GetUserID(),
+					self::kCol_CategoryRank,
+					self::kTableName,
+					self::kCol_UserID,
 					parent::GetUserID());
 		
+				NI::TRACE_ALWAYS($sql, __FILE__, __LINE__);
 				$result = $this->get_db_con()->query($sql);
 				if ($result == FALSE && $this->get_db_con()->errno == 1062)
 					throw new Exception(
