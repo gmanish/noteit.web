@@ -200,7 +200,8 @@ class CommandHandler extends CommandHandlerBase
             $arr = array(
                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
                 JSONCodes::kRetMessage => "",
-                Command::$arg1 => $noteit_db->get_db_userID());
+                Command::$arg1 => $noteit_db->get_db_userID(),
+				Command::$arg2 => $noteit_db->get_user_pref());
 
             echo(json_encode($arr));
             $noteit_db = NULL;
@@ -215,6 +216,47 @@ class CommandHandler extends CommandHandlerBase
         }
     }
     
+	public static function do_save_prefs() {
+       
+	    $prefs = isset($_REQUEST[Command::$arg1]) ? json_decode($_REQUEST[Command::$arg1]) : NULL;
+		
+        try
+        {
+            $user_ID = -1;
+
+            if (isset($_SESSION['USER_ID']))
+                $user_ID = $_SESSION['USER_ID'];
+            else
+            {
+                $user_ID = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
+                if ($user_ID == 0) {
+                    throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+                }
+            }
+
+        	if ($prefs == NULL || $user_ID <= 0)
+				throw new Exception("Invalid Preferences" . __FILE__ . __LINE__);
+			
+            $noteit_db = NoteItDB::login_user_id($user_ID);
+           	$noteit_db->save_preferences($prefs);
+            $noteit_db = NULL;
+
+            // Form a JSON string
+            $arr = array(
+                JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
+                JSONCodes::kRetMessage => "");
+
+            echo(json_encode($arr));
+        }
+        catch(Exception $e)
+        {
+            $arr = array(
+                JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
+                JSONCodes::kRetMessage => $e->getMessage());
+
+            echo(json_encode($arr));
+        }
+	}
     /*  This function is called asynchronously. It's important to note that all output
         from this function should be JSON encoded. No returning HTML headers and Tags.
     */
@@ -1143,6 +1185,32 @@ class CommandHandler extends CommandHandlerBase
                  JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
                  JSONCodes::kRetMessage => "",
                  Command::$arg1 => $units);
+			
+			echo(json_encode($arr));
+		}
+		catch (exception $e)
+		{
+            $arr = array(
+                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
+                 JSONCodes::kRetMessage => $e->getMessage());
+
+             echo(json_encode($arr));
+		}
+	}
+
+	public static function do_get_countries() {
+		
+		$ipAddress = isset($_REQUEST[Command::$arg1]) ? $_REQUEST[Command::$arg1] : $_SERVER['REMOTE_ADDR'];  
+			
+		try {
+			$nativeCountry = NoteItDB::list_country($ipAddress);
+			$countries = NoteItDB::list_countries();
+            $arr = array(
+                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
+                 JSONCodes::kRetMessage => "",
+                 Command::$arg1 => $ipAddress,
+                 Command::$arg2 => $nativeCountry,
+                 Command::$arg3 => $countries);
 			
 			echo(json_encode($arr));
 		}

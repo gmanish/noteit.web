@@ -18,10 +18,14 @@
 
 	class Handler
 	{
+		public static $do_get_countries		= 'do_get_countries';
 		public static $do_get_units			= 'do_get_units';
+		
 		public static $do_register 			= 'do_register';
 		public static $do_login				= 'do_login';
 
+		public static $do_save_prefs		= 'do_save_prefs';
+		
         // These functions do not redirect output or generate html.
         // They simply return the results as json encoded strings.
 

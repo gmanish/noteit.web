@@ -4,5 +4,6 @@ $config = array(
     'MYSQL_SERVER'  => '127.0.0.1',
     'MYSQL_USER'    => 'root',
     'MYSQL_PASSWD'  => 'pass123',
-    'MYSQL_DB'      => 'noteitdb');
+    'MYSQL_DB'      => 'noteitdb',
+	'GEOIP_DB'		=> '/Users/gmanish/pear/data/Net_GeoIP/data/GeoIP.dat');
 ?>

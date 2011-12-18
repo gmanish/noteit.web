@@ -4,7 +4,34 @@ require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "dbbase.php");
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "shoplisttable.php");
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "categorytable.php");
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "shopitems.php");
+require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "geoip.inc");
 
+class Country {
+	const kCol_CountryCode = 'countryCode';
+	const kCol_CurrencyCode = 'currencyCode';
+	const kCol_CurrencySymbol = 'currencySymbol';
+	const kCol_CurrencyIsRight = 'currencyIsRight';
+	const kCol_CurrencyName = 'currencyName';
+	
+	public $countryCode = "";
+	public $currencyCode = "";
+	public $currencySymbol = "";
+	public $currencyIsRight = 0;
+	public $currencyName = "";
+	
+	public function __construct(
+		$countryCode, 
+		$currencyCode, 
+		$currencySymbol, 
+		$currencyIsRight, 
+		$currencyName) {
+		$this->countryCode = $countryCode;
+		$this->currencyCode = $currencyCode;
+		$this->currencySymbol = $currencySymbol;
+		$this->currencyIsRight = $currencyIsRight;
+		$this->currencyName = $currencyName;
+	}	
+}
 
 class Unit
 {
@@ -22,6 +49,16 @@ class Unit
 	}
 }
 
+class UserPreference {
+	public $countryCode = "";
+	public $currencyCode = "";
+	
+	public function __construct($countryCode, $currencyCode) {
+		$this->countryCode = $countryCode;
+		$this->currencyCode = $currencyCode;
+	}	
+}
+
 class NoteItDB extends DbBase
 {
     // Name of users Table columns
@@ -30,13 +67,16 @@ class NoteItDB extends DbBase
     const kColUserEmail 		= 'emailID';
     const kColUserFirstName		= 'firstName';
     const kColUserLastName		= 'lastName';
+	const kColCountryCode		= 'countryCode';
+	const kColCurrencyCode		= 'currencyCode';
 
 	protected $db_userID;
 	protected $db_username;
 	protected $shop_list_db;
 	protected $cat_list_db;
     protected $shop_items_db;
-	
+	protected $user_pref;
+		
 	protected function __construct($userID)
 	{
         parent::__construct();
@@ -48,6 +88,9 @@ class NoteItDB extends DbBase
 		if ($result != FALSE || mysqli_num_rows($result) == 1) {
 			$row = $result->fetch_array();
 			$this->db_username = $row['firstName'] . " " . $row['lastName'];
+			$this->user_pref = new UserPreference(
+							$row[Country::kCol_CountryCode], 
+							$row[Country::kCol_CurrencyCode]);
 			$result->free();
 		}
         else 
@@ -57,6 +100,10 @@ class NoteItDB extends DbBase
 		$this->cat_list_db = new CategoryTable($this, $userID);
 		$this->shop_items_db = new ShopItems($this, $userID);
  	}
+	
+	public function get_user_pref() {
+		return $this->user_pref;
+	}
 	
 	public function get_db_userID() {
 		return $this->db_userID;
@@ -121,6 +168,7 @@ class NoteItDB extends DbBase
             
 			if ($result)
 				$result->free();
+			
 			
 			// try of register this user
 			$sql = sprintf(
@@ -202,53 +250,113 @@ class NoteItDB extends DbBase
 		}
 	}
 	
-	public static function logCountryInfo($ip_address)
-	{
-		try {
-			$country_id = 0;
-//			echo('IP: ' . $ip_address);
-			$xml = simplexml_load_file('http://www.ipgp.net/api/xml/'. '122.167.174.175' .'/AZE3dafAqD'); //AZE3dafAqD = API key assigned to geekjamboree@gmail.com
-//			echo('Country Code: ' . $xml->Code);
-//			echo('Country: ' . $xml->Country);
-			//. $xml->Ip . $xml->Country . $xml->City . $xml->Code . $xml->Country . $xml->Isp . $xml->Lat . $xml->Lng;
-	        $db_con = new MySQLi($config['MYSQL_SERVER'], $config['MYSQL_USER'], $config['MYSQL_PASSWD'], $config['MYSQL_DB']);
-			$sql = 'SELECT `countryID` FROM `countryTable` WHERE countryName="' . $db_con->escape_string($xml->Country) . '"';
-			
-//			echo('SQL Search: ' . $sql);
-			$result = $db_con->query($sql);
-			if ($result && mysqli_num_rows($result) == 1)
-			{
-				// The country is present in our database
-				$row = $result->fetch_array();
-				$country_id = $row['countryID'];
-				$result->free();
-//				echo('Found country in DB. ID=' . $country_id);
-			}
-			else
-			{
-				// The country is not present in our database, enter one
-				$sql = sprintf('INSERT INTO `countryTable` ' . 
-						'(countryName, countryCC, currency, currencyCode, ' . 
-						'displayCurrencyToLeft, currencySymbol)' . 
-						' VALUES ("%s", "%s", "", "", ' .
-						'"1", "")', $xml->Country, $xml->Code);
-//				echo('SQL INSERT: ' . $sql);
-				$sql = $db_con->query($sql);
-				if ($sql == false)
-					throw new Exception ("Could not update country table");
+	public function save_preferences($preferences) {
+		if ($preferences != NULL) {
+			$sql = sprintf(
+				"UPDATE `users` 
+				SET `%s`='%s', `%s`='%s' 
+				WHERE `%s`=%d", 
+				self::kColCountryCode,
+				$preferences->countryCode,
+				self::kColCurrencyCode,
+				$preferences->currencyCode,
+				self::kColUserID,
+				$this->db_userID);
 				
-				$country_id = $db_con->insert_id;
-//				echo('Inserted country in DB. ID=' . $country_id);
-			}
+			$result = $this->get_db_con()->query($sql);
+			if (!$result)
+				throw new Exception("Error Saving Preference.");
+		}	
+	}
+	
+	public static function list_country($ip_address)
+	{
+		global $config;
+		$country = new Country("US", "USD", "$", 1, "US Dollar");
+		if (!file_exists($config['GEOIP_DB']))
+			throw new Exception("GeoIP Database Not Installed");
 			
-			return $country_id;
+		$gi = geoip_open($config['GEOIP_DB'], GEOIP_STANDARD);
+		if ($gi != NULL) {
+			$countryCode = geoip_country_code_by_addr($gi, $ip_address);
+			if ($countryCode != ""){
+				global $config;
+				
+				$db_con = new MySQLi(
+					$config['MYSQL_SERVER'], 
+					$config['MYSQL_USER'], 
+					$config['MYSQL_PASSWD'], 
+					$config['MYSQL_DB']);
+				
+				if (mysqli_connect_error())
+					throw new Exception('Could not connect to Server' . "(" . mysqli_connect_errno() . ")");
+				
+				$sql = sprintf("SELECT * FROM `countrytable`
+								WHERE `countryCode`=UCASE('%s')",
+							 	$countryCode);
+				$result = $db_con->query($sql);
+									
+				if ($result && mysqli_num_rows($result) > 0) {
+					while ($row = $result->fetch_array()){
+						$country = new Country(
+							$row[Country::kCol_CountryCode],
+							$row[Country::kCol_CurrencyCode],
+							$row[Country::kCol_CurrencySymbol],
+							$row[Country::kCol_CurrencyIsRight],
+							$row[Country::kCol_CurrencyName]);
+					}
+		            $result->free();
+				}
+				
+				$db_con->close();
+				$db_con = NULL;
+			}
+
+			geoip_close($gi);
+			$gi = NULL;
 		}
-		catch (Exception $e)
-		{
-			echo('Unknown Exception' . $e->getMessage());
-		}
+		
+		return $country;
 	}
 
+	public static function list_countries() {
+        global $config;
+
+        $db_con = new MySQLi(
+        	$config['MYSQL_SERVER'], 
+        	$config['MYSQL_USER'], 
+        	$config['MYSQL_PASSWD'], 
+        	$config['MYSQL_DB']);
+    	
+         if (mysqli_connect_error())
+             throw new Exception('Could not connect to Server' . "(" . mysqli_connect_errno() . ")");
+
+ 		$sql = sprintf("SELECT * FROM `countrytable`");
+		$result = $db_con->query($sql);
+		
+		$countries = array();
+		if ($result && mysqli_num_rows($result) > 0) {
+			while ($row = $result->fetch_array()){
+				$country = new Country(
+					$row[Country::kCol_CountryCode],
+					$row[Country::kCol_CurrencyCode],
+					$row[Country::kCol_CurrencySymbol],
+					$row[Country::kCol_CurrencyIsRight],
+					$row[Country::kCol_CurrencyName]);
+				$countries[] = $country;
+			}
+            $result->free();
+			$db_con->close();
+			$db_con = NULL;
+			return $countries;
+		}
+		else {
+			$db_con->close();
+			$db_con = NULL;
+			throw new Exception("Could not fetch currency related data.");
+		}			
+	}
+	
 	public function list_units($unit_type, &$functor_obj, $function_name='iterate_unit')
 	{
 		$sql = sprintf("SELECT * FROM `units` WHERE `unitType`=%d OR `unitType`=%d", $unit_type, 0);
