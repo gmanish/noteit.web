@@ -218,28 +218,31 @@ class CommandHandler extends CommandHandlerBase
     
 	public static function do_save_prefs() {
        
-	    $prefs = isset($_REQUEST[Command::$arg1]) ? json_decode($_REQUEST[Command::$arg1]) : NULL;
-		
         try
         {
-            $user_ID = -1;
+		    $countryCode = isset($_REQUEST[Command::$arg1]) ? $_REQUEST[Command::$arg1] : "";
+			$currencyCode = isset($_REQUEST[Command::$arg2]) ? $_REQUEST[Command::$arg2] : "";
+
+		    $user_ID = -1;
 
             if (isset($_SESSION['USER_ID']))
                 $user_ID = $_SESSION['USER_ID'];
             else
             {
-                $user_ID = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
+                $user_ID = isset($_REQUEST[Command::$arg3]) ? intval($_REQUEST[Command::$arg3]) : 0;
                 if ($user_ID == 0) {
                     throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
                 }
             }
 
-        	if ($prefs == NULL || $user_ID <= 0)
-				throw new Exception("Invalid Preferences" . __FILE__ . __LINE__);
+        	if (($countryCode == "" && $countryCode == "") || $user_ID <= 0)
+				throw new Exception("Invalid Preferences");
 			
+			$prefs = new UserPreference($countryCode, $currencyCode);
             $noteit_db = NoteItDB::login_user_id($user_ID);
            	$noteit_db->save_preferences($prefs);
             $noteit_db = NULL;
+			$prefs = NULL;
 
             // Form a JSON string
             $arr = array(
