@@ -50,6 +50,7 @@
 		public static $do_delete_item       = 'do_delete_item';
 		public static $do_suggest_items		= 'do_suggest_items';
 		public static $do_copy_item			= 'do_copy_item';
+		public static $do_mark_all_done		= 'do_mark_all_done';
 	}
 	
 	class HandlerExitStatus

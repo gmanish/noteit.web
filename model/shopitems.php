@@ -481,5 +481,24 @@ class ShopItems extends TableBase
 
 		return $new_itemid;
 	}
+
+	function mark_all_done($list_Id, $done) {
+		
+		$sql = sprintf("UPDATE `%s` 
+						SET `%s`=%d
+						WHERE `%s`=%d and `%s`=%d and `%s`=%d", 
+						self::kTableName, 
+						self::kColIsPurchased,
+						$done,
+						self::kColUserID,
+						parent::GetUserID(),
+						self::kColListID,
+						$list_Id,
+						self::kColIsPurchased,
+						$done > 0 ? 0 : 1);
+		$result = $this->get_db_con()->query($sql);
+		if (!$result)
+			throw new Exception("Error Updating Items.");
+	}
 }
 ?>

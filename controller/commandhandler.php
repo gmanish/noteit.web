@@ -982,6 +982,44 @@ class CommandHandler extends CommandHandlerBase
             echo(json_encode($arr));
         }
 	}
+
+	public static function do_mark_all_done() {
+		try {
+			$list_Id = isset($_REQUEST['arg1']) ? intval($_REQUEST['arg1']) : 0;
+			$done = isset($_REQUEST['arg2']) ? intval($_REQUEST['arg2']) : 1;
+			$done = $done > 0 ? 1 : 0; // Clamp to 0 or 1
+			$user_Id = -1;
+			
+			if (isset($_SESSION['USER_ID']))
+				$user_Id = $_SESSION['USER_ID'];
+			else {
+				$user_Id = isset($_REQUEST['arg3']) ? intval($_REQUEST['arg3']): 0;
+				if ($user_Id == 0) {
+					throw new Exception("Session Expired. Please log in again.");
+				}
+			}
+			
+			if ($user_Id <= 0 || $list_Id <=0)
+				throw new Exception("Error Processing Request.", 1);
+			
+			$noteit_db = NoteItDB::login_user_id($user_Id);
+			if ($noteit_db != NULL) {
+				$noteit_db->get_shopitems_table()->mark_all_done($list_Id, $done);
+				$noteit_db = NULL;
+			}
+			
+            $arr = array(
+                JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
+                JSONCodes::kRetMessage => "");
+
+            echo(json_encode($arr));
+		} catch (Exception $e) {
+            $arr = array(
+                JSONCodes::kRetVal => -1,
+                JSONCodes::kRetMessage => "");
+            echo(json_encode($arr));
+		}
+	}
 	
     /*  This function is called asynchronously. It's important to note that all output
         from this function should be JSON encoded. No returning HTML headers and Tags.
