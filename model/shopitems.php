@@ -187,23 +187,23 @@ class ShopItems extends TableBase
 					"INNER JOIN `shopitemcategories` AS sicg " .
 					"ON si.itemID_FK=sic.itemID AND si.`categoryID_FK`=sicg.`categoryID` " .
 					"WHERE si.userID_FK=%d AND si.listID_FK=%d AND si.isPurchased <= 0 " . 
-					"ORDER BY sicg.`categoryRank` ASC",
+					"ORDER BY sicg.`categoryRank` ASC ",
 	                self::kTableName,
 	                parent::GetUserID(),
 	                $list_id);
 		} else {
 	        $sql = sprintf(
-					"SELECT si.*, sic.itemName FROM `%s` AS si " .
-					"INNER JOIN `shopitemscatalog` AS sic " .
-					"INNER JOIN `shopitemcategories` AS sicg " .
-					"ON si.itemID_FK=sic.itemID AND si.`categoryID_FK`=sicg.`categoryID` " .
-					"WHERE si.userID_FK=%d AND si.listID_FK=%d " . 
-					"ORDER BY sicg.`categoryRank` ASC",
+					"SELECT si.*, sic.itemName FROM `%s` AS si
+					INNER JOIN `shopitemscatalog` AS sic
+					INNER JOIN `shopitemcategories` AS sicg
+					ON si.itemID_FK=sic.itemID AND si.`categoryID_FK`=sicg.`categoryID`
+					WHERE si.userID_FK=%d AND si.listID_FK=%d
+					ORDER BY sicg.`categoryRank` ASC",
 	                self::kTableName,
 	                parent::GetUserID(),
 	                $list_id);
 	        if ($move_purchased_items_to_bottom)
-				$sql .= ", isPurchased asc";
+				$sql .= ", isPurchased asc ";
 		}
 
 		$sql = sprintf("%s LIMIT %d, %d", $sql, $start_at, $num_rows_fetch);

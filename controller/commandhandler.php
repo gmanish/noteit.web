@@ -590,6 +590,7 @@ class CommandHandler extends CommandHandlerBase
         $list_id = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0; //Show All default
         $start_at = isset($_REQUEST[Command::$arg3]) ? intval($_REQUEST[Command::$arg3]) : 0;
 		$move_purchased_to_bottom = isset($_REQUEST[Command::$arg5]) ? intval($_REQUEST[Command::$arg5]) : 1;
+		$num_rows_fetch = isset($_REQUEST[Command::$arg6]) ? intval($_REQUEST[Command::$arg6]) : 20;
 		
         try
         {
@@ -616,7 +617,7 @@ class CommandHandler extends CommandHandlerBase
                 $move_purchased_to_bottom,
                 $list_id,
                 $start_at,
-                20, // fetch max 20 rows for now
+                $num_rows_fetch,
                 $shop_item_functor,
                 'iterate_row');
 
