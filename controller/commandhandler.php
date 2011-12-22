@@ -399,6 +399,51 @@ class CommandHandler extends CommandHandlerBase
             echo(json_encode($arr));
         }
 	}
+
+    /*  This function is called asynchronously. It's important to note that all output
+        from this function should be JSON encoded. No returning HTML headers and Tags.
+    */
+	public static function do_get_pending_cost() {
+        $list_ID 	= isset($_REQUEST[Command::$arg1]) ? intval($_REQUEST[Command::$arg1]) : 0;
+		
+        try
+        {
+            $user_ID = -1;
+
+            if (isset($_SESSION['USER_ID']))
+                $user_ID = intval($_SESSION['USER_ID']);
+            else
+            {
+                $user_ID = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
+                if ($user_ID == 0) {
+                    throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
+                }
+            }
+
+			if($list_ID <= 0 || $user_ID <= 0)
+				throw new Exception("Error Processing Request" . __FILE__ . __LINE__ . ")");
+			
+            $noteit_db = NoteItDB::login_user_id($user_ID);
+            $pending_cost = $noteit_db->get_shopitems_table()->get_pending_cost($list_ID);
+            $noteit_db = NULL;
+
+            // Form a JSON string
+            $arr = array(
+                JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
+                JSONCodes::kRetMessage => "",
+                Command::$arg1 => $pending_cost);
+
+            echo(json_encode($arr));
+        }
+        catch(Exception $e)
+        {
+            $arr = array(
+                JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
+                JSONCodes::kRetMessage => $e->getMessage());
+
+            echo(json_encode($arr));
+        }
+	}
 	
     /*  This function is called asynchronously. It's important to note that all output
         from this function should be JSON encoded. No returning HTML headers and Tags.

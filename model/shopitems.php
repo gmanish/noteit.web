@@ -500,5 +500,29 @@ class ShopItems extends TableBase
 		if (!$result)
 			throw new Exception("Error Updating Items.");
 	}
+	
+	// Returns the total items cost and cost of pending items
+	function get_pending_cost($list_id) {
+		$sql = sprintf("select sum(%s * %s) as `totalCost`
+						from %s 
+						where %s=%d and %s=0",
+						self::kColUnitCost,
+						self::kColQuantity,
+						self::kTableName,
+						self::kColListID,
+						$list_id,
+						self::kColIsPurchased);
+		$result = $this->get_db_con()->query($sql);		
+		if (!$result)			
+			throw new Exception("Error Calculating Total.");
+		
+		$pending_cost = 0.0;
+        if ($row = mysqli_fetch_array($result, MYSQL_ASSOC))
+        {
+			$pending_cost = $row['totalCost'];
+			$result->free();
+        }
+		return $pending_cost;
+	}
 }
 ?>
