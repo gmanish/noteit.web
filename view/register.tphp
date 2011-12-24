@@ -17,6 +17,10 @@
 			<td>Email Id: </td>
 			<td><input name="email_ID" value="" />*</td>
 		</tr>
+		<tr>
+			<td>Password: </td>
+			<td><input name="password" value="" type="password"/>*</td>
+		</tr>
 	</table>
 	<input value="Submit" type="submit" />
 </form>

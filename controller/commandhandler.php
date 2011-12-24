@@ -124,13 +124,12 @@ class CommandHandler extends CommandHandlerBase
 
         try
         {
-            NoteItDB::register_user($user_name, $email_ID, $first_name, $last_name);
+            NoteItDB::register_user($user_name, $password, $email_ID, $first_name, $last_name);
 
             // Success in registration, navigate to login screen
             $params = array(
                 Command::$tag => Handler::$do_login,
-                Command::$arg1 => $user_name,
-                Command::$arg2 => $password);
+                Command::$arg1 => $user_name);
 
             CommandHandlerBase::redirect_to_view(
                 Views::kView_Home,
@@ -149,14 +148,19 @@ class CommandHandler extends CommandHandlerBase
     public static function do_login()
     {
         $email_ID 	= isset($_REQUEST['email_ID']) ? $_REQUEST['email_ID'] : "";
-
+		$pasword = isset($_REQUEST['password']) ? $_REQUEST['password'] : "";
+		$is_password_hashed = isset($_REQUEST['isHashedPassword']) ? $_REQUEST['isHashedPassword'] : 0;
+		  
         try
         {
             $params = array(
                 Command::$tag => Handler::$do_login,
                 Command::$arg1 => $email_ID);
 
-            $noteit_db = NoteItDB::login_user_email($email_ID);
+            $noteit_db = NoteItDB::login_user_email(
+            	$email_ID, 
+            	$pasword, 
+            	$is_password_hashed);
 
             // Start a session for this user and store the id in a session variable
             $_SESSION['USER_ID'] = $noteit_db->get_db_userID();
@@ -182,18 +186,17 @@ class CommandHandler extends CommandHandlerBase
     */
     public static function do_login_json()
     {
-        $email_ID 	= isset($_REQUEST['email_ID']) ? $_REQUEST['email_ID'] : "";
-
+        $email_ID 			= isset($_REQUEST['email_ID']) ? $_REQUEST['email_ID'] : "";
+		$password			= isset($_REQUEST['password']) ? $_REQUEST['password'] : "";
+		$is_password_hashed = isset($_REQUEST['isHashedPassword']) ? $_REQUEST['isHashedPassword'] : 0;
+		
         try
         {
-            $noteit_db = NoteItDB::login_user_email($email_ID);
+            $noteit_db = NoteItDB::login_user_email(
+            	$email_ID, 
+            	$password, 
+            	$is_password_hashed > 0 ? TRUE : FALSE);
 
-			// Log country specific information
-//			$remote_address = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : "";
-			
-//			if ($remote_address != "")
-//				NoteItDB::logCountryInfo($remote_address);
-			
 			// Start a session for this user and store the id in a session variable
 			$_SESSION['USER_ID'] = $noteit_db->get_db_userID();
 

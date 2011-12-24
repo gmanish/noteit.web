@@ -32,6 +32,14 @@ require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . '../lib/noteitcommon.php'
 				class="loginBarText" 
             	onfocus="if(this.value=='Email id')this.value='';"/>
             	
+			<input 
+				id="txtPassword"
+				type="password" 
+				name="password" 
+				value="password" 
+				class="loginBarText"
+				onfocus="if(this.value=='password')this.value='';" />
+
 			<button 
 				id="cmdLogin" 
 				tabindex="1" 

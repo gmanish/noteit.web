@@ -67,6 +67,7 @@ class NoteItDB extends DbBase
     const kColUserEmail 		= 'emailID';
     const kColUserFirstName		= 'firstName';
     const kColUserLastName		= 'lastName';
+	const kColUserPassword 		= 'userPassword';
 	const kColCountryCode		= 'countryCode';
 	const kColCurrencyCode		= 'currencyCode';
 
@@ -126,14 +127,15 @@ class NoteItDB extends DbBase
     }
     
 	public static function register_user(
-								$userName, 
+								$userName,
+								$password, 
 								$emailID, 
 								$firstName, 
 								$lastName)
 	{
         global $config;
-		if (is_null($firstName) || is_null($lastName) || is_null($emailID))
-			throw new Exception("Please fill all required fields.");
+		if (empty($emailID) || empty($password))
+			throw new Exception("Email Id and/or password cannot be blank.");
 			
 		if (!filter_var($emailID, FILTER_VALIDATE_EMAIL))
 			throw new Exception("Please provide a valid email id");
@@ -169,18 +171,23 @@ class NoteItDB extends DbBase
 			if ($result)
 				$result->free();
 			
+			global $config;
+			$salt = $config['SALT'];
+			$salted_hash = sha1($salt . $password);
 			
-			// try of register this user
+			// try to register this user
 			$sql = sprintf(
-				"INSERT INTO `%s` (`%s`,`%s`,`%s`) 
-				VALUES ('%s', '%s', '%s')", 
+				"INSERT INTO `%s` (`%s`,`%s`,`%s`, `%s`) 
+				VALUES ('%s', '%s', '%s', UNHEX('%s'))", 
 				self::kTableUsers,
 				self::kColUserEmail,
 				self::kColUserFirstName,
 				self::kColUserLastName,
+				self::kColUserPassword,
 				$db_con->escape_string($emailID),
 				$db_con->escape_string($firstName),
-				$db_con->escape_string($lastName));
+				$db_con->escape_string($lastName),
+				$salted_hash);
 			
 			$result = $db_con->query($sql);
 			if ($result == FALSE)
@@ -205,12 +212,15 @@ class NoteItDB extends DbBase
 	}
 	
 	// Returns self on true
-	public static function &login_user_email($user_email) {
+	public static function &login_user_email($user_email, $password, $is_password_hashed) {
         	
         global $config;
 		if (!filter_var($user_email, FILTER_VALIDATE_EMAIL))
 			throw new Exception("Please provide a valid email id");
 
+		if (empty($password))
+			throw new Exception("Password cannot be blank");
+		
         $db_con = new MySQLi(
         	$config['MYSQL_SERVER'], 
         	$config['MYSQL_USER'], 
@@ -224,11 +234,21 @@ class NoteItDB extends DbBase
          if (mysqli_connect_error())
              throw new Exception('Could not connect to Server: ' . mysqli_connect_error() . "(" . mysqli_connect_errno() . ")");
 
+		if (!$is_password_hashed) {
+			global $config;
+			$salt = $config['SALT'];
+			$salted_hash = sha1($salt . $password);
+		} else {
+			$salted_hash = $password;
+		}
+		
  		$sql = sprintf(
-			"SELECT `userID` FROM `%s` WHERE `%s`='%s'", 
+			"SELECT `userID` FROM `%s` WHERE `%s`='%s' AND `%s`=UNHEX('%s')", 
 			self::kTableUsers,
 			self::kColUserEmail,
-			$db_con->escape_string($user_email));
+			$db_con->escape_string($user_email),
+			self::kColUserPassword,
+			$salted_hash);
 				
 		$result = $db_con->query($sql);
 		
