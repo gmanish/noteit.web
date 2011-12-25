@@ -916,7 +916,16 @@ class CommandHandler extends CommandHandlerBase
 			{
 				$item->_is_purchased = intval($_REQUEST[Command::$arg9]);
 				$edit_flags = $edit_flags | ShopItem::SHOPITEM_ISPURCHASED;
+				
+				if ($item->_is_purchased == TRUE) {
+					$edit_flags = $edit_flags | SHOPItem::SHOPITEM_DATEPURCHASED;
+					if (isset($_REQUEST[Command::$arg11]))
+						$item->_date_purchased = new DateTime($_REQUEST[Command::$arg11]);
+					else
+						$item->_date_purchased = new DateTime();
+				}
 			}
+			
 			
 			if ($edit_flags == 0)
 				throw new Exception ("Nothing to Edit");
@@ -1037,6 +1046,7 @@ class CommandHandler extends CommandHandlerBase
 			$list_Id = isset($_REQUEST['arg1']) ? intval($_REQUEST['arg1']) : 0;
 			$done = isset($_REQUEST['arg2']) ? intval($_REQUEST['arg2']) : 1;
 			$done = $done > 0 ? 1 : 0; // Clamp to 0 or 1
+			$date_purchased = isset($_REQUEST[Command::$arg4]) ? new DateTime($_REQUEST[Command::$arg4]) : new DateTime();
 			$user_Id = -1;
 			
 			if (isset($_SESSION['USER_ID']))
@@ -1053,7 +1063,7 @@ class CommandHandler extends CommandHandlerBase
 			
 			$noteit_db = NoteItDB::login_user_id($user_Id);
 			if ($noteit_db != NULL) {
-				$noteit_db->get_shopitems_table()->mark_all_done($list_Id, $done);
+				$noteit_db->get_shopitems_table()->mark_all_done($list_Id, $done, $date_purchased);
 				$noteit_db = NULL;
 			}
 			
@@ -1301,6 +1311,93 @@ class CommandHandler extends CommandHandlerBase
                  Command::$arg1 => $ipAddress,
                  Command::$arg2 => $nativeCountry,
                  Command::$arg3 => $countries);
+			
+			echo(json_encode($arr));
+		}
+		catch (exception $e)
+		{
+            $arr = array(
+                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
+                 JSONCodes::kRetMessage => $e->getMessage());
+
+             echo(json_encode($arr));
+		}
+	}
+	
+	public static function do_item_report() {
+		try
+		{
+			$user_ID = -1;
+			
+            if (isset($_SESSION['USER_ID']))
+			{
+                $user_ID = $_SESSION['USER_ID'];
+			}
+            else
+            {
+                $user_ID = isset($_REQUEST[Command::$arg4]) ? intval($_REQUEST[Command::$arg4]) : 0;
+            }
+			
+			// Should be in YYYY-MM-DD format
+			$date_from = isset($_REQUEST[Command::$arg1]) ? new DateTime($_REQUEST[Command::$arg1]) : new DateTime();
+			$date_to = isset($_REQUEST[Command::$arg2]) ? new DateTime($_REQUEST[Command::$arg2]) : new DateTime();
+			$is_purchased = isset($_REQUEST[Command::$arg3]) ? intval($_REQUEST[Command::$arg3]) : 1;
+            if ($user_ID <= 0 || (empty($date_from) && empty($date_to))) {
+                throw new Exception("Error Processing Request");
+            }
+			
+            $noteit_db = NoteItDB::login_user_id($user_ID);
+			$report = $noteit_db->get_reports()->per_item($is_purchased, $date_from, $date_to);
+            $noteit_db = NULL;
+			
+            $arr = array(
+                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
+                 JSONCodes::kRetMessage => "",
+                 Command::$arg1 => $report);
+			
+			echo(json_encode($arr));
+		}
+		catch (exception $e)
+		{
+            $arr = array(
+                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
+                 JSONCodes::kRetMessage => $e->getMessage());
+
+             echo(json_encode($arr));
+		}
+	}
+	
+	public static function do_category_report() {
+		
+		try
+		{
+			$user_ID = -1;
+			
+            if (isset($_SESSION['USER_ID']))
+			{
+                $user_ID = $_SESSION['USER_ID'];
+			}
+            else
+            {
+                $user_ID = isset($_REQUEST[Command::$arg4]) ? intval($_REQUEST[Command::$arg4]) : 0;
+            }
+			
+			// Should be in YYYY-MM-DD format
+			$date_from = isset($_REQUEST[Command::$arg1]) ? new DateTime($_REQUEST[Command::$arg1]) : new DateTime();
+			$date_to = isset($_REQUEST[Command::$arg2]) ? new DateTime($_REQUEST[Command::$arg2]) : new DateTime();
+			$is_purchased = isset($_REQUEST[Command::$arg3]) ? intval($_REQUEST[Command::$arg3]) : 1;
+            if ($user_ID <= 0 || (empty($date_from) && empty($date_to))) {
+                throw new Exception("Error Processing Request");
+            }
+			
+            $noteit_db = NoteItDB::login_user_id($user_ID);
+			$report = $noteit_db->get_reports()->per_category($is_purchased, $date_from, $date_to);
+            $noteit_db = NULL;
+			
+            $arr = array(
+                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
+                 JSONCodes::kRetMessage => "",
+                 Command::$arg1 => $report);
 			
 			echo(json_encode($arr));
 		}

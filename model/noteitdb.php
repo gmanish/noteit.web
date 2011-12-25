@@ -4,6 +4,7 @@ require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "dbbase.php");
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "shoplisttable.php");
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "categorytable.php");
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "shopitems.php");
+require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "reports.php");
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "geoip.inc");
 
 class Country {
@@ -77,6 +78,7 @@ class NoteItDB extends DbBase
 	protected $cat_list_db;
     protected $shop_items_db;
 	protected $user_pref;
+	protected $reports;
 		
 	protected function __construct($userID)
 	{
@@ -100,8 +102,12 @@ class NoteItDB extends DbBase
 		$this->shop_list_db = new ShopListTable($this, $userID);
 		$this->cat_list_db = new CategoryTable($this, $userID);
 		$this->shop_items_db = new ShopItems($this, $userID);
+		$this->reports = new Reports($this, $userID);
  	}
 	
+	public function get_reports() {
+		return $this->reports;
+	}
 	public function get_user_pref() {
 		return $this->user_pref;
 	}

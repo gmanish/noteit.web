@@ -18,6 +18,10 @@
 		}
 	}
 	catch(Exception $e) {
-		echo('Unhandled exception: ' . $e->getMessage());
+	    $arr = array(
+	         JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
+	         JSONCodes::kRetMessage => $e->getMessage());
+	
+	     echo(json_encode($arr));
 	}
 ?>

@@ -347,6 +347,10 @@ class ShopItems extends TableBase
 			if ($prev_column_added)
 				$sql .= ', ';
 			$sql .= ' ' . self::kColIsPurchased . '=' . $item->_is_purchased;
+			
+			if ($item->_is_purchased > 0) {
+				$sql .= ', ' . self::kColDatePurchased . "='" . $item->_date_purchased->format('Y-m-d') . "'";
+			}
 			$prev_column_added = TRUE;
 		}
 
@@ -482,14 +486,17 @@ class ShopItems extends TableBase
 		return $new_itemid;
 	}
 
-	function mark_all_done($list_Id, $done) {
+	function mark_all_done($list_Id, $done, $date_purchased) {
 		
 		$sql = sprintf("UPDATE `%s` 
-						SET `%s`=%d
+						SET `%s`=%d,
+						`%s`='%s'
 						WHERE `%s`=%d and `%s`=%d and `%s`=%d", 
 						self::kTableName, 
 						self::kColIsPurchased,
 						$done,
+						self::kColDatePurchased,
+						$date_purchased->format('Y-m-d'),
 						self::kColUserID,
 						parent::GetUserID(),
 						self::kColListID,
