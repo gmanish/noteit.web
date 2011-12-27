@@ -41,12 +41,12 @@ class Reports extends TableBase {
 							parent::GetUserID(),
 							$date_from->format('Y-m-d'),
 							$date_to->format('Y-m-d'));
-		} else if (!$empty($date_from)) {
+		} else if (!empty($date_from)) {
 			$sql = sprintf("SELECT itemID, `itemName`, sum(`itemPrice` * `quantity`) as `price`
 							FROM `shopitems` si
 							INNER JOIN `shopitemscatalog` sic
 							ON si.`itemID_FK` = sic.`itemID`
-							WHERE `isPurchased`=%d AND si.userID_FK=1 AND `datePurchased` >= '%s'
+							WHERE `isPurchased`=%d AND si.userID_FK=%d AND `datePurchased` >= '%s'
 							GROUP BY `itemID`", 
 							$isPurchased,
 							parent::GetUserID(),
@@ -56,7 +56,7 @@ class Reports extends TableBase {
 							FROM `shopitems` si
 							INNER JOIN `shopitemscatalog` sic
 							ON si.`itemID_FK` = sic.`itemID`
-							WHERE `isPurchased`=%d AND si.userID_FK=1 AND `datePurchased` <= '%s'
+							WHERE `isPurchased`=%d AND si.userID_FK=%d AND `datePurchased` <= '%s'
 							GROUP BY `itemID`", 
 							$isPurchased,
 							parent::GetUserID(),

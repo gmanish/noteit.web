@@ -1339,8 +1339,8 @@ class CommandHandler extends CommandHandlerBase
             }
 			
 			// Should be in YYYY-MM-DD format
-			$date_from = isset($_REQUEST[Command::$arg1]) ? new DateTime($_REQUEST[Command::$arg1]) : new DateTime();
-			$date_to = isset($_REQUEST[Command::$arg2]) ? new DateTime($_REQUEST[Command::$arg2]) : new DateTime();
+			$date_from = isset($_REQUEST[Command::$arg1]) ? new DateTime($_REQUEST[Command::$arg1]) : NULL;
+			$date_to = isset($_REQUEST[Command::$arg2]) ? new DateTime($_REQUEST[Command::$arg2]) : NULL;
 			$is_purchased = isset($_REQUEST[Command::$arg3]) ? intval($_REQUEST[Command::$arg3]) : 1;
             if ($user_ID <= 0 || (empty($date_from) && empty($date_to))) {
                 throw new Exception("Error Processing Request");
@@ -1383,8 +1383,8 @@ class CommandHandler extends CommandHandlerBase
             }
 			
 			// Should be in YYYY-MM-DD format
-			$date_from = isset($_REQUEST[Command::$arg1]) ? new DateTime($_REQUEST[Command::$arg1]) : new DateTime();
-			$date_to = isset($_REQUEST[Command::$arg2]) ? new DateTime($_REQUEST[Command::$arg2]) : new DateTime();
+			$date_from = isset($_REQUEST[Command::$arg1]) ? new DateTime($_REQUEST[Command::$arg1]) : NULL;
+			$date_to = isset($_REQUEST[Command::$arg2]) ? new DateTime($_REQUEST[Command::$arg2]) : NULL;
 			$is_purchased = isset($_REQUEST[Command::$arg3]) ? intval($_REQUEST[Command::$arg3]) : 1;
             if ($user_ID <= 0 || (empty($date_from) && empty($date_to))) {
                 throw new Exception("Error Processing Request");
