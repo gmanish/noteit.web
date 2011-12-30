@@ -2,7 +2,8 @@ DROP DATABASE IF EXISTS `noteitdb`;
 CREATE DATABASE `noteitdb` CHARSET = utf8;
 USE noteitdb;
 
-CREATE TABLE `countrytable` (
+
+CREATE TABLE IF NOT EXISTS `countrytable` (
   `countryCode` varchar(3) NOT NULL,
   `currencyCode` varchar(3) NOT NULL,
   `currencySymbol` varchar(3) NOT NULL,
@@ -28,17 +29,18 @@ CREATE TABLE IF NOT EXISTS `units`(
 # -----------------------------------------------------------------
 # Create the shoplists table
 # -----------------------------------------------------------------
-CREATE TABLE `users` (
-  `userID` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '',
-  `emailID` varchar(254) NOT NULL COMMENT '',
+CREATE TABLE IF NOT EXISTS `users` (
+  `userID` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `emailID` varchar(254) NOT NULL,
   `firstName` varchar(25) DEFAULT NULL,
   `lastName` varchar(25) DEFAULT NULL,
   `countryCode` varchar(3) NOT NULL DEFAULT 'US',
   `currencyCode` varchar(3) NOT NULL DEFAULT 'USD',
+  `userPassword` binary(20) NOT NULL DEFAULT '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0',
   PRIMARY KEY (`userID`),
   UNIQUE KEY `userID_UNIQUE` (`userID`),
   UNIQUE KEY `emailID_UNIQUE` (`emailID`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 # -----------------------------------------------------------------
 # Create the shoplists table
@@ -55,7 +57,7 @@ CREATE TABLE IF NOT EXISTS `shoplists`(
 # -----------------------------------------------------------------
 # Create the shopitemcategories table
 # -----------------------------------------------------------------
-CREATE TABLE `shopitemcategories` (
+CREATE TABLE IF NOT EXISTS `shopitemcategories` (
   `categoryID` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `categoryName` varchar(50) NOT NULL,
   `userID_FK` int(11) unsigned NOT NULL,
@@ -256,7 +258,7 @@ DELIMITER ;
 # -----------------------------------------------------------------
 # Insert Countries And Currencies
 # -----------------------------------------------------------------
-INSERT INTO `countryTable` (
+INSERT INTO `countrytable` (
     `countryCode`, 
     `currencyCode`, 
     `currencySymbol`, 
@@ -271,8 +273,8 @@ VALUES
 # the `root` user. There are special cases throughout code for this user.
 # [TODO]: How to force `root` user to have id=0??
 # -----------------------------------------------------------------
-INSERT INTO `users` (`emailID`, `firstName`, `lastName`) VALUES ('mrmangu@hotmail.com', 'Manish', 'Gupta');
-INSERT INTO `users` (`emailID`, `firstName`, `lastName`) VALUES ('gmanish@gmail.com', 'Manish', 'Gupta');
+INSERT INTO `users` (`emailID`, `firstName`, `lastName`, `userPassword`) VALUES ('mrmangu@hotmail.com', 'Manish', 'Gupta', UNHEX('3530280EDB5AA715929266D1D6F0423ABC27B104'));
+INSERT INTO `users` (`emailID`, `firstName`, `lastName`, `userPassword`) VALUES ('gmanish@gmail.com', 'Manish', 'Gupta', UNHEX('3530280EDB5AA715929266D1D6F0423ABC27B104'));
 
 # -----------------------------------------------------------------
 # Populate factory units into the units table
@@ -280,31 +282,31 @@ INSERT INTO `users` (`emailID`, `firstName`, `lastName`) VALUES ('gmanish@gmail.
 # NOTE: Keep this list sorted alphabetically
 # -----------------------------------------------------------------
 # Common units (Have the unitType = 0)
-INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('unit', 'unit', 0);
-INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('pair', 'pair', 0);
-INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('package', 'package', 0);
-INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('piece', 'piece', 0);
-INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('dozen', 'dozen', 0);
+INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('unit', 'unit', 0);
+INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('pair', 'pair', 0);
+INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('package', 'package', 0);
+INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('piece', 'piece', 0);
+INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('dozen', 'dozen', 0);
 
 # SI/Metric Units (Have the unitType = 1)
-INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('meter', 'm', 1);
-INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('kilogram', 'kg', 1);
-INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('square meter', 'm2', 1);
-INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('gram', 'gm', 1);
-INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('litre', 'l', 1);
-INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('millimeter', 'mm', 1);
-INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('centimeter', 'cm', 1);
+INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('meter', 'm', 1);
+INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('kilogram', 'kg', 1);
+INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('square meter', 'm2', 1);
+INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('gram', 'gm', 1);
+INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('litre', 'l', 1);
+INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('millimeter', 'mm', 1);
+INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('centimeter', 'cm', 1);
 
 # Imperial Units (Have the unitType = 2)
-INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('foot', 'ft', 2);
-INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('inch', 'in', 2);
-INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('yard', 'yd', 2);
-INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('mile', 'mi', 2);
-INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('ounce', 'oz', 2);
-INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('pound', 'lb', 2);
-INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('pint', 'pt', 2);
-INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('quart', 'qt', 2);
-INSERT INTO `noteitdb`.`units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('gallon', 'gal', 2);
+INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('foot', 'ft', 2);
+INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('inch', 'in', 2);
+INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('yard', 'yd', 2);
+INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('mile', 'mi', 2);
+INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('ounce', 'oz', 2);
+INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('pound', 'lb', 2);
+INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('pint', 'pt', 2);
+INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('quart', 'qt', 2);
+INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('gallon', 'gal', 2);
 
 # -----------------------------------------------------------------
 # Populate factory categories into the shopitemcategories table. These
