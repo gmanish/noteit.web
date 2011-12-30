@@ -1,5 +1,5 @@
 DROP DATABASE IF EXISTS `noteitdb`;
-CREATE DATABASE `noteitdb` CHARSET = latin1;
+CREATE DATABASE `noteitdb` CHARSET = utf8;
 USE noteitdb;
 
 CREATE TABLE `countrytable` (
@@ -10,7 +10,8 @@ CREATE TABLE `countrytable` (
   `currencyName` varchar(45) DEFAULT 'US Dollar',
   PRIMARY KEY (`countryCode`,`currencyCode`),
   UNIQUE KEY `countryCode_UNIQUE` (`countryCode`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 # -----------------------------------------------------------------
 # Create the units table
 # -----------------------------------------------------------------
@@ -22,14 +23,14 @@ CREATE TABLE IF NOT EXISTS `units`(
   PRIMARY KEY (`unitID`),
   UNIQUE KEY `unitName_UNIQUE` (`unitName`),
   UNIQUE KEY `unitAbbreviation_UNIQUE` (`unitAbbreviation`)
-) ENGINE = INNODB DEFAULT CHARSET = latin1;
+) ENGINE = INNODB DEFAULT CHARSET = utf8;
 
 # -----------------------------------------------------------------
 # Create the shoplists table
 # -----------------------------------------------------------------
 CREATE TABLE `users` (
-  `userID` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Surrogate Key for User ID',
-  `emailID` varchar(256) NOT NULL COMMENT 'PK email ID',
+  `userID` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '',
+  `emailID` varchar(254) NOT NULL COMMENT '',
   `firstName` varchar(25) DEFAULT NULL,
   `lastName` varchar(25) DEFAULT NULL,
   `countryCode` varchar(3) NOT NULL DEFAULT 'US',
@@ -37,7 +38,7 @@ CREATE TABLE `users` (
   PRIMARY KEY (`userID`),
   UNIQUE KEY `userID_UNIQUE` (`userID`),
   UNIQUE KEY `emailID_UNIQUE` (`emailID`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
 
 # -----------------------------------------------------------------
 # Create the shoplists table
@@ -49,7 +50,7 @@ CREATE TABLE IF NOT EXISTS `shoplists`(
   PRIMARY KEY (`listID`),
   KEY `ref_userID_FK` (`userID_FK`),
   CONSTRAINT `ref_userID_FK` FOREIGN KEY (`userID_FK`) REFERENCES `users` (`userID`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE = INNODB DEFAULT CHARSET = latin1;
+) ENGINE = INNODB DEFAULT CHARSET = utf8;
 
 # -----------------------------------------------------------------
 # Create the shopitemcategories table
@@ -63,7 +64,7 @@ CREATE TABLE `shopitemcategories` (
   UNIQUE KEY `categoryID_UNIQUE` (`categoryID`),
   KEY `Ref_07` (`userID_FK`),
   CONSTRAINT `ref_userID` FOREIGN KEY (`userID_FK`) REFERENCES `users` (`userID`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 # -----------------------------------------------------------------
 # Create the `shopitemscatalog` table
@@ -80,7 +81,7 @@ CREATE TABLE IF NOT EXISTS `shopitemscatalog`(
   KEY `Ref_02` (`categoryID_FK`),
   CONSTRAINT `Ref_01` FOREIGN KEY (`userID_FK`) REFERENCES `users` (`userID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `Ref_02` FOREIGN KEY (`categoryID_FK`) REFERENCES `shopitemcategories` (`categoryID`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE = INNODB DEFAULT CHARSET = latin1;
+) ENGINE = INNODB DEFAULT CHARSET = utf8;
 
 # -----------------------------------------------------------------
 # Create the `shopitems` table
@@ -110,7 +111,7 @@ CREATE TABLE IF NOT EXISTS`shopitems` (
   CONSTRAINT `Ref_03_FK` FOREIGN KEY (`listID_FK`) REFERENCES `shoplists` (`listID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `Ref_04_FK` FOREIGN KEY (`unitID_FK`) REFERENCES `units` (`unitID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `Ref_05_FK` FOREIGN KEY (`categoryID_FK`) REFERENCES `shopitemcategories` (`categoryID`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------------------
 -- Routine DDL
