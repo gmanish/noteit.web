@@ -180,7 +180,7 @@ class NoteItDB extends DbBase
 			global $config;
 			$salt = $config['SALT'];
 			$salted_hash = sha1($salt . $password);
-			
+			 
 			// try to register this user
 			$sql = sprintf(
 				"INSERT INTO `%s` (`%s`,`%s`,`%s`, `%s`) 
@@ -244,12 +244,15 @@ class NoteItDB extends DbBase
 			global $config;
 			$salt = $config['SALT'];
 			$salted_hash = sha1($salt . $password);
+//			echo("\n<br>Clear Text Password Received: " . $password);
+//			echo("\n<br>Salted Password: " . $salted_hash);
 		} else {
 			$salted_hash = $password;
+//			echo("\n<br>Hashed Password Received: " . $salted_hash);
 		}
 		
  		$sql = sprintf(
-			"SELECT `userID` FROM `%s` WHERE `%s`='%s' AND `%s`=UNHEX('%s')", 
+			"SELECT `userID`, HEX(`userPassword`) as A FROM `%s` WHERE `%s`='%s' AND `%s`=UNHEX('%s')",
 			self::kTableUsers,
 			self::kColUserEmail,
 			$db_con->escape_string($user_email),
@@ -262,6 +265,7 @@ class NoteItDB extends DbBase
 		if ($result && mysqli_num_rows($result) == 1) {
 			$row = $result->fetch_array();
             $noteit_db = new NoteItDB($row[self::kColUserID]);
+//			echo "<br>HEX(userPassword) Password from DB: ", $row['A'];
             $result->free();
 			$db_con->close();
 			$db_con = NULL;
@@ -270,6 +274,20 @@ class NoteItDB extends DbBase
 		else {
 			if ($result) 
 				$result->free();
+			
+			$sql = sprintf(
+				"SELECT 
+				HEX(userPassword) AS A  
+				FROM `users` WHERE `emailID`='%s'", 
+				$salted_hash,
+				$user_email);
+			$result = $db_con->query($sql);
+			if ($result) {
+				$row = $result->fetch_array();
+//				echo "\n<br/>HEX(userPassword) Password From DB: " . $row['A'];
+			} else {
+//				echo $db_con->err;
+			}
 			$db_con->close();
 			$db_con = NULL;
 			throw new Exception("User email or password is incorrect");
