@@ -49,6 +49,8 @@ if(class_exists('Category') != TRUE)
 if(class_exists('CategoryTable') != TRUE)
 {
 	class CategoryTable extends TableBase {
+		
+		const kUSE_STORED_PROC 	= FALSE;
 			
 		const kTableName 		= 'shopitemcategories';
 	    const kCol_CategoryID 	= 'categoryID';
@@ -60,38 +62,46 @@ if(class_exists('CategoryTable') != TRUE)
 			parent::__construct($db_base, $user_ID);
 		}
 		
-		function list_all($current_user_only, &$functor_obj, $function_name='iterate_row') {
-			if ($current_user_only == TRUE)
+		function list_all(
+			$current_user_only, 
+			&$functor_obj, 
+			$function_name='iterate_row') {
+				
+			if ($current_user_only == TRUE) {
 				$sql = sprintf(
 					"SELECT * FROM `%s` WHERE `userID_FK`=%d ORDER BY `categoryRank`", 
 					self::kTableName, 
 					parent::GetUserID());
-			else
+			}
+			else {
 				$sql = sprintf(
 					"SELECT * FROM `%s` ORDER BY `categoryName`", 
 					self::kTableName);
-			
-			$result = $this->get_db_con()->query($sql);
-			if ($result == FALSE)
-				throw new Exception("SQL exec failed (". __FILE__ . __LINE__ . "): $this->get_db_con()->error");
-	
-			while ($row = mysqli_fetch_array($result))
-			{
-	            NI::TRACE($row, __FILE__, __LINE__);
-				call_user_func(
-					array($functor_obj, $function_name), // invoke the callback function
-					$row[0], // 'categoryID 
-					$row[1], // 'categoryName
-					$row[2], // 'userID_FK
-					$row[3]);// 'categoryRank 
 			}
 			
-			if ($result)
+			$result = $this->get_db_con()->query($sql);
+			if ($result == FALSE) {
+				throw new Exception("SQL exec failed (". $this->get_db_con()->errorno . ")");
+			}
+	
+			while ($row = mysqli_fetch_array($result)) {
+	            	
+				call_user_func(
+					array($functor_obj, $function_name), // invoke the callback function
+					$row[0], 	// 'categoryID 
+					$row[1], 	// 'categoryName
+					$row[2], 	// 'userID_FK
+					$row[3]);	// 'categoryRank 
+			}
+			
+			if ($result) {
 				$result->free();
+			}
 		}
 	
 	    function add_category($category_name) {
-			if (1) {
+				
+			if (!self::kUSE_STORED_PROC) {
 				
 				$sql = sprintf("INSERT INTO `%s` (`%s`, `%s`, `%s`) 
 								SELECT '%s', %d, (MAX(`%s`) + 1) AS rank
@@ -110,18 +120,20 @@ if(class_exists('CategoryTable') != TRUE)
 		
 				//NI::TRACE_ALWAYS($sql, __FILE__, __LINE__);
 				$result = $this->get_db_con()->query($sql);
-				if ($result == FALSE && $this->get_db_con()->errno == 1062)
+				if ($result == FALSE && $this->get_db_con()->errno == 1062) {
 					throw new Exception(
 						"This Category already exists (" .
 						$this->get_db_con()->errno . ")");
-				else if ($result == FALSE)
+				}
+				else if ($result == FALSE) {
 					throw new Exception(
 						"An error occurred. The Category could not be added (" . 
 						$this->get_db_con()->errno . ")");
+				}
 										
 				return $this->get_db_con()->insert_id;
 			
-			} else {
+			} else {	// self::kUSE_STORED_PROC
 					    	
 		        $sql = sprintf(
 						"SELECT add_category('%s', %d)", 
@@ -142,60 +154,88 @@ if(class_exists('CategoryTable') != TRUE)
 	    }
 		
 		function edit_category($bitMask, $category) {
-			$sql = sprintf("UPDATE `%s` SET ", self::kTableName);
+			
 			$prev_col_added = FALSE;
-			if ($bitMask & Category::CATEGORY_NAME)
-			{
+			$sql = sprintf("UPDATE `%s` SET ", self::kTableName);
+
+			if ($bitMask & Category::CATEGORY_NAME) {
 				$sql .= self::kCol_CategoryName . "='" . $category->_categoryName . "'";
 				$prev_col_added = TRUE; 
 			}
 			
-			if (!$prev_col_added )
-				throw new Exception("Nothing to Edit (" . __FILE__ . __LINE__ . ")");
+			if (!$prev_col_added ) {
+				throw new Exception("Nothing to Edit (" . $this->get_db_con()->errno . ")");
+			}
 			
 			$sql .= " WHERE `" . self::kCol_CategoryID . "`=" . $category->categoryID;
 			$sql .= " AND `" . self::kCol_UserID . "`=" . $category->userID_FK;
+			
 			$result = $this->get_db_con()->query($sql);
-			if ($result == FALSE)
-				throw new Exception("SQL exec failed (" . __FILE__ . __LINE__ . ")" . $this->get_db_con()->error);			
+			if ($result == FALSE) {
+				throw new Exception("SQL exec failed (" . $this->get_db_con()->errorno . ")");
+			}			
 		}
 	
 	    function remove_category($category_ID) {
-	    	if (1) {
+	    	
+			global $config;
+			
+	    	if ($config['USE_STORED_PROCS'] == FALSE) {
+	    		
 				$sql = sprintf("UPDATE `shopitemscatalog` 
 					SET categoryID_FK=1 
 					WHERE `userID_FK`=%d AND `categoryID_FK`=%d",
 					parent::GetUserID(),
 					$category_ID);
+	
+				$isTransactional = FALSE;
 				
-//				NI::TRACE_ALWAYS($sql, __FILE__, __LINE__);
-				$result = $this->get_db_con()->query($sql);
-				if ($result == FALSE)
-					throw new Exception("Could not delete Category");
-
-				$sql = sprintf("UPDATE `shopitems` 
-					SET categoryID_FK=1 
-					WHERE `userID_FK`=%d AND `categoryID_FK`=%d",
-					parent::GetUserID(),
-					$category_ID);
-				
-//				NI::TRACE_ALWAYS($sql, __FILE__, __LINE__);
-				$result = $this->get_db_con()->query($sql);
-				if ($result == FALSE)
-					throw new Exception("Could not delete Category");
-				
-				$sql = sprintf("DELETE `%s` FROM `%s` WHERE `%s`=%d AND `%s`=%d",
-					self::kTableName,
-					self::kTableName,
-					self::kCol_CategoryID,
-					$category_ID,
-					self::kCol_UserID,
-					parent::GetUserID());
-
-//				NI::TRACE_ALWAYS($sql, __FILE__, __LINE__);
-				$result = $this->get_db_con()->query($sql);
-				if ($result == FALSE)
-					throw new Exception("Could not delete Category");
+				try {
+					$isTransactional = $this->get_db_con()->autocommit(FALSE);
+					if ($isTransactional == FALSE) {
+						throw new Exception("Failed to Create Transaction.");
+					} 				
+					
+					$result = $this->get_db_con()->query($sql);
+					if ($result == FALSE) {
+						throw new Exception("Could not delete Category");
+					}
+	
+					$sql = sprintf("UPDATE `shopitems` 
+						SET categoryID_FK=1 
+						WHERE `userID_FK`=%d AND `categoryID_FK`=%d",
+						parent::GetUserID(),
+						$category_ID);
+					
+					$result = $this->get_db_con()->query($sql);
+					if ($result == FALSE) {
+						throw new Exception("Could not delete Category");
+					}
+					
+					$sql = sprintf("DELETE `%s` FROM `%s` WHERE `%s`=%d AND `%s`=%d",
+						self::kTableName,
+						self::kTableName,
+						self::kCol_CategoryID,
+						$category_ID,
+						self::kCol_UserID,
+						parent::GetUserID());
+	
+					$result = $this->get_db_con()->query($sql);
+					if ($result == FALSE) {
+						throw new Exception("Could not delete Category");
+					}
+					
+					$this->get_db_con()->commit();
+					$this->get_db_con()->autocommit(TRUE);
+					
+				} catch (Exception $e) {
+					if ($isTransactional) {
+						$this->get_db_con()->rollback();
+						$this->autocommit(TRUE);
+					}
+					
+					throw $e;
+				}
 			} else {
 		        $sql = sprintf(
 					"call delete_category(%d, %d)",
@@ -210,13 +250,26 @@ if(class_exists('CategoryTable') != TRUE)
 	
 	    function get_category($category_ID) {
 	    	
-	        $sql = sprintf("SELECT * FROM `shopitemcategories` WHERE `categoryID`=%d LIMIT 1", $category_ID);
+	        $sql = sprintf("SELECT * 
+	        				FROM `shopitemcategories` 
+	        				WHERE `categoryID`=%d 
+	        				LIMIT 1", 
+	        				$category_ID);
+							
 	        $result = $this->get_db_con()->query($sql);
-	        if ($result == FALSE || mysqli_num_rows($result) <= 0)
-	            throw new Exception("Database operation failed (" . __FILE__ . __LINE__ . ")" . $this->get_db_con()->error);
+	        if ($result == FALSE || mysqli_num_rows($result) <= 0) {
+	            throw new Exception(
+	            	"Database operation failed (" . 
+	            	$this->get_db_con()->errorno . ")");
+			}
 	
 	        $row = mysqli_fetch_array($result);
-	        $category = new Category($row[0], $row[1], $row[2], $row[3]);
+	        $category = new Category(
+	        	$row[self::kCol_CategoryID], 
+	        	$row[self::kCol_UserID], 
+	        	$row[self::kCol_CategoryName], 
+	        	$row[self::kCol_CategoryRank]);
+				
 			$result->free();
 	        return $category;
 	    }
@@ -225,6 +278,7 @@ if(class_exists('CategoryTable') != TRUE)
 			
 			$sql = "";
 			if ($old_rank < $new_rank) {
+				
 				$sql = sprintf("UPDATE `shopitemcategories`
 								JOIN (
 					  				SELECT categoryID, (`categoryRank` - 1) as new_rank
@@ -239,7 +293,9 @@ if(class_exists('CategoryTable') != TRUE)
 								$new_rank,
 								$category_ID,
 								$new_rank);
+								
 			} else if ($old_rank > $new_rank) {
+				
 				$sql = sprintf("UPDATE `shopitemcategories` 
 								JOIN ( 
 									SELECT categoryID, (`categoryRank` + 1) as new_rank 
@@ -255,10 +311,11 @@ if(class_exists('CategoryTable') != TRUE)
 								$new_rank);
 			}
 			
-			//NI::TRACE_ALWAYS($sql, __FILE__, __LINE__);
 			$result = $this->get_db_con()->query($sql);
-			if ($result == FALSE)
-				throw new Exception("Database operation failed :" . $this->get_db_con()->error . $this->get_db_con()->errno);
+			if ($result == FALSE) {
+				throw new Exception(
+					"Database operation failed (" . $this->get_db_con()->errno . ")");
+			}	
 		}
 	}
 }

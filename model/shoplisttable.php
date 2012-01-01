@@ -34,27 +34,23 @@ class ShopListTable extends TableBase
 		parent::__construct($db_base, $user_ID);
 	}
 	
-	function list_all($fetch_count, &$functor_obj, $function_name='iterate_row')
+	function list_all(
+		$fetch_count, 
+		&$functor_obj, 
+		$function_name='iterate_row')
 	{
 		if ($fetch_count > 0) {
-/*			
-			$sql = sprintf("
-					SELECT sl.listID, sl.listName, count(si.listID_FK) AS itemCount
-					FROM shoplists sl
-					LEFT JOIN shopitems si ON sl.`listID`=si.`listID_FK`
-					WHERE sl.`userID_FK`=%d AND si.`isPurchased` <= 0
-					GROUP BY sl.listID",
-					parent::GetUserID());
- */
+				
 			$sql = sprintf("SELECT sl.listID, sl.listName, (
-						SELECT COUNT(`listID_FK`) 
-						FROM `shopitems` si 
-						where si.`listID_FK`=sl.`listID` AND si.`isPurchased` <= 0) AS itemCount
-					FROM shoplists sl
-					WHERE sl.`userID_FK`=%d",
+								SELECT COUNT(`listID_FK`) 
+								FROM `shopitems` si 
+								where si.`listID_FK`=sl.`listID` AND si.`isPurchased` <= 0) AS itemCount
+							FROM shoplists sl
+							WHERE sl.`userID_FK`=%d",
 					parent::GetUserID());
  
 		} else {
+				
 			$sql = sprintf("
 					SELECT shoplists.listID, shoplists.listName
 					FROM shoplists
@@ -63,23 +59,25 @@ class ShopListTable extends TableBase
 		}	
 		
 		$result = $this->get_db_con()->query($sql);
-		if ($result == FALSE)
-			throw new Exception("SQL exec failed (". __FILE__ . __LINE__ . "): $this->get_db_con()->error");
+		if ($result == FALSE) {
+			throw new Exception("SQL exec failed (" . $this->get_db_con()->errorno . ")");
+		}
+		
+		while ($row = mysqli_fetch_array($result)) {
 			
-		while ($row = mysqli_fetch_array($result))
-		{
-			if ($fetch_count > 0)
+			if ($fetch_count > 0) {
 				call_user_func(
 					array($functor_obj, $function_name), // invoke the callback function
 					$row[0], // 'listID' 
 					$row[1], // 'listName'		
 					$row[2]);// 'itemCount'
-			else
+			} else {
 				call_user_func(
 					array($functor_obj, $function_name), // invoke the callback function
 					$row[0], // 'listID' 
 					$row[1], // 'listName'		
 					0);// 'itemCount'
+			}
 		}
 		
 		if ($result)
@@ -95,40 +93,70 @@ class ShopListTable extends TableBase
 				self::kCol_UserID, 
 				$this->get_db_con()->escape_string($list_name),
 				parent::GetUserID());
-	//	echo($sql);
-        
+
 		$result = $this->get_db_con()->query($sql);
-		if ($result == FALSE)
-			throw new Exception("SQL exec failed (" . __FILE__ . __LINE__ . "): " . $this->get_db_con()->error);
+		if ($result == FALSE) {
+			throw new Exception(
+				"Failed to add Shopping List (" . 
+				$this->get_db_con()->errorno . ")");
+		}
 		
 		return $this->get_db_con()->insert_id;
 	}
 	
-	// [TODO] : Make this a transaction
 	function remove_list($list_ID) {
-			
-		if (1) {
-			$sql = sprintf("DELETE FROM `shopitems` WHERE `%s`=%d AND `%s`=%d",
-				self::kCol_UserID,
-				parent::GetUserID(),
-				'listID_FK',
-				$list_ID);
 		
-			NI::TRACE($sql, __FILE__, __LINE__);						
-			$result = $this->get_db_con()->query($sql);
-			if ($result == FALSE)
-				throw new Exception("Error deleting Shopping List");
+		global $config;
+		$isTransactional = FALSE;
+		
+		if (!$config['USE_STORED_PROCS']) {
+
+			try {
+				$isTransactional = $this->get_db_con()->autocommit(FALSE);
+				if ($isTransactional == FALSE) {
+					throw new Exception("Could Not Start Transaction.");
+				}
+				
+				$sql = sprintf("DELETE FROM `shopitems` 
+								WHERE `%s`=%d AND `listID_FK`=%d",
+								self::kCol_UserID,
+								parent::GetUserID(),
+								$list_ID);
 			
-			$sql = sprintf("DELETE FROM `%s` WHERE `%s`=%d AND `%s`=%d",
-				self::kTableName,
-				self::kCol_ListID,
-				$list_ID,
-				self::kCol_UserID,
-				parent::GetUserID());
-			NI::TRACE($sql, __FILE__, __LINE__);						
-			$result = $this->get_db_con()->query($sql);
-			if ($result == FALSE)
-				throw new Exception("Error deleting Shopping List");
+				$result = $this->get_db_con()->query($sql);
+				if ($result == FALSE) {
+					throw new Exception(
+						"Error deleting Shopping List (" . 
+						$this->get_db_con()->errorno . ")");
+				}
+				
+				$sql = sprintf(
+					"DELETE FROM `%s` WHERE `%s`=%d AND `%s`=%d",
+					self::kTableName,
+					self::kCol_ListID,
+					$list_ID,
+					self::kCol_UserID,
+					parent::GetUserID());
+	
+				$result = $this->get_db_con()->query($sql);
+				if ($result == FALSE) {
+					throw new Exception(
+						"Error deleting Shopping List (",
+						$this->get_db_con()->errorno . ")");
+				}
+				
+				$this->get_db_con()->commit();
+				$this->get_db_con()->autocommit(TRUE);
+			
+			} catch (Exception $e) {
+					
+				if ($isTransactional) {
+					$this->get_db_con()->rollback();
+					$this->get_db_con()->autocommit(TRUE);
+				}
+				
+				throw $e;
+			}
 			
 		} else {
 			
@@ -136,10 +164,13 @@ class ShopListTable extends TableBase
 				"call delete_shopping_list(%d, %d)",
 				$list_ID, 
 				$this->GetUserID());
+				
 			$result = $this->get_db_con()->query($sql);
-			if ($result == FALSE)
-				throw new Exception("Database operaion failed (" . __FILE__ . __LINE__ . "): " . $this->get_db_con()->error .
-	                "\nActual SQL: " . $sql);
+			if ($result == FALSE) {
+				throw new Exception(
+					"Error Deleting Shopping List (" . 
+					$this->get_db_con()->error . ")");
+			}
 		}
 	}
 	
@@ -151,9 +182,11 @@ class ShopListTable extends TableBase
 				$this->get_db_con()->escape_string($list_name),
 				$list_ID,
 				$this->GetUserID());
+		
 		$result = $this->get_db_con()->query($sql);
-		if ($result == FALSE)
-			throw new Exception ("Failed to rename list: " . $sql);
+		if ($result == FALSE) {
+			throw new Exception ("Failed to rename list: (" . $this->get_db_con()->errorno);
+		}
 	}
 }
 ?>

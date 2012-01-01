@@ -62,6 +62,8 @@ class ShopItem
 
 class ShopItems extends TableBase
 {
+	const USE_STORED_PROC  	= FALSE;
+	
     const kTableName        = 'shopitems';
     const kColInstanceID    = 'instanceID';
     const kColUserID        = 'userID_FK';
@@ -76,7 +78,7 @@ class ShopItems extends TableBase
     const kColCategoryID	= 'categoryID_FK';
 	const kColIsPurchased	= 'isPurchased';
 	const kColIsAskLater	= 'isAskLater';
-
+	
     function __construct($db_base, $user_ID)
     {
         parent::__construct($db_base, $user_ID);
@@ -84,72 +86,102 @@ class ShopItems extends TableBase
 
     function add_item($list_id, $category_id, $item_name, $unit_cost, $item_quantity, $unit_id, $is_asklater)
     {
-    	if (1) {
+    	if (!self::USE_STORED_PROC) {
     		$class_ID = 0;
     		$sql = sprintf("SELECT `itemID` FROM `shopitemscatalog` WHERE `%s`='%s' AND `%s`=%d LIMIT 1", 
 					self::kColItemName,
 					$this->get_db_con()->escape_string($item_name),
 					self::kColUserID,
 					parent::GetUserID());
-//			NI::TRACE_ALWAYS($sql, __FILE__, __LINE__);
+
+			$isTransactional = FALSE;
 			$result = $this->get_db_con()->query($sql);
 			if ($result == FALSE || mysqli_num_rows($result) <= 0) {
 				
 				// A record of this item does not exist in the `shopitemcatelog` table; create one
-				$sql = sprintf("INSERT INTO `shopitemscatalog` (
-					`itemName`, 
-					`itemPrice`, 
-					`userID_FK`, 
-					`categoryID_FK`) 
-					VALUES ('%s', %f, %d, %d)",
-					$this->get_db_con()->escape_string($item_name),
-					$unit_cost,
-					parent::GetUserID(),
-					$category_id);
+				// At this point start a transaction which is can  roll back on failure
+				try {
+					$isTransactional = $this->get_db_con()->autocommit(FALSE);
+					if (!$isTransactional) {
+						throw new Exception("Could Not Create Transaction");	
+					}	
 					
-				//NI::TRACE_ALWAYS($sql, __FILE__, __LINE__);
-
-				$result = $this->get_db_con()->query($sql);
-				if ($result == FALSE)
-					throw new Exception("Item could not be added to Catalog (". $this->get_db_con()->errno .")");
-				
-				$class_ID =	$this->get_db_con()->insert_id;
+					$sql = sprintf("INSERT INTO `shopitemscatalog` (
+						`itemName`, 
+						`itemPrice`, 
+						`userID_FK`, 
+						`categoryID_FK`) 
+						VALUES ('%s', %f, %d, %d)",
+						$this->get_db_con()->escape_string($item_name),
+						$unit_cost,
+						parent::GetUserID(),
+						$category_id);
+						
+					$result = $this->get_db_con()->query($sql);
+					if ($result == FALSE) {
+						throw new Exception(
+							"Item could not be added to Catalog (". 
+							$this->get_db_con()->errno .")");
+					}
+					
+					$class_ID =	$this->get_db_con()->insert_id;
+				} catch (Exception $e) {
+					if ($isTransactional) {
+						$this->get_db_con()->rollback();
+						$this->get_db_con()->autocommit(TRUE);
+					}
+					throw $e;
+				}
 			} else {
 		       	$row = $result->fetch_row();
 				$class_ID = $row[0];
 				$result->free();
 			}
 			
-			$sql = sprintf("INSERT INTO `%s` (`%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`)
-					VALUES(%d, %d, curDate(), %d, %f, %f, %d, %d, %d)",
-					self::kTableName,
-					self::kColUserID,
-					self::kColItemID,
-					self::kColDateAdded,
-					self::kColListID,
-					self::kColUnitCost,
-					self::kColQuantity,
-					self::kColUnitID,
-					self::kColCategoryID,
-					self::kColIsAskLater,
-					parent::GetUserID(),
-					$class_ID,
-					$list_id,
-					$unit_cost,
-					$item_quantity,
-					$unit_id,
-					$category_id,
-					$is_asklater);
 			
-			//NI::TRACE_ALWAYS($sql, __FILE__, __LINE__);
-			
-			$result = $this->get_db_con()->query($sql);
-			if ($result == FALSE) 
-				throw new Exception("Item could not be added.");
-			
-			return $this->get_db_con()->insert_id;
+			try {
+				$sql = sprintf("INSERT INTO `%s` (`%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`)
+						VALUES(%d, %d, curDate(), %d, %f, %f, %d, %d, %d)",
+						self::kTableName,
+						self::kColUserID,
+						self::kColItemID,
+						self::kColDateAdded,
+						self::kColListID,
+						self::kColUnitCost,
+						self::kColQuantity,
+						self::kColUnitID,
+						self::kColCategoryID,
+						self::kColIsAskLater,
+						parent::GetUserID(),
+						$class_ID,
+						$list_id,
+						$unit_cost,
+						$item_quantity,
+						$unit_id,
+						$category_id,
+						$is_asklater);
 				
-		} else {
+				$result = $this->get_db_con()->query($sql);
+				if ($result == FALSE) {
+					throw new Exception("Error Adding Item.");
+				}
+				
+				$instance_id =  $this->get_db_con()->insert_id; 
+				if ($isTransactional == TRUE) {
+					$this->get_db_con()->commit();
+					$this->get_db_con()->autocommit(TRUE);
+				}
+				return $instance_id;
+				
+			} catch (Exception $e) {
+				if ($isTransactional) {
+					$this->get_db_con()->rollback();
+					$this->get_db_con()->autocommit(TRUE);
+				}
+				throw $e;
+			}			
+				
+		} else { //USE_STORED_PROC
 	        $sql = sprintf(
 					"SELECT add_shop_item(%d, %d, %d, '%s', %.2f, %.2f, %d, %d)", 
 					parent::GetUserID(), 

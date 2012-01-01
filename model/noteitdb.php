@@ -105,6 +105,10 @@ class NoteItDB extends DbBase
 		$this->reports = new Reports($this, $userID);
  	}
 	
+	public function __destruct() {
+		parent::__destruct();
+	}
+	
 	public function get_reports() {
 		return $this->reports;
 	}
@@ -174,8 +178,9 @@ class NoteItDB extends DbBase
 				throw new Exception('This email ID is already registered');
             }
             
-			if ($result)
+			if ($result) {
 				$result->free();
+			}
 			
 			global $config;
 			$salt = $config['SALT'];
@@ -213,89 +218,98 @@ class NoteItDB extends DbBase
 	}
 	
 	public static function &login_user_id($user_id) {
+        	
         $noteit_db = new NoteItDB($user_id);
         return $noteit_db;
 	}
 	
 	// Returns self on true
-	public static function &login_user_email($user_email, $password, $is_password_hashed) {
-        	
-        global $config;
-		if (!filter_var($user_email, FILTER_VALIDATE_EMAIL))
-			throw new Exception("Please provide a valid email id");
-
-		if (empty($password))
-			throw new Exception("Password cannot be blank");
+	public static function &login_user_email(
+		$user_email, 
+		$password, 
+		$is_password_hashed) {
+        
+		$db_con = NULL;
 		
-        $db_con = new MySQLi(
-        	$config['MYSQL_SERVER'], 
-        	$config['MYSQL_USER'], 
-        	$config['MYSQL_PASSWD'], 
-        	$config['MYSQL_DB']);
-    	
-        /*
-         * Use this instead of $db_con->connect_error if you need to ensure
-         * compatibility with PHP versions prior to 5.2.9 and 5.3.0.
-         */
-         if (mysqli_connect_error())
-             throw new Exception('Could not connect to Server: ' . mysqli_connect_error() . "(" . mysqli_connect_errno() . ")");
-
-		if (!$is_password_hashed) {
-			global $config;
-			$salt = $config['SALT'];
-			$salted_hash = sha1($salt . $password);
-//			echo("\n<br>Clear Text Password Received: " . $password);
-//			echo("\n<br>Salted Password: " . $salted_hash);
-		} else {
-			$salted_hash = $password;
-//			echo("\n<br>Hashed Password Received: " . $salted_hash);
-		}
-		
- 		$sql = sprintf(
-			"SELECT `userID`, HEX(`userPassword`) as A FROM `%s` WHERE `%s`='%s' AND `%s`=UNHEX('%s')",
-			self::kTableUsers,
-			self::kColUserEmail,
-			$db_con->escape_string($user_email),
-			self::kColUserPassword,
-			$salted_hash);
-				
-		$result = $db_con->query($sql);
-		
-		 // There should be one and only one user by this email ID
-		if ($result && mysqli_num_rows($result) == 1) {
-			$row = $result->fetch_array();
-            $noteit_db = new NoteItDB($row[self::kColUserID]);
-//			echo "<br>HEX(userPassword) Password from DB: ", $row['A'];
-            $result->free();
-			$db_con->close();
-			$db_con = NULL;
-			return $noteit_db;
-		}
-		else {
-			if ($result) 
-				$result->free();
-			
-			$sql = sprintf(
-				"SELECT 
-				HEX(userPassword) AS A  
-				FROM `users` WHERE `emailID`='%s'", 
-				$salted_hash,
-				$user_email);
-			$result = $db_con->query($sql);
-			if ($result) {
-				$row = $result->fetch_array();
-//				echo "\n<br/>HEX(userPassword) Password From DB: " . $row['A'];
-			} else {
-//				echo $db_con->err;
+		try {
+	        	
+	        global $config;
+			if (!filter_var($user_email, FILTER_VALIDATE_EMAIL)) {
+				throw new Exception("Please provide a valid email id");
 			}
-			$db_con->close();
-			$db_con = NULL;
-			throw new Exception("User email or password is incorrect");
+	
+			if (empty($password)) {
+				throw new Exception("Password cannot be blank");
+			}
+			
+	        $db_con = new MySQLi(
+	        	$config['MYSQL_SERVER'], 
+	        	$config['MYSQL_USER'], 
+	        	$config['MYSQL_PASSWD'], 
+	        	$config['MYSQL_DB']);
+	    	
+	        /*
+	         * Use this instead of $db_con->connect_error if you need to ensure
+	         * compatibility with PHP versions prior to 5.2.9 and 5.3.0.
+	         */
+	         if (mysqli_connect_error()) {
+	             throw new Exception(
+	             	'Could not connect to Server: ' . 
+	             	mysqli_connect_error() . "(" . 
+	             	mysqli_connect_errno() . ")");
+			 }
+	
+			if (!$is_password_hashed) {
+				global $config;
+				$salt = $config['SALT'];
+				$salted_hash = sha1($salt . $password);
+			} else {
+				$salted_hash = $password;
+			}
+			
+	 		$sql = sprintf(
+				"SELECT `userID` FROM `%s` WHERE `%s`='%s' AND `%s`=UNHEX('%s')",
+				self::kTableUsers,
+				self::kColUserEmail,
+				$db_con->escape_string($user_email),
+				self::kColUserPassword,
+				$db_con->escape_string($salted_hash));
+					
+			$result = $db_con->query($sql);
+			
+			 // There should be one and only one user by this email ID
+			if ($result && mysqli_num_rows($result) == 1) {
+				
+				$row = $result->fetch_array();
+	            $noteit_db = new NoteItDB($row[self::kColUserID]);
+	            $result->free();
+				
+				$db_con->close();
+				$db_con = NULL;
+				return $noteit_db;
+			}
+			else {
+				if ($result) {
+					$result->free();
+				}
+				
+				throw new Exception("User email or password is incorrect");
+			}
+		} catch (Exception $e) {
+			
+			if ($db_con) {
+				$db_con->close();
+				$db_con = NULL;
+			}
+			
+			throw $e;
 		}
 	}
 	
 	public function save_preferences($preferences) {
+			
 		if ($preferences != NULL) {
+				
 			$sql = sprintf(
 				"UPDATE `users` 
 				SET `%s`='%s', `%s`='%s' 
@@ -308,52 +322,70 @@ class NoteItDB extends DbBase
 				$this->db_userID);
 				
 			$result = $this->get_db_con()->query($sql);
-			if (!$result)
+			if (!$result) {
 				throw new Exception("Error Saving Preference.");
+			}
 		}	
 	}
 	
 	public static function list_country($ip_address)
 	{
 		global $config;
+		
 		$country = new Country("US", "USD", "$", 1, "US Dollar");
 		if (!file_exists($config['GEOIP_DB']))
 			throw new Exception("GeoIP Database Not Installed");
 			
 		$gi = geoip_open($config['GEOIP_DB'], GEOIP_STANDARD);
 		if ($gi != NULL) {
+			
 			$countryCode = geoip_country_code_by_addr($gi, $ip_address);
 			if ($countryCode != ""){
-				global $config;
 				
-				$db_con = new MySQLi(
-					$config['MYSQL_SERVER'], 
-					$config['MYSQL_USER'], 
-					$config['MYSQL_PASSWD'], 
-					$config['MYSQL_DB']);
-				
-				if (mysqli_connect_error())
-					throw new Exception('Could not connect to Server' . "(" . mysqli_connect_errno() . ")");
-				
-				$sql = sprintf("SELECT * FROM `countrytable`
-								WHERE `countryCode`=UCASE('%s')",
-							 	$countryCode);
-				$result = $db_con->query($sql);
-									
-				if ($result && mysqli_num_rows($result) > 0) {
-					while ($row = $result->fetch_array()){
-						$country = new Country(
-							$row[Country::kCol_CountryCode],
-							$row[Country::kCol_CurrencyCode],
-							$row[Country::kCol_CurrencySymbol],
-							$row[Country::kCol_CurrencyIsRight],
-							$row[Country::kCol_CurrencyName]);
-					}
-		            $result->free();
-				}
-				
-				$db_con->close();
 				$db_con = NULL;
+				
+				try {
+									
+					$db_con = new MySQLi(
+						$config['MYSQL_SERVER'], 
+						$config['MYSQL_USER'], 
+						$config['MYSQL_PASSWD'], 
+						$config['MYSQL_DB']);
+					
+					if (mysqli_connect_error()) {
+						throw new Exception('Could not connect to Server' . "(" . mysqli_connect_errno() . ")");
+					} 
+					
+					$sql = sprintf("SELECT * FROM `countrytable`
+									WHERE `countryCode`=UCASE('%s')",
+								 	$countryCode);
+					
+					$result = $db_con->query($sql);
+					if ($result && mysqli_num_rows($result) > 0) {
+							
+						while ($row = $result->fetch_array()){
+							
+							$country = new Country(
+								$row[Country::kCol_CountryCode],
+								$row[Country::kCol_CurrencyCode],
+								$row[Country::kCol_CurrencySymbol],
+								$row[Country::kCol_CurrencyIsRight],
+								$row[Country::kCol_CurrencyName]);
+						}
+			            $result->free();
+					}
+					
+					$db_con->close();
+					$db_con = NULL;
+				} catch (Exception $e) {
+					
+					if ($db_con != NULL) {
+						$db_con->close();
+						$db_con = NULL;
+					}
+					
+					throw $e;					
+				}
 			}
 
 			geoip_close($gi);
@@ -364,41 +396,53 @@ class NoteItDB extends DbBase
 	}
 
 	public static function list_countries() {
+        	
         global $config;
-
-        $db_con = new MySQLi(
-        	$config['MYSQL_SERVER'], 
-        	$config['MYSQL_USER'], 
-        	$config['MYSQL_PASSWD'], 
-        	$config['MYSQL_DB']);
-    	
-         if (mysqli_connect_error())
-             throw new Exception('Could not connect to Server' . "(" . mysqli_connect_errno() . ")");
-
- 		$sql = sprintf("SELECT * FROM `countrytable`");
-		$result = $db_con->query($sql);
+		$db_con = NULL;
 		
-		$countries = array();
-		if ($result && mysqli_num_rows($result) > 0) {
-			while ($row = $result->fetch_array()){
-				$country = new Country(
-					$row[Country::kCol_CountryCode],
-					$row[Country::kCol_CurrencyCode],
-					$row[Country::kCol_CurrencySymbol],
-					$row[Country::kCol_CurrencyIsRight],
-					$row[Country::kCol_CurrencyName]);
-				$countries[] = $country;
+		try {
+	        $db_con = new MySQLi(
+	        	$config['MYSQL_SERVER'], 
+	        	$config['MYSQL_USER'], 
+	        	$config['MYSQL_PASSWD'], 
+	        	$config['MYSQL_DB']);
+	    	
+			if (mysqli_connect_error()) {
+			    throw new Exception(
+			    	'Could not connect to Server' . "(" . 
+			    	mysqli_connect_errno() . ")");
 			}
-            $result->free();
+	
+	 		$sql = sprintf("SELECT * FROM `countrytable`");
+			$result = $db_con->query($sql);
+			
+			$countries = array();
+			if ($result && mysqli_num_rows($result) > 0) {
+					
+				while ($row = $result->fetch_array()){
+					$country = new Country(
+						$row[Country::kCol_CountryCode],
+						$row[Country::kCol_CurrencyCode],
+						$row[Country::kCol_CurrencySymbol],
+						$row[Country::kCol_CurrencyIsRight],
+						$row[Country::kCol_CurrencyName]);
+					$countries[] = $country;
+				}
+				
+	            $result->free();
+				$db_con->close();
+				$db_con = NULL;
+				
+				return $countries;
+			} else {
+				throw new Exception("Could not fetch currency related data.");
+			}
+		} catch (Exception $e) {
+				
 			$db_con->close();
 			$db_con = NULL;
-			return $countries;
-		}
-		else {
-			$db_con->close();
-			$db_con = NULL;
-			throw new Exception("Could not fetch currency related data.");
-		}			
+			throw $e;
+		}		
 	}
 	
 	public function list_units($unit_type, &$functor_obj, $function_name='iterate_unit')

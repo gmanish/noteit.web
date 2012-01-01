@@ -12,9 +12,10 @@ class TableBase {
 	 */
 	function __construct($my_dbbase_obj, $user_ID) {
 			
-		if (is_null($my_dbbase_obj))
-			throw new Exception('Null Database Connection Object');
-
+		if (is_null($my_dbbase_obj)) {
+			throw new Exception('Could Not Connect to Database.');
+		} 
+		
 		$this->db_user_ID = $user_ID;
 		$this->db_base = $my_dbbase_obj;
 		$this->db_base->add_ref();
