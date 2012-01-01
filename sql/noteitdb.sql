@@ -307,38 +307,3 @@ INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('pound'
 INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('pint', 'pt', 2);
 INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('quart', 'qt', 2);
 INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('gallon', 'gal', 2);
-
-# -----------------------------------------------------------------
-# Populate factory categories into the shopitemcategories table. These
-# categories belong to `root` user with ID = 0 and are visible to all.
-#
-# NOTE: Keep this list sorted alphabetically
-# -----------------------------------------------------------------
-INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`, `categoryRank`)
-VALUES
-	('Uncategorized', 1, 1),
-	('Apparel & Jewelry', 1, 2),
-	('Bath & Beauty', 1, 3),
-	('Baby Supplies', 1, 4),
-	('Beverages', 1, 5),
-	('Books & Magazines', 1, 6),
-	('Breakfast & Cereals', 1, 7),
-	('Condiments', 1, 8),
-	('Dairy', 1, 9),
-	('Electronics & Computers', 1, 10),
-	('Everything Else', 1, 11),
-	('Frozen Foods', 1, 12),
-	('Fruits', 1, 13),
-	('Furniture', 1, 14),
-	('Games', 1, 15),
-	('Housewares', 1, 16),
-	('Meat & Fish', 1, 17),
-	('Medical', 1, 18),
-	('Mobiles & Cameras', 1, 19),
-	('Music', 1, 20),
-	('Movies', 1, 21),
-	('Pet Supplies', 1, 22),
-	('Snacks & Candy', 1, 23),
-	('Supplies', 1, 24),
-	('Toys & Hobbies', 1, 25),
-	('Vegetables', 1, 26);
