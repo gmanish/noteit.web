@@ -160,8 +160,9 @@ class NoteItDB extends DbBase
             	$config['MYSQL_PASSWD'], 
             	$config['MYSQL_DB']);
             	
-             if ($db_con->connect_error)
+             if ($db_con->connect_error) {
                  throw new Exception('Could not connect to Server: ' . $db_con->error);
+			 }
 
 			// Email ID is already registered??
 			$sql = sprintf(
@@ -200,15 +201,38 @@ class NoteItDB extends DbBase
 				$db_con->escape_string($lastName),
 				$salted_hash);
 			
-			$result = $db_con->query($sql);
-			if ($result == FALSE)
-				throw new Exception('Could not register given user: ' . mysql_error());
+			$noteit_db = NULL;
+			$isTransactional = $db_con->autocommit(FALSE);
+			if (!$isTransactional) {
+				throw new Exception("Could Note Create Transaction.");
+			}
 			
-			$db_con->close();
-			$db_con = NULL;
+			try {
+				$result = $db_con->query($sql);
+				if (!$result) {
+					throw new Exception('Could not register given user: ' . $db_con->error);
+				}
+
+				$user_id = $db_con->insert_id;
+				CategoryTable::createFactoryCategories($user_id, $db_con);
+				
+				$commit = $db_con->commit(); 
+				if (!$commit) {
+					throw new Exception('Could not Commit Transaction: ' . $db_con->error);
+				}
+				
+				$db_con->close();
+				$db_con = NULL;
+				return $user_id;
+				
+			} catch (Exception $e) {
+				if ($isTransactional && $db_con != NULL) {
+					$db_con->rollback();
+				}
+				throw $e;	
+			}			
 		}
-		catch(Exception $e)
-		{
+		catch(Exception $e) {
 			if ($db_con != NULL) { 
 				$db_con->close();
 				$db_con = NULL;

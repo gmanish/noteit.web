@@ -124,12 +124,16 @@ class CommandHandler extends CommandHandlerBase
 
         try
         {
-            NoteItDB::register_user($user_name, $password, $email_ID, $first_name, $last_name);
-
+            $user_id = NoteItDB::register_user($user_name, $password, $email_ID, $first_name, $last_name);
+			if ($user_id <= 0) {
+				throw new Exception("Could not Register User.");
+			}
+			
             // Success in registration, navigate to login screen
             $params = array(
                 Command::$tag => Handler::$do_login,
-                Command::$arg1 => $user_name);
+                Command::$arg1 => $user_name,
+				Command::$arg2 => $user_id);
 
             CommandHandlerBase::redirect_to_view(
                 Views::kView_Home,

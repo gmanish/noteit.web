@@ -46,8 +46,8 @@ if(class_exists('Category') != TRUE)
 	}
 }
 
-if(class_exists('CategoryTable') != TRUE)
-{
+if(class_exists('CategoryTable') != TRUE) {
+		
 	class CategoryTable extends TableBase {
 		
 		const kUSE_STORED_PROC 	= FALSE;
@@ -70,7 +70,7 @@ if(class_exists('CategoryTable') != TRUE)
 			if ($current_user_only == TRUE) {
 				$sql = sprintf(
 					"SELECT * FROM `%s` WHERE `userID_FK`=%d ORDER BY `categoryRank`", 
-					self::kTableName, 
+					self::kTableName	, 
 					parent::GetUserID());
 			}
 			else {
@@ -317,6 +317,49 @@ if(class_exists('CategoryTable') != TRUE)
 					"Database operation failed (" . $this->get_db_con()->errno . ")");
 			}	
 		}
+		
+		static function createFactoryCategories($user_id, $connection) {
+				
+			if ($user_id > 0 && $connection) {
+					
+				$sql = "INSERT INTO `SHOPITEMCATEGORIES` (`categoryName`, `userID_FK`, `categoryRank`)
+						VALUES
+							('Uncategorized', 			$user_id, 1),
+							('Apparel & Jewelry', 		$user_id, 2),
+							('Bath & Beauty', 			$user_id, 3),
+							('Baby Supplies', 			$user_id, 4),
+							('Beverages', 				$user_id, 5),
+							('Books & Magazines', 		$user_id, 6),
+							('Breakfast & Cereals', 	$user_id, 7),
+							('Condiments', 				$user_id, 8),
+							('Dairy', 					$user_id, 9),
+							('Electronics & Computers', $user_id, 10),
+							('Everything Else', 		$user_id, 11),
+							('Frozen Foods', 			$user_id, 12),
+							('Fruits', 					$user_id, 13),
+							('Furniture', 				$user_id, 14),
+							('Games', 					$user_id, 15),
+							('Housewares', 				$user_id, 16),
+							('Meat & Fish', 			$user_id, 17),
+							('Medical', 				$user_id, 18),
+							('Mobiles & Cameras', 		$user_id, 19),
+							('Music', 					$user_id, 20),
+							('Movies', 					$user_id, 21),
+							('Pet Supplies', 			$user_id, 22),
+							('Snacks & Candy', 			$user_id, 23),
+							('Supplies', 				$user_id, 24),
+							('Toys & Hobbies', 			$user_id, 25),
+							('Vegetables', 				$user_id, 26);";
+				
+				$result = $connection->query($sql);
+				if (!$result) {
+					throw new Exception(
+						"Unable to Create Factory Categories for User (" . 
+						$connection->errorno . ")");
+				}
+			}
+		}
 	}
 }
+
 ?>
