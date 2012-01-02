@@ -1377,12 +1377,9 @@ class CommandHandler extends CommandHandlerBase
 		{
 			$user_ID = -1;
 			
-            if (isset($_SESSION['USER_ID']))
-			{
+            if (isset($_SESSION['USER_ID'])) {
                 $user_ID = $_SESSION['USER_ID'];
-			}
-            else
-            {
+			} else {
                 $user_ID = isset($_REQUEST[Command::$arg4]) ? intval($_REQUEST[Command::$arg4]) : 0;
             }
 			

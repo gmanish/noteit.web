@@ -34,33 +34,39 @@ class Reports extends TableBase {
 			$sql = sprintf("SELECT itemID, `itemName`, sum(`itemPrice` * `quantity`) as `price`
 							FROM `shopitems` si
 							INNER JOIN `shopitemscatalog` sic
-							ON si.`itemID_FK` = sic.`itemID`
-							WHERE `isPurchased`=%d AND si.userID_FK=%d AND `datePurchased` BETWEEN '%s' AND '%s'
-							GROUP BY `itemID`", 
+							ON si.`itemID_FK` = sic.`itemID` 
+							WHERE `isPurchased`=%d AND si.userID_FK=%d ",
 							$isPurchased,
-							parent::GetUserID(),
-							$date_from->format('Y-m-d'),
-							$date_to->format('Y-m-d'));
+							parent::GetUserID());
+			if ($isPurchased) {
+				$sql .= "AND `datePurchased` BETWEEN '" . $date_from->format('Y-m-d') . 
+						"' AND '" . $date_to->format('Y-m-d') . "'";
+			}
+			$sql .= " GROUP BY `itemID`"; 
 		} else if (!empty($date_from)) {
 			$sql = sprintf("SELECT itemID, `itemName`, sum(`itemPrice` * `quantity`) as `price`
 							FROM `shopitems` si
 							INNER JOIN `shopitemscatalog` sic
 							ON si.`itemID_FK` = sic.`itemID`
-							WHERE `isPurchased`=%d AND si.userID_FK=%d AND `datePurchased` >= '%s'
-							GROUP BY `itemID`", 
+							WHERE `isPurchased`=%d AND si.userID_FK=%d ",
 							$isPurchased,
-							parent::GetUserID(),
-							$date_from->format('Y-m-d'));
+							parent::GetUserID());
+			if ($isPurchased) {
+				$sql .=  "AND `datePurchased` >= '" . $date_from->format('Y-m-d') . "'";
+			}
+			$sql .= " GROUP BY `itemID`"; 
 		} else if (!empty($date_to)) {
 			$sql = sprintf("SELECT itemID, `itemName`, sum(`itemPrice` * `quantity`) as `price`
 							FROM `shopitems` si
 							INNER JOIN `shopitemscatalog` sic
 							ON si.`itemID_FK` = sic.`itemID`
-							WHERE `isPurchased`=%d AND si.userID_FK=%d AND `datePurchased` <= '%s'
-							GROUP BY `itemID`", 
+							WHERE `isPurchased`=%d AND si.userID_FK=%d ",
 							$isPurchased,
-							parent::GetUserID(),
-							$date_to->format('Y-m-d'));
+							parent::GetUserID());
+			if ($isPurchased) {
+				$sql .= "AND `datePurchased` <= '" . $date_to->format('Y-m-d') . "'";
+		 	}
+			$sql .= " GROUP BY `itemID`"; 
 		} else {
 			throw new Exception("Both To and From Dates cannot be null");
 		}
@@ -83,39 +89,52 @@ class Reports extends TableBase {
 							FROM shopitems si
 							INNER JOIN shopitemcategories sic
 							ON si.categoryID_FK = sic.categoryID
-							WHERE isPurchased=%d  
-							GROUP BY `categoryID`", 
+							WHERE isPurchased=%d AND si.userID_FK=%d ",
 							$isPurchased,
-							parent::GetUserID(),
-							$date_from->format('Y-m-d'),
-							$date_to->format('Y-m-d'));
-		}
-		else if (!empty($date_from)) {
+							parent::GetUserID());
+			if ($isPurchased) {
+				$sql .= " AND si.datePurchased BETWEEN '" . $date_from->format('Y-m-d') . 
+						"' AND '" . $date_to->format('Y-m-d') . "'";
+			}
+			
+			$sql .= " GROUP BY `categoryID`";
+		} else if (!empty($date_from)) {
 			$sql = sprintf("SELECT `categoryID_FK`, `categoryName`, sum(unitCost *  quantity) as `price`
 							FROM shopitems si
 							INNER JOIN shopitemcategories sic
 							ON si.categoryID_FK = sic.categoryID
-							WHERE isPurchased=%d AND si.userID_FK=%d AND si.dateAdded > '%s' 
-							GROUP BY `categoryID`", 
+							WHERE isPurchased=%d AND si.userID_FK=%d ", 
 							$isPurchased,
-							parent::GetUserID(),
-							$date_from->format('Y-m-d'));
-		}
-		else if (!empty($date_to)) {
+							parent::GetUserID());
+			
+			if ($isPurchased) {				
+				$sql .= " AND si.datePurchased >= '" . $date_from->format('Y-m-d') ."'";
+			}
+			
+			$sql .= " GROUP BY `categoryID`";				
+		} else if (!empty($date_to)) {
 			$sql = sprintf("SELECT `categoryID_FK`, `categoryName`, sum(unitCost *  quantity) as `price`
 							FROM shopitems si
 							INNER JOIN shopitemcategories sic
 							ON si.categoryID_FK = sic.categoryID
-							WHERE isPurchased=%d AND si.userID_FK=%d AND si.dateAdded < '%s' 
-							GROUP BY `categoryID`", 
+							WHERE isPurchased=%d AND si.userID_FK=%d", 
 							$isPurchased,
-							parent::GetUserID(),
-							$date_to->format('Y-m-d'));
+							parent::GetUserID());
+							
+			if ($isPurchased) {
+				$sql .= " AND si.datePurchased <= '" . $date_to->format('Y-m-d') . "'";
+			}
+			
+			$sql .= " GROUP BY `categoryID`";
 		} else {
 			throw new Exception("Both To and From Dates Cannot be null.");
 		}
 			
 		$result = $this->get_db_con()->query($sql);
+		if (!$result) {
+			throw new Exception("Error in Report Query");
+		}
+		
 		$result_set = array();
 		while ($result && $row = $result->fetch_array()) {
 			$result_set[] = array(
