@@ -10,9 +10,11 @@ body {
 }
 
 a:link {
-	color: #67593A;
-	text-decoration: underline; /* unless you style your links to look extremely unique, it's best to provide underlines for quick visual identification */
+	color: #E7C681;
+	text-decoration: underline; 
+	font-size: 0.8em;
 }
+
 a:visited {
 	color: #67593A;
 	text-decoration: underline;
@@ -46,6 +48,20 @@ a:hover, a:active, a:focus { /* this group of selectors will give a keyboard nav
     color:#fff;
 }
 
+.textButtonStyle {
+	width: 260px;
+	height: 30px;
+	font-size: 1.3em;
+	font-weight: bold;
+}
+
+.dropShadow {
+	box-shadow: 10px 10px #808080;
+	-webkit-box-shadow: 5px 5px #808080;
+	-moz-box-shadow: 5px 5px #808080;
+	filter: progid:DXImageTransform.Microsoft.dropShadow(color=#000000, offX=5, offY=5, positive=true);
+}
+   
 </style>
 </head>
 
@@ -55,47 +71,36 @@ a:hover, a:active, a:focus { /* this group of selectors will give a keyboard nav
 	method="post" 
 	enctype="application/x-www-form-urlencoded" 
 	target="_self">
-	<table height="500px" align="center" cellspacing="10px">
-	<tr>
-	<td valign="middle">
-		<div class="container" style="border:thin; border-radius: 10px;">
-			<table cellspacing="10px">
-				<tr align="center">
-					<td colspan="2">
+	<table width="300px" height="600px" align="center" cellpadding="0">
+		<tr>
+			<td valign="middle">
+				<div id="container" class="container" style="border:thin; border-radius: 10px; padding:20px;">
+					<div id="logo" align="center">
 						<img align="middle" src="img/logo.png" width="96" height="96" alt="Note It!" />
+					</div>
+					<div id="loginbox" align="left">
 						<input name="command" type="hidden" value="do_login" />
-					</td>
-				</tr>
-				<tr>
-					<td align="right">
+						<br/>
 						<label for="email_ID">Email ID:</label>
-					</td>
-					<td>
-						<input type="text" name="email_ID" id="email_ID" tabindex="1" />
-					</td>
-				</tr>
-				<tr>
-					<td align="right">
+						<br/>
+						<input class="textButtonStyle" type="text" name="email_ID" id="email_ID" tabindex="1" />
+						<br/>
 						<label for="password">Password:</label>
-					</td>
-					<td>
-						<input type="password" name="password" id="password" tabindex="2" />
-					</td>
-				</tr>
-				<tr>
-					<td>&nbsp;</td>
-					<td>&nbsp;</td>
-				</tr>
-				<tr>
-					<td colspan="2" align="center">
+						<br/>
+						<input class="textButtonStyle" type="password" name="password" id="password" tabindex="2" />
+						<br/>
+						<br/>
 						<input name="cmdCancel" type="button" value="Cancel" class="appButton"/>
 						<input name="cmdLogIn" type="submit" value="Log In" class="appButton"/>
-					</td>
-				</tr>
-			</table>
-		</div>	
-	</td>
-	</tr>
+						<br/>
+				</div>
+				</div>	
+				<div align="center" id="footer" style="padding:20px;">
+				<a href="#" target="_self">Forgot Password?</a>
+				&nbsp;&nbsp;<a href="#" target="_self">Home</a>
+				</div>
+			</td>
+		</tr>
 	</table>
 </form>
 </body>
