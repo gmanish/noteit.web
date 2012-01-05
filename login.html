@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Note It! Log in</title>
+<link rel="stylesheet" href="css/noteit.css" type="text/css" />
+<style type="text/css">
+body {
+	color: #67593A;
+}
+
+a:link {
+	color: #67593A;
+	text-decoration: underline; /* unless you style your links to look extremely unique, it's best to provide underlines for quick visual identification */
+}
+a:visited {
+	color: #67593A;
+	text-decoration: underline;
+}
+a:hover, a:active, a:focus { /* this group of selectors will give a keyboard navigator the same hover experience as the person using a mouse. */
+	text-decoration: none;
+}
+
+.appButton {
+	display: 		block;
+	background: 	#67593A;
+	color: 			#E7C681;
+	width: 			90px;
+    float:			right;
+    border:			1px solid #dedede;
+	border-top:		1px solid #eee;
+    border-left:	1px solid #eee;
+	line-height:	130%;
+	cursor:			pointer;
+	padding:		5px 10px 6px 7px;
+}
+
+.appButton a:hover{
+    background-color:#dff4ff;
+    border:1px solid #c2e1ef;
+    color:#336699;
+}
+.appButton a:active{
+    background-color:#6299c5;
+    border:1px solid #6299c5;
+    color:#fff;
+}
+
+</style>
+</head>
+
+<body>
+<form 
+	action="controller/appcontroller.php" 
+	method="post" 
+	enctype="application/x-www-form-urlencoded" 
+	target="_self">
+	<table height="500px" align="center" cellspacing="10px">
+	<tr>
+	<td valign="middle">
+		<div class="container" style="border:thin; border-radius: 10px;">
+			<table cellspacing="10px">
+				<tr align="center">
+					<td colspan="2">
+						<img align="middle" src="img/logo.png" width="96" height="96" alt="Note It!" />
+						<input name="command" type="hidden" value="do_login" />
+					</td>
+				</tr>
+				<tr>
+					<td align="right">
+						<label for="email_ID">Email ID:</label>
+					</td>
+					<td>
+						<input type="text" name="email_ID" id="email_ID" tabindex="1" />
+					</td>
+				</tr>
+				<tr>
+					<td align="right">
+						<label for="password">Password:</label>
+					</td>
+					<td>
+						<input type="password" name="password" id="password" tabindex="2" />
+					</td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td colspan="2" align="center">
+						<input name="cmdCancel" type="button" value="Cancel" class="appButton"/>
+						<input name="cmdLogIn" type="submit" value="Log In" class="appButton"/>
+					</td>
+				</tr>
+			</table>
+		</div>	
+	</td>
+	</tr>
+	</table>
+</form>
+</body>
+</html>
