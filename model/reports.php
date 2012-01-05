@@ -31,7 +31,7 @@ class Reports extends TableBase {
 	public function per_item($isPurchased, $date_from, $date_to) {
 		$sql = "";
 		if (!empty($date_from) && !empty($date_to)) {
-			$sql = sprintf("SELECT itemID, `itemName`, sum(`itemPrice` * `quantity`) as `price`
+			$sql = sprintf("SELECT itemID, `itemName`, sum(`unitCost` * `quantity`) as `price`
 							FROM `shopitems` si
 							INNER JOIN `shopitemscatalog` sic
 							ON si.`itemID_FK` = sic.`itemID` 
@@ -44,7 +44,7 @@ class Reports extends TableBase {
 			}
 			$sql .= " GROUP BY `itemID`"; 
 		} else if (!empty($date_from)) {
-			$sql = sprintf("SELECT itemID, `itemName`, sum(`itemPrice` * `quantity`) as `price`
+			$sql = sprintf("SELECT itemID, `itemName`, sum(`unitCost` * `quantity`) as `price`
 							FROM `shopitems` si
 							INNER JOIN `shopitemscatalog` sic
 							ON si.`itemID_FK` = sic.`itemID`
@@ -56,7 +56,7 @@ class Reports extends TableBase {
 			}
 			$sql .= " GROUP BY `itemID`"; 
 		} else if (!empty($date_to)) {
-			$sql = sprintf("SELECT itemID, `itemName`, sum(`itemPrice` * `quantity`) as `price`
+			$sql = sprintf("SELECT itemID, `itemName`, sum(`unitCost` * `quantity`) as `price`
 							FROM `shopitems` si
 							INNER JOIN `shopitemscatalog` sic
 							ON si.`itemID_FK` = sic.`itemID`

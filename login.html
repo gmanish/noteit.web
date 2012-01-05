@@ -5,6 +5,7 @@
 <title>Note It! Log in</title>
 <link rel="stylesheet" href="css/noteit.css" type="text/css" />
 <style type="text/css">
+
 body {
 	color: #67593A;
 }
@@ -16,9 +17,10 @@ a:link {
 }
 
 a:visited {
-	color: #67593A;
+	color: #E7C681;
 	text-decoration: underline;
 }
+
 a:hover, a:active, a:focus { /* this group of selectors will give a keyboard navigator the same hover experience as the person using a mouse. */
 	text-decoration: none;
 }
@@ -52,15 +54,14 @@ a:hover, a:active, a:focus { /* this group of selectors will give a keyboard nav
 	width: 260px;
 	height: 30px;
 	font-size: 1.3em;
-	font-weight: bold;
 }
 
-.dropShadow {
+/*.dropShadow {
 	box-shadow: 10px 10px #808080;
 	-webkit-box-shadow: 5px 5px #808080;
 	-moz-box-shadow: 5px 5px #808080;
 	filter: progid:DXImageTransform.Microsoft.dropShadow(color=#000000, offX=5, offY=5, positive=true);
-}
+}*/
    
 </style>
 </head>
@@ -81,23 +82,25 @@ a:hover, a:active, a:focus { /* this group of selectors will give a keyboard nav
 					<div id="loginbox" align="left">
 						<input name="command" type="hidden" value="do_login" />
 						<br/>
-						<label for="email_ID">Email ID:</label>
+						<label for="email_ID">Email ID</label>
 						<br/>
-						<input class="textButtonStyle" type="text" name="email_ID" id="email_ID" tabindex="1" />
-						<br/>
-						<label for="password">Password:</label>
-						<br/>
-						<input class="textButtonStyle" type="password" name="password" id="password" tabindex="2" />
+						<input tabindex="1" class="textButtonStyle" type="text" name="email_ID" id="email_ID"/>
 						<br/>
 						<br/>
-						<input name="cmdCancel" type="button" value="Cancel" class="appButton"/>
-						<input name="cmdLogIn" type="submit" value="Log In" class="appButton"/>
+						<label for="password">Password</label>
 						<br/>
-				</div>
+						<input tabindex="2" class="textButtonStyle" type="password" name="password" id="password" />
+						<br/>
+						<br/>
+						<input tabindex="3" name="cmdCancel" type="button" value="Cancel" class="appButton"/>
+						<input tabindex="4" name="cmdLogIn" type="submit" value="Log In" class="appButton"/>
+						<br/>
+					</div>
 				</div>	
 				<div align="center" id="footer" style="padding:20px;">
+				<a href="#" target="_self">Home</a>&nbsp;&nbsp;
+				<a href="#" target="_self">Register</a>&nbsp;&nbsp;
 				<a href="#" target="_self">Forgot Password?</a>
-				&nbsp;&nbsp;<a href="#" target="_self">Home</a>
 				</div>
 			</td>
 		</tr>
