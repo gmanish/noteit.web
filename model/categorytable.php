@@ -339,7 +339,7 @@ if(class_exists('CategoryTable') != TRUE) {
 							('Fruits', 					$user_id, 13),
 							('Furniture', 				$user_id, 14),
 							('Games', 					$user_id, 15),
-							('Housewares', 				$user_id, 16),
+							('Household Supplies', 		$user_id, 16),
 							('Meat & Fish', 			$user_id, 17),
 							('Medical', 				$user_id, 18),
 							('Mobiles & Cameras', 		$user_id, 19),

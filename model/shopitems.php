@@ -2,6 +2,16 @@
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '../lib/noteitcommon.php';
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'tablebase.php';
 
+class SuggestedItem
+{
+	public $itemName = "";
+	public $itemId = 0;
+	
+	function __construct($itemId, $itemName) {
+		$this->itemId = $itemId;
+		$this->itemName = $itemName;
+	}	
+}
 
 class ShopItem
 {
@@ -82,17 +92,16 @@ class ShopItems extends TableBase
     function __construct($db_base, $user_ID)
     {
         parent::__construct($db_base, $user_ID);
-    }
+    }	
 
     function add_item($list_id, $category_id, $item_name, $unit_cost, $item_quantity, $unit_id, $is_asklater)
     {
     	if (!self::USE_STORED_PROC) {
+    		
     		$class_ID = 0;
-    		$sql = sprintf("SELECT `itemID` FROM `shopitemscatalog` WHERE `%s`='%s' AND `%s`=%d LIMIT 1", 
+    		$sql = sprintf("SELECT `itemID` FROM `shopitemscatalog` WHERE `%s`='%s' LIMIT 1", 
 					self::kColItemName,
-					$this->get_db_con()->escape_string($item_name),
-					self::kColUserID,
-					parent::GetUserID());
+					$this->get_db_con()->escape_string($item_name));
 
 			$isTransactional = FALSE;
 			$result = $this->get_db_con()->query($sql);
@@ -106,16 +115,8 @@ class ShopItems extends TableBase
 						throw new Exception("Could Not Create Transaction");	
 					}	
 					
-					$sql = sprintf("INSERT INTO `shopitemscatalog` (
-						`itemName`, 
-						`itemPrice`, 
-						`userID_FK`, 
-						`categoryID_FK`) 
-						VALUES ('%s', %f, %d, %d)",
-						$this->get_db_con()->escape_string($item_name),
-						$unit_cost,
-						parent::GetUserID(),
-						$category_id);
+					$sql = sprintf("INSERT INTO `shopitemscatalog` (`itemName`) VALUES ('%s')",
+						$this->get_db_con()->escape_string($item_name));
 						
 					$result = $this->get_db_con()->query($sql);
 					if ($result == FALSE) {
@@ -125,6 +126,7 @@ class ShopItems extends TableBase
 					}
 					
 					$class_ID =	$this->get_db_con()->insert_id;
+					
 				} catch (Exception $e) {
 					if ($isTransactional) {
 						$this->get_db_con()->rollback();
@@ -290,7 +292,7 @@ class ShopItems extends TableBase
         if ($result == FALSE)
             throw new Exception('SQL exec failed ('. __FILE__ . __LINE__ . '): ' . $this->get_db_con()->error);
 
-        while ($row = mysqli_fetch_array($result, MYSQL_ASSOC))
+        if ($row = mysqli_fetch_array($result, MYSQL_ASSOC))
         {
             NI::TRACE('ShopItems::get_item() returned row: ' . print_r($row, TRUE), __FILE__, __LINE__);
             $thisItem = new ShopItem(
@@ -448,12 +450,13 @@ class ShopItems extends TableBase
 	
 	function suggest_item($string, $max_suggestions)
 	{
-		$sql = sprintf("SELECT `%s` FROM `shopitemscatalog` 
-					WHERE `%s` LIKE '%%%s%%' LIMIT %d", 
+		$sql = sprintf("SELECT `itemID`, `%s` 
+					FROM `shopitemscatalog` 
+					WHERE `%s` LIKE '%%%s%%' LIMIT %d",
 					self::kColItemName, 
 					self::kColItemName, 
 					$this->get_db_con()->escape_string($string), 
-					max($max_suggestions, 10));
+					min($max_suggestions, 10));
 
 		NI::TRACE("SQL: " . $sql, __FILE__, __LINE__);
 		$result = $this->get_db_con()->query($sql);
@@ -464,7 +467,7 @@ class ShopItems extends TableBase
 		$suggestions = array();
         while ($row = mysqli_fetch_array($result, MYSQL_ASSOC))
         {
-			$suggestions[] = $row[self::kColItemName];
+        	$suggestions[] = new SuggestedItem($row['itemID'], $row[self::kColItemName]);
         }
 		if ($result)
 			$result->free();
@@ -481,14 +484,15 @@ class ShopItems extends TableBase
 		// the catalogs table first and then update the appropriate record in the
 		// `shopitems` table.
 		$new_itemid = 0;
-		$sql = sprintf("SELECT `itemID` FROM `shopitemscatalog` 
-				WHERE `itemName`='%s' AND `userID_FK`=%d LIMIT 1", 
-				$this->get_db_con()->escape_string($item->_item_name), 
-				parent::GetUserID());
+		$sql = sprintf("SELECT `itemID` 
+				FROM `shopitemscatalog` 
+				WHERE `itemName`='%s' LIMIT 1", 
+				$this->get_db_con()->escape_string($item->_item_name));
 				
 		$result = $this->get_db_con()->query($sql);
-		if ($result == FALSE)
-            throw new Exception('SQL exec failed ('. __FILE__ . __LINE__ . '): ' . $this->get_db_con()->error);
+		if ($result == FALSE) {
+            throw new Exception('Could not find matching entry in Catalog (' . $this->get_db_con()->errorno . ')');
+		}
 		
 		$row = mysqli_fetch_array($result);
 		if ($row)
@@ -499,18 +503,13 @@ class ShopItems extends TableBase
 		else
 		{
 			// No item was found create a new record for this name
-			$sql = sprintf("INSERT INTO `shopitemscatalog` 
-							(`itemName`, `itemPrice`, `userID_FK`, `categoryID_FK`) 
-							VALUES ('%s', %.2f, %d, %d)",
-						$this->get_db_con()->escape_string($item->_item_name), 
-						$item->_unit_cost,
-						parent::GetUserID(),
-						$item->_category_id);
+			$sql = sprintf("INSERT INTO `shopitemscatalog` (`itemName`) VALUES ('%s')",
+						$this->get_db_con()->escape_string($item->_item_name));
 			
 			$result = $this->get_db_con()->query($sql);
-			if ($result == FALSE)
-				throw new Exception('SQL exec failed ('. __FILE__ . __LINE__ . '): ' . $this->get_db_con()->error);
-			
+			if ($result == FALSE) {
+				throw new Exception('Could not create Catalog entry (' . $this->get_db_con()->errorno . ')');
+			}
 			
 			$new_itemid = $this->get_db_con()->insert_id;
 		} 
@@ -552,8 +551,9 @@ class ShopItems extends TableBase
 						$list_id,
 						self::kColIsPurchased);
 		$result = $this->get_db_con()->query($sql);		
-		if (!$result)			
-			throw new Exception("Error Calculating Total.");
+		if (!$result) {			
+			throw new Exception("Error Calculating Total." . $this->get_db_con()->errno . ")");
+		}
 		
 		$pending_cost = 0.0;
         if ($row = mysqli_fetch_array($result, MYSQL_ASSOC))
@@ -562,6 +562,53 @@ class ShopItems extends TableBase
 			$result->free();
         }
 		return $pending_cost;
+	}
+	
+	function list_instances(
+		$class_id, 
+		$num_instances,
+		& $functor_obj,
+        $function_name="iterate_row") {
+		
+		$num_instances = min($num_instances, 1); // Let's restrict till we know we need more
+		$sql = sprintf(
+			"SELECT `instanceID`, `categoryID_FK`, `unitCost`, `quantity`, `unitID_FK` 
+			FROM `shopitems` 
+			WHERE `itemID_FK`=%d AND `isPurchased`=1 AND `unitCost` > 0 AND `userID_FK`=%d  
+			ORDER BY `datePurchased` DESC 
+			LIMIT %d", 
+			$class_id, 
+			parent::GetUserID(),
+			$num_instances);
+		$result = $this->get_db_con()->query($sql);
+		if (!$result) {
+			throw new Exception("Could not fetch item history. (" . $this->get_db_con()->errno . ".");	
+		}
+		
+        while ($row = mysqli_fetch_array($result)) {
+        	
+            $thisItem = new ShopItem(
+                $row[self::kColInstanceID],
+				$class_id,
+                parent::GetUserID(),
+                0,
+                $row[self::kColCategoryID],
+                "",
+                $row[self::kColUnitCost],  // unit cost
+                $row[self::kColQuantity],
+                $row[self::kColUnitID],
+				1,
+				0);
+				
+            call_user_func(
+                array($functor_obj, $function_name), // invoke the callback function
+                $thisItem);
+                
+            $thisItem = NULL;
+        }
+        
+        if ($result)
+        	$result->free();
 	}
 }
 ?>

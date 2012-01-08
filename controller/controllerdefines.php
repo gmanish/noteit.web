@@ -53,6 +53,7 @@
 		public static $do_copy_item			= 'do_copy_item';
 		public static $do_mark_all_done		= 'do_mark_all_done';
 		public static $do_get_pending_cost	= 'do_get_pending_cost';
+		public static $do_get_instances		= 'do_get_instances';
 		
 		public static $do_category_report	= 'do_category_report';
 		public static $do_item_report		= 'do_item_report';

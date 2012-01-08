@@ -1,7 +1,5 @@
-DROP DATABASE IF EXISTS `noteitdb`;
-CREATE DATABASE `noteitdb` CHARSET = utf8;
+CREATE DATABASE IF NOT EXISTS `noteitdb` CHARSET = utf8;
 USE noteitdb;
-
 
 CREATE TABLE IF NOT EXISTS `countrytable` (
   `countryCode` varchar(3) NOT NULL,
@@ -71,19 +69,12 @@ CREATE TABLE IF NOT EXISTS `shopitemcategories` (
 # -----------------------------------------------------------------
 # Create the `shopitemscatalog` table
 # -----------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `shopitemscatalog`(
-  `itemID` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `itemName` VARCHAR(50) NOT NULL,
-  `itemPrice` DECIMAL(11, 2) UNSIGNED DEFAULT NULL,
-  `userID_FK` INT(11) UNSIGNED NOT NULL,
-  `categoryID_FK` INT(11) UNSIGNED NOT NULL,
-  PRIMARY KEY (`userID_FK`, `itemName`),
-  UNIQUE KEY `itemID_UNIQUE` (`itemID`),
-  KEY `Ref_01` (`userID_FK`),
-  KEY `Ref_02` (`categoryID_FK`),
-  CONSTRAINT `Ref_01` FOREIGN KEY (`userID_FK`) REFERENCES `users` (`userID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `Ref_02` FOREIGN KEY (`categoryID_FK`) REFERENCES `shopitemcategories` (`categoryID`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE = INNODB DEFAULT CHARSET = utf8;
+CREATE TABLE `shopitemscatalog` (
+  `itemID` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `itemName` varchar(50) NOT NULL,
+  PRIMARY KEY (`itemID`),
+  UNIQUE KEY `itemName` (`itemName`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 # -----------------------------------------------------------------
 # Create the `shopitems` table

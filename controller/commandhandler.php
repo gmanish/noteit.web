@@ -697,6 +697,54 @@ class CommandHandler extends CommandHandlerBase
         }
     }
 
+	public static function do_get_instances() {
+        	
+        $class_ID = isset($_REQUEST[Command::$arg1]) ? intval($_REQUEST[Command::$arg1]) : 0;
+		$num_instances = isset($_REQUEST[Command::$arg2]) ? min(intval($_REQUEST[COmmand::$arg2]), 5) : 1;
+		
+        try
+        {
+            $user_ID = -1;
+
+            if (isset($_SESSION['USER_ID']))
+                $user_ID = $_SESSION['USER_ID'];
+            else {
+                $user_ID = isset($_REQUEST[Command::$arg3]) ? intval($_REQUEST[Command::$arg3]) : 0;
+                if ($user_ID == 0) {
+                    throw new Exception("Session Expired. Please log in again.");
+                }
+            }
+
+			if ($user_ID <= 0 || $class_ID <= 0 || $num_instances <= 0)
+				throw new Exception("Error Processing Request.");
+			
+            $noteit_db = NoteItDB::login_user_id($user_ID);
+           	$items = array();
+            $shop_item_functor = new ListFunctorShopItems($items);
+            $noteit_db->get_shopitems_table()->list_instances(
+            	$class_ID, 
+            	$num_instances, 
+            	$shop_item_functor, 
+            	'iterate_row');
+            $arr = array(
+                JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
+                JSONCodes::kRetMessage => "",
+                Command::$arg1 => $items);
+
+            $json_str = json_encode($arr);
+            $noteit_db = NULL;
+            echo($json_str);
+        }
+        catch(Exception $e)
+        {
+            $arr = array(
+                JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
+                JSONCodes::kRetMessage => $e->getMessage());
+
+            echo(json_encode($arr));
+        }
+	}
+
     /*  This function is called asynchronously. It's important to note that all output
         from this function should be JSON encoded. No returning HTML headers and Tags.
     */
@@ -1237,7 +1285,6 @@ class CommandHandler extends CommandHandlerBase
             }
 			
             $noteit_db = NoteItDB::login_user_id($user_ID);
-            $suggestions = array();
             $suggestions = $noteit_db->get_shopitems_table()->suggest_item($substring, $max_items);
          	$noteit_db = NULL;
         	$arr = array(
