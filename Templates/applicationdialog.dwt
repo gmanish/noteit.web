@@ -10,23 +10,27 @@
 <link href="../css/noteit.css" rel="stylesheet" type="text/css" />
 <style type="text/css">
 	
-	body {
-		color: #67593A;
-	}
-	
 	a:link {
-		color: #E7C681;
-		text-decoration: underline; 
-		font-size: 0.8em;
+		color: 				#E7C681;
+		text-decoration: 	underline; 
+		font-size: 			0.8em;
 	}
 	
 	a:visited {
-		color: #E7C681;
-		text-decoration: underline;
+		color:	 			#E7C681;
+		text-decoration: 	underline;
 	}
 	
 	a:hover, a:active, a:focus {
-		text-decoration: none;
+		text-decoration: 	none;
+	}
+	
+	.dialog_box {
+		width: 				400px;
+		min-width: 			400px;
+		border:				thin;
+		border-radius:		20px;
+		padding:			20px;
 	}
 
 </style>
@@ -34,10 +38,13 @@
 </head>
 
 <body>
-	<table width="500px" height="600px" align="center" cellpadding="0">
+	<table align="center" cellpadding="0">
+		<tr height="100px;">
+			<td>
+			</td>
 		<tr>
 			<td valign="middle">
-				<div id="container" class="container" style="border:thin; border-radius: 10px; padding:20px;">
+				<div id="container" class="container dialog_box">
 					<div id="logo" align="center">
 						<img align="middle" src="../img/logo.png" width="96" height="96" alt="Note It!" />
 					</div>

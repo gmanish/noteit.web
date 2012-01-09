@@ -4,8 +4,8 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . ("controllerdefines.php")
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../model/noteitdb.php");
 
 // [TODO] : Research if there is a better way to do this
-function shopitem_obj_to_array($shop_item_obj)
-{
+function shopitem_obj_to_array($shop_item_obj) {
+	
     $shop_item_array = array(
         ShopItems::kColInstanceID       => $shop_item_obj->_instance_id,
         ShopItems::kColUserID           => $shop_item_obj->_user_id,
@@ -25,19 +25,17 @@ function shopitem_obj_to_array($shop_item_obj)
     return $shop_item_array;
 }
 
-class ListFunctorShopItems
-{
-    public $_items = array();
+class ListFunctorShopItems {
+    
+	public $_items = array();
 
-    function __construct(& $items_array)
-    {
+    function __construct(& $items_array) {
         $this->_items = & $items_array;
     }
 
-    function iterate_row($shop_item)
-    {
-        NI::TRACE("ListFunctorShopItems::iterate_row, Obect passed:" . print_r($shop_item, TRUE), __FILE__, __LINE__);
+    function iterate_row($shop_item) {
 
+        NI::TRACE("ListFunctorShopItems::iterate_row, Obect passed:" . print_r($shop_item, TRUE), __FILE__, __LINE__);
         $thisItem = shopitem_obj_to_array($shop_item);
         $this->_items[] = $thisItem; //append this item to the array
     }
@@ -47,13 +45,11 @@ class ListFunctorUnits
 {
     public $_units = array();
 
-    function __construct(& $units_array)
-    {
+    function __construct(& $units_array) {
         $this->_units = & $units_array;
     }
 
-    function iterate_unit($unit)
-    {
+    function iterate_unit($unit) {
         $this->_units[] = $unit; //append this item to the array
     }
 }
@@ -64,26 +60,22 @@ class CommandHandlerBase
         $view_ID, /* One of class Views */
         $handler_exit_status = HandleHandlerExitStatus::kCommandStatus_OK,
         $message = NULL,
-        $params = NULL)
-    {
+        $params = NULL) {
+			
         global $view_map;
 
         require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/htmlheader.tphp"));
 
-        if ($handler_exit_status == HandlerExitStatus::kCommandStatus_Error)
-        {
+        if ($handler_exit_status == HandlerExitStatus::kCommandStatus_Error) {
             echo "<div class=\"headerBubble headerBubbleError\">";
             echo "Error: " . $message;
             echo "</div>";
-        }
-        else if ($handler_exit_status == HandlerExitStatus::kCommandStatus_Information)
-        {
+        } else if ($handler_exit_status == HandlerExitStatus::kCommandStatus_Information) {
             echo "<div class=\"headerBubble headerBubbleInfo\">";
             echo "Information: " . $message;
             echo "</div>";
         }
-        else if ($handler_exit_status == HandlerExitStatus::kCommandStatus_OK && !is_null($message))
-        {
+        else if ($handler_exit_status == HandlerExitStatus::kCommandStatus_OK && !is_null($message)) {
             echo "<div class=\"headerBubble headerBubbleOK\">";
             echo "OK: " . $message;
             echo "</div>";
@@ -92,8 +84,9 @@ class CommandHandlerBase
         require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/htmlheader.tphp"));
         require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/noteitbodybegin.tphp"));
         require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/noteitheader.tphp"));
-        require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/noteitheader.tphp"));
-        require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ($view_map[$view_ID]));
+		if ($handler_exit_status != HandlerExitStatus::kCommandStatus_Error) {
+        	require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ($view_map[$view_ID]));
+		}
         require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/noteitfooter.tphp"));
         require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/noteitbodyend.tphp"));
         require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../view/htmlfooter.tphp"));
@@ -103,26 +96,25 @@ class CommandHandlerBase
         $url,
         $params = NULL,
         $handler_exit_status = HandlerExitStatus::kCommandStatus_OK,
-        $message = NULL)
-    {
-        if ($params != NULL)
+        $message = NULL) {
+        
+		if ($params != NULL)
             header('Location: ' . $url . "?" . http_build_query($params));
         else
             header('Location: ' . $url);
     }
 }
 
-class CommandHandler extends CommandHandlerBase
-{
-    public static function do_register()
-    {
+class CommandHandler extends CommandHandlerBase {
+
+    public static function do_register() {
+    	
         $first_name = isset($_REQUEST['first_name']) ? $_REQUEST['first_name'] : "";
         $last_name 	= isset($_REQUEST['last_name']) ? $_REQUEST['last_name'] : "";
         $email_ID 	= isset($_REQUEST['email_ID']) ? $_REQUEST['email_ID'] : "";
         $password	= isset($_REQUEST['password']) ? $_REQUEST['password'] : "";
 
-        try
-        {
+        try {
             $user_id = NoteItDB::register_user("", $password, $email_ID, $first_name, $last_name);
 			if ($user_id <= 0) {
 				throw new Exception("Could not Register User.");
@@ -143,9 +135,9 @@ class CommandHandler extends CommandHandlerBase
 
             echo(json_encode($arr));
             $noteit_db = NULL;
-         }
-        catch(Exception $e)
-        {
+        
+		} catch(Exception $e) {
+			
             $arr = array(
                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
                 JSONCodes::kRetMessage => $e->getMessage());
@@ -154,53 +146,16 @@ class CommandHandler extends CommandHandlerBase
         }
     }
 
-    public static function do_login()
-    {
-        $email_ID 	= isset($_REQUEST['email_ID']) ? $_REQUEST['email_ID'] : "";
-		$pasword = isset($_REQUEST['password']) ? $_REQUEST['password'] : "";
-		$is_password_hashed = isset($_REQUEST['isHashedPassword']) ? $_REQUEST['isHashedPassword'] : 0;
-		  
-        try
-        {
-            $params = array(
-                Command::$tag => Handler::$do_login,
-                Command::$arg1 => $email_ID);
-
-            $noteit_db = NoteItDB::login_user_email(
-            	$email_ID, 
-            	$pasword, 
-            	$is_password_hashed);
-
-            // Start a session for this user and store the id in a session variable
-            $_SESSION['USER_ID'] = $noteit_db->get_db_userID();
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        $_SESSION['FOO'] = 'BAR';
-            CommandHandlerBase::redirect_to_view(
-                Views::kView_Dashboard,
-                HandlerExitStatus::kCommandStatus_OK,
-                "You have successfully logged in.");
-
-            $noteit_db = NULL;
-        }
-        catch(Exception $e)
-        {
-            CommandHandlerBase::redirect_to_view(
-                Views::kView_Register,
-                HandlerExitStatus::kCommandStatus_Error,
-                $e->getMessage());
-        }
-    }
-
     /*  This function is called asynchronously. It's important to note that all output
         from this function should be JSON encoded. No returning HTML headers and Tags.
     */
-    public static function do_login_json()
-    {
+    public static function do_login_json() {
+    	
         $email_ID 			= isset($_REQUEST['email_ID']) ? $_REQUEST['email_ID'] : "";
 		$password			= isset($_REQUEST['password']) ? $_REQUEST['password'] : "";
 		$is_password_hashed = isset($_REQUEST['isHashedPassword']) ? $_REQUEST['isHashedPassword'] : 0;
 		
-        try
-        {
+        try {
             $noteit_db = NoteItDB::login_user_email(
             	$email_ID, 
             	$password, 
@@ -218,8 +173,7 @@ class CommandHandler extends CommandHandlerBase
             echo(json_encode($arr));
             $noteit_db = NULL;
         }
-        catch(Exception $e)
-        {
+        catch(Exception $e) {
             $arr = array(
                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
                 JSONCodes::kRetMessage => $e->getMessage());
@@ -228,6 +182,59 @@ class CommandHandler extends CommandHandlerBase
         }
     }
     
+    public static function do_login() {
+        try {
+			CommandHandlerBase::redirect_to_view(
+				Views::kView_Dashboard,
+				HandlerExitStatus::kCommandStatus_OK);
+        }
+        catch(Exception $e) {
+//        	echo($e->getMessage());
+            CommandHandlerBase::redirect_to_view(
+                0,
+                HandlerExitStatus::kCommandStatus_Error,
+                $e->getMessage());
+        }
+    }
+
+	public static function do_change_password() {
+		
+		try {
+		    $user_ID = -1;
+			$old_password = isset($_REQUEST[Command::$arg1]) ? $_REQUEST[Command::$arg1] : "";
+			$new_password = isset($_REQUEST[Command::$arg2]) ? $_REQUEST[Command::$arg2] : "";
+
+            if (isset($_SESSION['USER_ID']))
+                $user_ID = $_SESSION['USER_ID'];
+            else {
+                $user_ID = isset($_REQUEST[Command::$arg3]) ? intval($_REQUEST[Command::$arg3]) : 0;
+            }
+
+			if ($user_ID <= 0) {
+            	throw new Exception("Session Expired. Please log in again.");
+            }
+			
+            $noteit_db = NoteItDB::login_user_id($user_ID);
+           	$noteit_db->change_password($old_password, $new_password);
+            $noteit_db = NULL;
+
+            // Form a JSON string
+            $arr = array(
+                JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
+                JSONCodes::kRetMessage => "");
+
+            echo(json_encode($arr));
+			
+		} catch (Exception $e) {
+            $arr = array(
+                JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
+                JSONCodes::kRetMessage => $e->getMessage());
+
+            echo(json_encode($arr));
+		}
+			
+	}
+	
 	public static function do_save_prefs() {
        
         try
@@ -239,8 +246,7 @@ class CommandHandler extends CommandHandlerBase
 
             if (isset($_SESSION['USER_ID']))
                 $user_ID = $_SESSION['USER_ID'];
-            else
-            {
+            else {
                 $user_ID = isset($_REQUEST[Command::$arg3]) ? intval($_REQUEST[Command::$arg3]) : 0;
                 if ($user_ID == 0) {
                     throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
@@ -262,9 +268,8 @@ class CommandHandler extends CommandHandlerBase
                 JSONCodes::kRetMessage => "");
 
             echo(json_encode($arr));
-        }
-        catch(Exception $e)
-        {
+        
+		} catch(Exception $e) {
             $arr = array(
                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
                 JSONCodes::kRetMessage => $e->getMessage());
@@ -275,8 +280,8 @@ class CommandHandler extends CommandHandlerBase
     /*  This function is called asynchronously. It's important to note that all output
         from this function should be JSON encoded. No returning HTML headers and Tags.
     */
-    public static function do_delete_shop_list()
-    {
+    public static function do_delete_shop_list() {
+		
         $listID = isset($_REQUEST[Command::$arg1]) ? intval($_REQUEST[Command::$arg1]) : 0;
 
         try
@@ -306,9 +311,9 @@ class CommandHandler extends CommandHandlerBase
                 JSONCodes::kRetMessage => "");
 
             echo(json_encode($arr));
-        }
-        catch(Exception $e)
-        {
+			
+        } catch(Exception $e) {
+			
             $arr = array(
                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
                 JSONCodes::kRetMessage => $e->getMessage());
@@ -354,8 +359,8 @@ class CommandHandler extends CommandHandlerBase
 
             echo(json_encode($arr));
         }
-        catch(Exception $e)
-        {
+        catch(Exception $e) {
+			
             $arr = array(
                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
                 JSONCodes::kRetMessage => $e->getMessage());
@@ -401,9 +406,8 @@ class CommandHandler extends CommandHandlerBase
                 Command::$arg2 => $list_name);
 
             echo(json_encode($arr));
-        }
-        catch(Exception $e)
-        {
+			
+        } catch(Exception $e) {
             $arr = array(
                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
                 JSONCodes::kRetMessage => $e->getMessage());
@@ -424,8 +428,7 @@ class CommandHandler extends CommandHandlerBase
 
             if (isset($_SESSION['USER_ID']))
                 $user_ID = intval($_SESSION['USER_ID']);
-            else
-            {
+            else {
                 $user_ID = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
                 if ($user_ID == 0) {
                     throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");
@@ -446,9 +449,9 @@ class CommandHandler extends CommandHandlerBase
                 Command::$arg1 => $pending_cost);
 
             echo(json_encode($arr));
-        }
-        catch(Exception $e)
-        {
+			
+        } catch(Exception $e) {
+			
             $arr = array(
                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
                 JSONCodes::kRetMessage => $e->getMessage());
@@ -470,8 +473,7 @@ class CommandHandler extends CommandHandlerBase
 
             if (isset($_SESSION['USER_ID']))
                 $user_ID = $_SESSION['USER_ID'];
-            else
-            {
+            else {
                 $user_ID = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
                 if ($user_ID == 0) {
                     throw new Exception("Session Expired. Please log in again. (" . __FILE__ . __LINE__ . ")");

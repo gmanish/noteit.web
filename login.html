@@ -10,23 +10,27 @@
 <link href="css/noteit.css" rel="stylesheet" type="text/css" />
 <style type="text/css">
 	
-	body {
-		color: #67593A;
-	}
-	
 	a:link {
-		color: #E7C681;
-		text-decoration: underline; 
-		font-size: 0.8em;
+		color: 				#E7C681;
+		text-decoration: 	underline; 
+		font-size: 			0.8em;
 	}
 	
 	a:visited {
-		color: #E7C681;
-		text-decoration: underline;
+		color:	 			#E7C681;
+		text-decoration: 	underline;
 	}
 	
 	a:hover, a:active, a:focus {
-		text-decoration: none;
+		text-decoration: 	none;
+	}
+	
+	.dialog_box {
+		width: 				400px;
+		min-width: 			400px;
+		border:				thin;
+		border-radius:		20px;
+		padding:			20px;
 	}
 
 </style>
@@ -34,43 +38,80 @@
 </head>
 
 <body>
-	<table width="500px" height="600px" align="center" cellpadding="0">
+	<table align="center" cellpadding="0">
+		<tr height="100px;">
+			<td>
+			</td>
 		<tr>
 			<td valign="middle">
-				<div id="container" class="container" style="border:thin; border-radius: 10px; padding:20px;">
+				<div id="container" class="container dialog_box">
 					<div id="logo" align="center">
 						<img align="middle" src="img/logo.png" width="96" height="96" alt="Note It!" />
 					</div>
 					<div id="dialogbox" align="left">
 					<!-- InstanceBeginEditable name="dialogcontent" -->
-					<form 
-						action="controller/appcontroller.php" 
-						method="post" 
-						enctype="application/x-www-form-urlencoded" 
-						target="_self">
-						
-						<input name="command" type="hidden" value="do_login" />
-						<table cellpadding="5px">
-							<tr>
-								<td>Email</td>
-								<td>
-									<input id="email_ID" name="email_ID" class="textButtonStyle" value="" />
-								</td>
-							</tr>
-							<tr>
-								<td>Password</td>
-								<td>
-									<input id="password" name="password" type="password" class="textButtonStyle" value=""/>
-								</td>
-							</tr>
-							<tr>
-								<td style="" colspan="2" align="right">
-									<input name="cmdCancel" style="float:right" type="button" value="Cancel" class="appButton"/>
-									<input name="cmdLogIn" style="float:right" type="submit" value="Log In" class="appButton"/>
-								</td>
-							</tr>						
-						</table>
-					</form>
+					<input name="command" type="hidden" value="do_login" />
+					
+					<table cellpadding="5px">
+						<tr>
+							<td>Email</td>
+							<td>
+								<input id="email_ID" name="email_ID" class="textButtonStyle" value="" />
+							</td>
+						</tr>
+						<tr>
+							<td>Password</td>
+							<td>
+								<input id="password" name="password" type="password" class="textButtonStyle" value=""/>
+							</td>
+						</tr>
+						<tr>
+							<td style="" colspan="2" align="right">
+								<input name="cmdCancel" style="float:right" type="button" value="Cancel" class="appButton"/>
+								<input id="cmdLogIn" name="cmdLogIn" style="float:right" type="submit" value="Log In" class="appButton"/>
+							</td>
+						</tr>						
+					</table>
+					
+					<script type="text/javascript" src="js/jquery.js"></script>
+					<script type="text/javascript">
+						$(document).ready(function() {
+							
+							$('#cmdLogIn').click (function() {
+								var url="controller/appcontroller.php";
+								var email = $('#email_ID').val();
+								var password = $('#password').val();
+								if (email == "") {
+									alert("Email cannot be empty.");
+									return;
+								}
+								else if (password == "") {
+									alert("Password cannot be empty.");
+									return;
+								} 
+								$.post(
+									url,
+									{ 
+										command: 	"do_login_json", 
+										email_ID:	email,
+										password:	password
+									},
+									function(data) {
+										try {
+				                            var JSONObject = eval('(' + data + ')');
+				                            if (JSONObject.JSONRetVal == 0) {
+			                            		window.location = url + "?command=do_login&arg1=" + JSONObject.arg1;
+				                            } else {
+				                            	alert(JSONObject.JSONRetMessage);
+				                            }
+										}
+										catch (err) {
+										}
+									}
+								);
+							});
+						});
+					</script>
 					<!-- InstanceEndEditable -->
 					</div>
 				</div>	

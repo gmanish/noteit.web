@@ -330,6 +330,31 @@ class NoteItDB extends DbBase
 		}
 	}
 	
+	public function change_password($old_password, $new_password) {
+		
+		if (empty($new_password) || empty($old_password))
+			throw new Exception("Password cannot be empty.");
+		else if ($new_password == $old_password)
+			throw new Exception("The new password cannot be the same as the old password."); 
+		
+		global $config;
+		$salt = $config['SALT'];
+		$salted_hash_new = sha1($salt . $new_password);
+		$salted_hash_old = sha1($salt . $old_password);
+
+		$sql = 	sprintf("UPDATE `users`
+						SET `userPassword`=UNHEX('%s') 
+						WHERE `userID`=%d AND `userPassword`=UNHEX('%s')",
+						$salted_hash_new,
+						$this->db_userID,
+						$salted_hash_old);
+		echo($sql);
+		$result = $this->get_db_con()->query($sql);
+		if ($this->get_db_con()->affected_rows <= 0) {
+			throw new Exception("Passwords do not match.");
+		}
+	}
+	
 	public function save_preferences($preferences) {
 			
 		if ($preferences != NULL) {
@@ -357,9 +382,10 @@ class NoteItDB extends DbBase
 		global $config;
 		
 		$country = new Country("US", "USD", "$", 1, "US Dollar");
-		if (!file_exists($config['GEOIP_DB']))
-			throw new Exception("GeoIP Database Not Installed");
-			
+		if (!file_exists($config['GEOIP_DB'])) {
+			throw new Exception("A required database was not found. Server Installation is corrupt.");
+		}
+		
 		$gi = geoip_open($config['GEOIP_DB'], GEOIP_STANDARD);
 		if ($gi != NULL) {
 			
@@ -414,6 +440,8 @@ class NoteItDB extends DbBase
 
 			geoip_close($gi);
 			$gi = NULL;
+		} else {
+			throw new Exception("A required database was not found. Server Installation is corrupt.");
 		}
 		
 		return $country;

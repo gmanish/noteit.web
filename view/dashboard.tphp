@@ -2,13 +2,13 @@
 
 require_once (dirname(__FILE__) . DIRECTORY_SEPARATOR . "../model/noteitdb.php");
 require_once (dirname(__FILE__) . DIRECTORY_SEPARATOR . "../lib/noteitcommon.php");
+
 if(isset($_SESSION['USER_ID']))
 	$userID = $_SESSION['USER_ID'];
 else
 	throw new Exception("Session expired. Please log in again.");
 
 $noteit_db = NoteItDB::login_user_id($userID);
-
 
 class ListFunctorShopListHTML {
 	public function iterate_row($list_id, $list_name)

@@ -1,0 +1,13 @@
+<Files ~ "\.(inc|sql)$">
+  	order allow,deny
+  	deny from all
+</Files>
+
+<Files config/config.php>
+	order allow,deny
+ 	deny from all
+</Files>
+
+ErrorDocument 403 /errors/error.php?403
+ErrorDocument 404 /errors/error.php?403
+ErrorDocument 500 /errors/error.php?500
