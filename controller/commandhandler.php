@@ -116,7 +116,6 @@ class CommandHandler extends CommandHandlerBase
 {
     public static function do_register()
     {
-        $user_name 	= isset($_REQUEST['user_name']) ? $_REQUEST['user_name'] : "";
         $first_name = isset($_REQUEST['first_name']) ? $_REQUEST['first_name'] : "";
         $last_name 	= isset($_REQUEST['last_name']) ? $_REQUEST['last_name'] : "";
         $email_ID 	= isset($_REQUEST['email_ID']) ? $_REQUEST['email_ID'] : "";
@@ -124,28 +123,34 @@ class CommandHandler extends CommandHandlerBase
 
         try
         {
-            $user_id = NoteItDB::register_user($user_name, $password, $email_ID, $first_name, $last_name);
+            $user_id = NoteItDB::register_user("", $password, $email_ID, $first_name, $last_name);
 			if ($user_id <= 0) {
 				throw new Exception("Could not Register User.");
 			}
-			
-            // Success in registration, navigate to login screen
-            $params = array(
-                Command::$tag => Handler::$do_login,
-                Command::$arg1 => $user_name,
-				Command::$arg2 => $user_id);
 
-            CommandHandlerBase::redirect_to_view(
-                Views::kView_Home,
-                HandlerExitStatus::kCommandStatus_OK,
-                "You have been registered. Please log in.", $params);
-        }
+            // Success in registration
+            $noteit_db = NoteItDB::login_user_email(
+            	$email_ID, 
+            	$password, 
+            	FALSE);
+
+            // Start a session for this user and store the id in a session variable
+            $_SESSION['USER_ID'] = $noteit_db->get_db_userID();
+						
+            $arr = array(
+                JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
+                JSONCodes::kRetMessage => "");
+
+            echo(json_encode($arr));
+            $noteit_db = NULL;
+         }
         catch(Exception $e)
         {
-            CommandHandlerBase::redirect_to_view(
-                Views::kView_Register,
-                HandlerExitStatus::kCommandStatus_Error,
-                $e->getMessage());
+            $arr = array(
+                JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
+                JSONCodes::kRetMessage => $e->getMessage());
+
+            echo(json_encode($arr));
         }
     }
 
@@ -168,7 +173,7 @@ class CommandHandler extends CommandHandlerBase
 
             // Start a session for this user and store the id in a session variable
             $_SESSION['USER_ID'] = $noteit_db->get_db_userID();
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    $_SESSION['FOO'] = 'BAR';
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        $_SESSION['FOO'] = 'BAR';
             CommandHandlerBase::redirect_to_view(
                 Views::kView_Dashboard,
                 HandlerExitStatus::kCommandStatus_OK,

@@ -134,7 +134,7 @@ class ListFunctorCategoryListHTML {
 	
 	var gurl = "<?php echo(get_virtual_path("controller/appcontroller.php")); ?>";
 	
-	$(document).ready(function()
+	$(document).ready(function() 
 	{
         $('#lst_shop_list').change
         (

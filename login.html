@@ -1,110 +1,88 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml"><!-- InstanceBegin template="/Templates/applicationdialog.dwt" codeOutsideHTMLIsLocked="false" -->
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Note It! Log in</title>
-<link rel="stylesheet" href="css/noteit.css" type="text/css" />
+<!-- InstanceBeginEditable name="doctitle" -->
+<title>Note It!</title>
+<!-- InstanceEndEditable -->
+<!-- InstanceBeginEditable name="head" -->
+<!-- InstanceEndEditable -->
+<link href="css/noteit.css" rel="stylesheet" type="text/css" />
 <style type="text/css">
+	
+	body {
+		color: #67593A;
+	}
+	
+	a:link {
+		color: #E7C681;
+		text-decoration: underline; 
+		font-size: 0.8em;
+	}
+	
+	a:visited {
+		color: #E7C681;
+		text-decoration: underline;
+	}
+	
+	a:hover, a:active, a:focus {
+		text-decoration: none;
+	}
 
-body {
-	color: #67593A;
-}
-
-a:link {
-	color: #E7C681;
-	text-decoration: underline; 
-	font-size: 0.8em;
-}
-
-a:visited {
-	color: #E7C681;
-	text-decoration: underline;
-}
-
-a:hover, a:active, a:focus { /* this group of selectors will give a keyboard navigator the same hover experience as the person using a mouse. */
-	text-decoration: none;
-}
-
-.appButton {
-	display: 		block;
-	background: 	#67593A;
-	color: 			#E7C681;
-	width: 			90px;
-    float:			right;
-    border:			1px solid #dedede;
-	border-top:		1px solid #eee;
-    border-left:	1px solid #eee;
-	line-height:	130%;
-	cursor:			pointer;
-	padding:		5px 10px 6px 7px;
-}
-
-.appButton a:hover{
-    background-color:#dff4ff;
-    border:1px solid #c2e1ef;
-    color:#336699;
-}
-.appButton a:active{
-    background-color:#6299c5;
-    border:1px solid #6299c5;
-    color:#fff;
-}
-
-.textButtonStyle {
-	width: 260px;
-	height: 30px;
-	font-size: 1.3em;
-}
-
-/*.dropShadow {
-	box-shadow: 10px 10px #808080;
-	-webkit-box-shadow: 5px 5px #808080;
-	-moz-box-shadow: 5px 5px #808080;
-	filter: progid:DXImageTransform.Microsoft.dropShadow(color=#000000, offX=5, offY=5, positive=true);
-}*/
-   
 </style>
+
 </head>
 
 <body>
-<form 
-	action="controller/appcontroller.php" 
-	method="post" 
-	enctype="application/x-www-form-urlencoded" 
-	target="_self">
-	<table width="300px" height="600px" align="center" cellpadding="0">
+	<table width="500px" height="600px" align="center" cellpadding="0">
 		<tr>
 			<td valign="middle">
 				<div id="container" class="container" style="border:thin; border-radius: 10px; padding:20px;">
 					<div id="logo" align="center">
 						<img align="middle" src="img/logo.png" width="96" height="96" alt="Note It!" />
 					</div>
-					<div id="loginbox" align="left">
+					<div id="dialogbox" align="left">
+					<!-- InstanceBeginEditable name="dialogcontent" -->
+					<form 
+						action="controller/appcontroller.php" 
+						method="post" 
+						enctype="application/x-www-form-urlencoded" 
+						target="_self">
+						
 						<input name="command" type="hidden" value="do_login" />
-						<br/>
-						<label for="email_ID">Email ID</label>
-						<br/>
-						<input tabindex="1" class="textButtonStyle" type="text" name="email_ID" id="email_ID"/>
-						<br/>
-						<br/>
-						<label for="password">Password</label>
-						<br/>
-						<input tabindex="2" class="textButtonStyle" type="password" name="password" id="password" />
-						<br/>
-						<br/>
-						<input tabindex="3" name="cmdCancel" type="button" value="Cancel" class="appButton"/>
-						<input tabindex="4" name="cmdLogIn" type="submit" value="Log In" class="appButton"/>
-						<br/>
+						<table cellpadding="5px">
+							<tr>
+								<td>Email</td>
+								<td>
+									<input id="email_ID" name="email_ID" class="textButtonStyle" value="" />
+								</td>
+							</tr>
+							<tr>
+								<td>Password</td>
+								<td>
+									<input id="password" name="password" type="password" class="textButtonStyle" value=""/>
+								</td>
+							</tr>
+							<tr>
+								<td style="" colspan="2" align="right">
+									<input name="cmdCancel" style="float:right" type="button" value="Cancel" class="appButton"/>
+									<input name="cmdLogIn" style="float:right" type="submit" value="Log In" class="appButton"/>
+								</td>
+							</tr>						
+						</table>
+					</form>
+					<!-- InstanceEndEditable -->
 					</div>
 				</div>	
 				<div align="center" id="footer" style="padding:20px;">
-				<a href="#" target="_self">Home</a>&nbsp;&nbsp;
-				<a href="#" target="_self">Register</a>&nbsp;&nbsp;
+				<!-- InstanceBeginEditable name="DialogFooterLinks" -->
+				<a href="index.html" target="_self">Home</a>&nbsp;&nbsp;
+				<a href="register.html" target="_self">Register</a>&nbsp;&nbsp;
 				<a href="#" target="_self">Forgot Password?</a>
+				<!-- InstanceEndEditable -->
 				</div>
 			</td>
 		</tr>
 	</table>
-</form>
 </body>
-</html>
+<!-- InstanceEnd --></html>

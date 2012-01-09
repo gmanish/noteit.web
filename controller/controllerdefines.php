@@ -69,7 +69,6 @@
 	class Views
 	{
 		const kView_Home 		= 0;
-		const kView_Register	= 1;
 		const kView_Dashboard 	= 2;
 	}
 	
@@ -77,7 +76,6 @@
 	   header (noteitheader.tphp) and the standard footer (noteitfooter.tphp) */
 	static $view_map = array(
 		Views::kView_Home 		=> '../view/home.tphp',
-		Views::kView_Register	=> '../view/register.tphp',
 		Views::kView_Dashboard	=> '../view/dashboard.tphp');
 		
 	class JSONCodes

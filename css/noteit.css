@@ -4,10 +4,10 @@ body {
 	margin: 0;
 	padding: 0;
 	color: #000;
-	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
 	font-size: 100%;
 	line-height: 1.4;
     background: #67593A; /*67593A*/
+	font: 100%/1.4 Verdana, Arial, Helvetica, sans-serif;
 }
 
 /* ~~ Element/tag selectors ~~ */
@@ -123,4 +123,35 @@ a:hover, a:active, a:focus { /* this group of selectors will give a keyboard nav
 {
     font-size: 70%;
     color: #666;
+}
+
+.appButton {
+	display: 		block;
+	background: 	#67593A;
+	color: 			#E7C681;
+	width: 			90px;
+	/* [disabled]float:			right; */
+	border:			1px solid #dedede;
+	border-top:		1px solid #eee;
+	border-left:	1px solid #eee;
+	line-height:	130%;
+	cursor:			pointer;
+	padding:		5px 10px 6px 7px;
+}
+
+.appButton a:hover{
+    background-color:#dff4ff;
+    border:1px solid #c2e1ef;
+    color:#336699;
+}
+.appButton a:active{
+    background-color:#6299c5;
+    border:1px solid #6299c5;
+    color:#fff;
+}
+
+.textButtonStyle {
+	width: 260px;
+	height: 30px;
+	font-size: 1.3em;
 }
