@@ -71,6 +71,7 @@ class NoteItDB extends DbBase
 	const kColUserPassword 		= 'userPassword';
 	const kColCountryCode		= 'countryCode';
 	const kColCurrencyCode		= 'currencyCode';
+	const kMIN_PASSWORD_LENGTH 	= 6;
 
 	protected $db_userID;
 	protected $db_username;
@@ -173,12 +174,15 @@ class NoteItDB extends DbBase
 				$db_con->escape_string($emailID));
 			
 			$result = $db_con->query($sql);
-			if ($result ==  FALSE || mysqli_num_rows($result) > 0)
-            {
+			if ($result ==  FALSE || mysqli_num_rows($result) > 0) {
                 NI::TRACE("NoteItDb::register_user: " . $db_con->error, __FILE__, __LINE__);
 				throw new Exception('This email ID is already registered');
             }
             
+			if (strlen($password) < self::kMIN_PASSWORD_LENGTH) {
+				throw new Exception("Password must be at least " . self::kMIN_PASSWORD_LENGTH . " characters in length");
+			}
+			
 			if ($result) {
 				$result->free();
 			}
@@ -336,7 +340,9 @@ class NoteItDB extends DbBase
 			throw new Exception("Password cannot be empty.");
 		else if ($new_password == $old_password)
 			throw new Exception("The new password cannot be the same as the old password."); 
-		
+		else if (strlen($new_password) < self::kMIN_PASSWORD_LENGTH)
+			throw new Exception("Password must be at least " . self::kMIN_PASSWORD_LENGTH . " characters in length");
+			
 		global $config;
 		$salt = $config['SALT'];
 		$salted_hash_new = sha1($salt . $new_password);

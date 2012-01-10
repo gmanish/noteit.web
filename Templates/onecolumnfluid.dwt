@@ -17,7 +17,7 @@
 
 .footer {
 	padding: 15px;
-	background: #67593A;
+	background: #483e29;
 	color: #E7C681;
 	font-size: 100%;
 }

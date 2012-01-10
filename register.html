@@ -32,9 +32,35 @@
 		border-radius:		20px;
 		padding:			20px;
 	}
-
+	
+	.error_box {
+		font-size: 10px;
+		background: red;
+		color: white;
+		border: thick;
+		border-color: #000;
+		padding: 5px;
+		text-align: center;
+		visibility: collapse;
+	}
+	
 </style>
 
+<script type="text/javascript">
+
+	function hideError(id) {
+		$(id).css("visibility", "collapse");
+		$(id).text("");
+		$(id).hide("slow");
+	}
+	
+	function displayError(id, message) {
+		$(id).css("visibility", "visible");
+		$(id).text(message);
+		$(id).show("fast");
+	}
+
+</script>
 </head>
 
 <body>
@@ -85,51 +111,65 @@
 							<td style="" colspan="2" align="right">
 								<input id="cmdRegister" type="button" class="appButton" value="Register" />
 							</td>
-						</tr>						
+						</tr>	
+						<tr>
+							<td colspan="2">
+								<div id="error_message" class="error_box">
+									Display Error Here
+								</div>
+							</td>
+						</tr>					
 					</table>
 					<script type="text/javascript" src="js/jquery.js"></script>
 					<script type="text/javascript">
+						
 						$(document).ready(function() {
 							
+							hideError('#error_message');
+							
+							$('.textButtonStyle').focus(function() {
+								hideError('#error_message');
+							});
+							
 							$('#cmdRegister').click (function() {
-								var url="controller/appcontroller.php";
-								var email = $('#email_ID').val();
-								var password = $('#password').val();
-								var confirmPassword = $('#confirm_password').val();
-								if (email == "") {
-									alert("Email cannot be empty.");
-									return;
-								}
-								else if (password == "" || confirmPassword == "") {
-									alert("Password cannot be empty.");
-									return;
-								} else if (password != confirmPassword) {
-									alert("Passwords do not match.");
-									return;
-								}
-								$.post(
-									url,
-									{ 
-										command: 	"do_register", 
-										first_name: $('#first_name').val(),
-										last_name:	$('#last_name').val(),
-										email_ID:	$('#email_ID').val(),
-										password:	$('#password').val()
-									},
-									function(data) {
-										try {
-				                            var JSONObject = eval('(' + data + ')');
-				                            if (JSONObject.JSONRetVal == 0) {
-				                            	alert("Registration Successful. Please Log In.");
-				                            	window.location = "login.html"; 
-				                            } else {
-				                            	alert(JSONObject.JSONRetMessage);
-				                            }
-										}
-										catch (err) {
+							var url="controller/appcontroller.php";
+							var email = $('#email_ID').val();
+							var password = $('#password').val();
+							var confirmPassword = $('#confirm_password').val();
+							
+							if (email == "") {
+								displayError('#error_message', "Email cannot be empty.");
+								return;
+							}
+							else if (password == "" || confirmPassword == "") {
+								displayError('#error_message', "Password cannot be empty.");
+								return;
+							} else if (password != confirmPassword) {
+								displayError('#error_message', "Passwords do not match.");
+								return;
+							}
+							$.post(
+								url,
+								{ 
+									command: 	"do_register", 
+									first_name: $('#first_name').val(),
+									last_name:	$('#last_name').val(),
+									email_ID:	$('#email_ID').val(),
+									password:	$('#password').val()
+								},
+								function(data) {
+									try {
+										var JSONObject = eval('(' + data + ')');
+										if (JSONObject.JSONRetVal == 0) {
+											displayError('#error_message', "Registration Successful. Please Log In.");
+											window.location = "login.html"; 
+										} else {
+											displayError('#error_message', JSONObject.JSONRetMessage);
 										}
 									}
-								);
+									catch (err) {
+									}
+								});
 							});
 						});
 					</script>

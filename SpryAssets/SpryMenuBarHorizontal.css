@@ -17,6 +17,8 @@ ul.MenuBarHorizontal
 	padding: 0;
 	list-style-type: none;
 	font-size: 100%;
+	font-family:Helvetica, Arial, sans-serif;
+	font-stretch:extra-condensed;
 	cursor: default;
 	width: 100%;
 }

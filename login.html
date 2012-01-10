@@ -32,9 +32,35 @@
 		border-radius:		20px;
 		padding:			20px;
 	}
-
+	
+	.error_box {
+		font-size: 10px;
+		background: red;
+		color: white;
+		border: thick;
+		border-color: #000;
+		padding: 5px;
+		text-align: center;
+		visibility: collapse;
+	}
+	
 </style>
 
+<script type="text/javascript">
+
+	function hideError(id) {
+		$(id).css("visibility", "collapse");
+		$(id).text("");
+		$(id).hide("slow");
+	}
+	
+	function displayError(id, message) {
+		$(id).css("visibility", "visible");
+		$(id).text(message);
+		$(id).show("fast");
+	}
+
+</script>
 </head>
 
 <body>
@@ -70,23 +96,35 @@
 								<input name="cmdCancel" style="float:right" type="button" value="Cancel" class="appButton"/>
 								<input id="cmdLogIn" name="cmdLogIn" style="float:right" type="submit" value="Log In" class="appButton"/>
 							</td>
+						</tr>
+						<tr>
+							<td colspan="2" align="center">
+								<div id="message_row" class="error_box">Display Messages Here</div>
+							</td>
 						</tr>						
 					</table>
 					
 					<script type="text/javascript" src="js/jquery.js"></script>
 					<script type="text/javascript">
+						
 						$(document).ready(function() {
+							
+							hideError("#message_row");
+							
+							$('.textButtonStyle').focus(function() {
+								hideError("#message_row");
+							});
 							
 							$('#cmdLogIn').click (function() {
 								var url="controller/appcontroller.php";
 								var email = $('#email_ID').val();
 								var password = $('#password').val();
 								if (email == "") {
-									alert("Email cannot be empty.");
+									displayError("#message_row", "Email cannot be empty.");
 									return;
 								}
 								else if (password == "") {
-									alert("Password cannot be empty.");
+									displayError("#message_row", "Password cannot be empty.");
 									return;
 								} 
 								$.post(
@@ -102,7 +140,8 @@
 				                            if (JSONObject.JSONRetVal == 0) {
 			                            		window.location = url + "?command=do_login&arg1=" + JSONObject.arg1;
 				                            } else {
-				                            	alert(JSONObject.JSONRetMessage);
+				                            	//displayError(JSONObject.JSONRetMessage);
+												displayError("#message_row", JSONObject.JSONRetMessage);
 				                            }
 										}
 										catch (err) {
