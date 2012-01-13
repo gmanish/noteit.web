@@ -19,9 +19,9 @@ function shopitem_obj_to_array($shop_item_obj) {
         ShopItems::kColQuantity         => $shop_item_obj->_quantity,
         ShopItems::kColUnitID           => $shop_item_obj->_unit_id,
 		ShopItems::kColIsPurchased		=> $shop_item_obj->_is_purchased,
-		ShopItems::kColIsAskLater		=> $shop_item_obj->_is_asklater
-        );
-//        $shop_item_array = (array)$shop_item_obj;
+		ShopItems::kColIsAskLater		=> $shop_item_obj->_is_asklater,
+		ShopItems::kColBarcode			=> $shop_item_obj->_barcode);
+
     return $shop_item_array;
 }
 
@@ -812,14 +812,15 @@ class CommandHandler extends CommandHandlerBase {
     */
     public static function do_add_item()
     {
-        $list_ID = isset($_REQUEST[Command::$arg1]) ? intval($_REQUEST[Command::$arg1]) : 1;
-        $category_ID = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 1;
-        $item_name = isset($_REQUEST[Command::$arg3]) ? $_REQUEST[Command::$arg3] : "";
-        $item_quantity = isset($_REQUEST[Command::$arg4]) ? floatval($_REQUEST[Command::$arg4]) : 1.00;
-        $item_unit_cost = isset($_REQUEST[Command::$arg5]) ? floatval($_REQUEST[Command::$arg5]) : 0.00;
-        $item_unit_id = isset($_REQUEST[Command::$arg6]) ? intval($_REQUEST[Command::$arg6]) : 1;
-		$item_ispurchased = isset($_REQUEST[Command::$arg8]) ? intval($_REQUEST[Command::$arg8]) : 0; // 0 or 1
-		$item_isasklater = isset($_REQUEST[Command::$arg9]) ? intval($_REQUEST[Command::$arg9]) : 0; // 0 or 1
+        $list_ID 			= isset($_REQUEST[Command::$arg1]) ? intval($_REQUEST[Command::$arg1]) : 1;
+        $category_ID 		= isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 1;
+        $item_name 			= isset($_REQUEST[Command::$arg3]) ? $_REQUEST[Command::$arg3] : "";
+        $item_quantity 		= isset($_REQUEST[Command::$arg4]) ? floatval($_REQUEST[Command::$arg4]) : 1.00;
+        $item_unit_cost 	= isset($_REQUEST[Command::$arg5]) ? floatval($_REQUEST[Command::$arg5]) : 0.00;
+        $item_unit_id 		= isset($_REQUEST[Command::$arg6]) ? intval($_REQUEST[Command::$arg6]) : 1;
+		$item_ispurchased 	= isset($_REQUEST[Command::$arg8]) ? intval($_REQUEST[Command::$arg8]) : 0; // 0 or 1
+		$item_isasklater 	= isset($_REQUEST[Command::$arg9]) ? intval($_REQUEST[Command::$arg9]) : 0; // 0 or 1
+		$item_barcode 		= isset($_REQUEST[Command::$arg10]) ? $_REQUEST[Command::$arg10] : "";
 		
        try
         {
@@ -852,8 +853,9 @@ class CommandHandler extends CommandHandlerBase {
                     $item_unit_cost,
                     $item_quantity,
                     $item_unit_id,
-                    $item_isasklater
-                    );
+                    $item_isasklater,
+                    $item_barcode);
+					
 	            $noteit_db = NULL;
 
 				// Construct a new shop item with the details to return to caller
@@ -868,7 +870,8 @@ class CommandHandler extends CommandHandlerBase {
 						$item_quantity, 
 						$item_unit_id,
 						$item_ispurchased,
-						$item_isasklater);
+						$item_isasklater,
+						$item_barcode);
 				
 				$item_array = array();
 				$item_array[] = shopitem_obj_to_array($newItem);

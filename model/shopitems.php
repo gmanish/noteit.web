@@ -42,6 +42,7 @@ class ShopItem
     public $_date_purchased;
 	public $_is_purchased = 0; // TINYINT should be 0 or 1
 	public $_is_asklater = 0; // TINYINT should be 0 or 1
+	public $_barcode = "";
 	
 	function __construct(
         $instance_id,
@@ -54,7 +55,8 @@ class ShopItem
         $quantity = 1.00,
         $unit_id = 3 /* General Unit */,
 		$is_purchased = FALSE,
-		$is_asklater = FALSE)
+		$is_asklater = FALSE,
+		$barcode = "")
     {
         $this->_instance_id = $instance_id;
         $this->_item_id = $item_id;
@@ -67,6 +69,7 @@ class ShopItem
         $this->_unit_id = $unit_id;
 		$this->_is_purchased = $is_purchased;
 		$this->_is_asklater = $is_asklater;
+		$this->_barcode = "";
     }
 }
 
@@ -88,13 +91,14 @@ class ShopItems extends TableBase
     const kColCategoryID	= 'categoryID_FK';
 	const kColIsPurchased	= 'isPurchased';
 	const kColIsAskLater	= 'isAskLater';
+	const kColBarcode		= 'itemBarcode';
 	
     function __construct($db_base, $user_ID)
     {
         parent::__construct($db_base, $user_ID);
     }	
 
-    function add_item($list_id, $category_id, $item_name, $unit_cost, $item_quantity, $unit_id, $is_asklater)
+    function add_item($list_id, $category_id, $item_name, $unit_cost, $item_quantity, $unit_id, $is_asklater, $barcode)
     {
     	if (!self::USE_STORED_PROC) {
     		
@@ -115,8 +119,10 @@ class ShopItems extends TableBase
 						throw new Exception("Could Not Create Transaction");	
 					}	
 					
-					$sql = sprintf("INSERT INTO `shopitemscatalog` (`itemName`) VALUES ('%s')",
-						$this->get_db_con()->escape_string($item_name));
+					$sql = sprintf("INSERT INTO `shopitemscatalog` (`itemName`, `itemBarcode`) 
+								VALUES ('%s', '%s')",
+								$this->get_db_con()->escape_string($item_name),
+								$this->get_db_con()->escape_string($barcode));
 						
 					$result = $this->get_db_con()->query($sql);
 					if ($result == FALSE) {
@@ -216,7 +222,7 @@ class ShopItems extends TableBase
     	$sql = "";
     	if ($show_purchased_items <= 0) {
 	        $sql = sprintf(
-					"SELECT si.*, sic.itemName FROM `%s` AS si " .
+					"SELECT si.*, sic.itemName, sic.itemBarcode FROM `%s` AS si " .
 					"INNER JOIN `shopitemscatalog` AS sic " .
 					"INNER JOIN `shopitemcategories` AS sicg " .
 					"ON si.itemID_FK=sic.itemID AND si.`categoryID_FK`=sicg.`categoryID` " .
@@ -227,7 +233,7 @@ class ShopItems extends TableBase
 	                $list_id);
 		} else {
 	        $sql = sprintf(
-					"SELECT si.*, sic.itemName FROM `%s` AS si
+					"SELECT si.*, sic.itemName, sic.itemBarcode FROM `%s` AS si
 					INNER JOIN `shopitemscatalog` AS sic
 					INNER JOIN `shopitemcategories` AS sicg
 					ON si.itemID_FK=sic.itemID AND si.`categoryID_FK`=sicg.`categoryID`
@@ -263,7 +269,8 @@ class ShopItems extends TableBase
                 $row[self::kColQuantity],
                 $row[self::kColUnitID],
 				$row[self::kColIsPurchased],
-				$row[self::kColIsAskLater]);
+				$row[self::kColIsAskLater],
+				is_null($row[self::kColBarcode]) ? "" : $row[self::kColBarcode]);
 
             call_user_func(
                 array($functor_obj, $function_name), // invoke the callback function
@@ -278,7 +285,7 @@ class ShopItems extends TableBase
 
     function get_item($instance_id)
     {
-        $sql = sprintf("SELECT si.*, sic.itemName 
+        $sql = sprintf("SELECT si.*, sic.itemName , sic.itemBarcode 
         		FROM `%s` AS si 
         		inner join `shopitemscatalog` AS sic  
         		ON si.itemID_FK = sic.itemID  
@@ -306,7 +313,8 @@ class ShopItems extends TableBase
                 $row[self::kColQuantity],
                 $row[self::kColUnitID],
 				$row[self::kColIsPurchased],
-				$row[self::kColIsAskLater]);
+				$row[self::kColIsAskLater],
+				is_null($row[self::kColBarcode]) ? "" : $row[self::kColBarcode]);
 
             if ($result)
                 $result->free();

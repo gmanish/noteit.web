@@ -72,6 +72,7 @@ CREATE TABLE IF NOT EXISTS `shopitemcategories` (
 CREATE TABLE `shopitemscatalog` (
   `itemID` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `itemName` varchar(50) NOT NULL,
+  `itemBarcode` varchar(11) DEFAULT NULL,
   PRIMARY KEY (`itemID`),
   UNIQUE KEY `itemName` (`itemName`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
