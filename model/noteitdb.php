@@ -9,12 +9,14 @@ require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "geoip.inc");
 
 class Country {
 	const kCol_CountryCode = 'countryCode';
+	const kCol_CountryName = 'countryName';
 	const kCol_CurrencyCode = 'currencyCode';
 	const kCol_CurrencySymbol = 'currencySymbol';
 	const kCol_CurrencyIsRight = 'currencyIsRight';
 	const kCol_CurrencyName = 'currencyName';
 	
 	public $countryCode = "";
+	public $countryName = "";
 	public $currencyCode = "";
 	public $currencySymbol = "";
 	public $currencyIsRight = 0;
@@ -25,12 +27,14 @@ class Country {
 		$currencyCode, 
 		$currencySymbol, 
 		$currencyIsRight, 
-		$currencyName) {
+		$currencyName,
+		$countryName) {
 		$this->countryCode = $countryCode;
 		$this->currencyCode = $currencyCode;
 		$this->currencySymbol = $currencySymbol;
 		$this->currencyIsRight = $currencyIsRight;
 		$this->currencyName = $currencyName;
+		$this->countryName = $countryName;
 	}	
 }
 
@@ -165,6 +169,10 @@ class NoteItDB extends DbBase
                  throw new Exception('Could not connect to Server: ' . $db_con->error);
 			 }
 
+			if (!$db_con->set_charset("utf8")) {
+				throw new Exception('Could not set charset to utf8. PHP version 5.2.3 or greater required');			
+			}
+
 			// Email ID is already registered??
 			$sql = sprintf(
 				"SELECT %s FROM %s WHERE %s='%s'", 
@@ -286,6 +294,10 @@ class NoteItDB extends DbBase
 	             	mysqli_connect_error() . "(" . 
 	             	mysqli_connect_errno() . ")");
 			 }
+			 
+			if (!$db_con->set_charset("utf8")) {
+				throw new Exception('Could not set charset to utf8. PHP version 5.2.3 or greater required');			
+			}
 	
 			if (!$is_password_hashed) {
 				global $config;
@@ -387,7 +399,7 @@ class NoteItDB extends DbBase
 	{
 		global $config;
 		
-		$country = new Country("US", "USD", "$", 1, "US Dollar");
+		$country = new Country("US", "USD", "$", 1, "US Dollar", "UNITED STATES");
 		if (!file_exists($config['GEOIP_DB'])) {
 			throw new Exception("A required database was not found. Server Installation is corrupt.");
 		}
@@ -412,6 +424,10 @@ class NoteItDB extends DbBase
 						throw new Exception('Could not connect to Server' . "(" . mysqli_connect_errno() . ")");
 					} 
 					
+					if (!$db_con->set_charset("utf8")) {
+						throw new Exception('Could not set charset to utf8. PHP version 5.2.3 or greater required');			
+					}
+					
 					$sql = sprintf("SELECT * FROM `countrytable`
 									WHERE `countryCode`=UCASE('%s')",
 								 	$countryCode);
@@ -426,7 +442,8 @@ class NoteItDB extends DbBase
 								$row[Country::kCol_CurrencyCode],
 								$row[Country::kCol_CurrencySymbol],
 								$row[Country::kCol_CurrencyIsRight],
-								$row[Country::kCol_CurrencyName]);
+								$row[Country::kCol_CurrencyName],
+								$row[Country::kCol_CountryName]);
 						}
 			            $result->free();
 					}
@@ -470,8 +487,12 @@ class NoteItDB extends DbBase
 			    	'Could not connect to Server' . "(" . 
 			    	mysqli_connect_errno() . ")");
 			}
-	
-	 		$sql = sprintf("SELECT * FROM `countrytable`");
+
+			if (!$db_con->set_charset("utf8")) {
+				throw new Exception('Could not set charset to utf8. PHP version 5.2.3 or greater required');			
+			}
+			
+	 		$sql = sprintf("SELECT * FROM `countrytable` ORDER BY `countryName`");
 			$result = $db_con->query($sql);
 			
 			$countries = array();
@@ -483,7 +504,65 @@ class NoteItDB extends DbBase
 						$row[Country::kCol_CurrencyCode],
 						$row[Country::kCol_CurrencySymbol],
 						$row[Country::kCol_CurrencyIsRight],
-						$row[Country::kCol_CurrencyName]);
+						$row[Country::kCol_CurrencyName],
+						$row[Country::kCol_CountryName]);
+						
+					$countries[] = $country;
+				}
+				
+	            $result->free();
+				$db_con->close();
+				$db_con = NULL;
+				
+				return $countries;
+			} else {
+				throw new Exception("Could not fetch currency related data.");
+			}
+		} catch (Exception $e) {
+				
+			$db_con->close();
+			$db_con = NULL;
+			throw $e;
+		}		
+	}
+
+	public static function list_currencies() {
+        	
+        global $config;
+		$db_con = NULL;
+		
+		try {
+	        $db_con = new MySQLi(
+	        	$config['MYSQL_SERVER'], 
+	        	$config['MYSQL_USER'], 
+	        	$config['MYSQL_PASSWD'], 
+	        	$config['MYSQL_DB']);
+	    	
+			if (mysqli_connect_error()) {
+			    throw new Exception(
+			    	'Could not connect to Server' . "(" . 
+			    	mysqli_connect_errno() . ")");
+			}
+			
+			if (!$db_con->set_charset("utf8")) {
+				throw new Exception('Could not set charset to utf8. PHP version 5.2.3 or greater required');			
+			}
+			
+	 		$sql = sprintf("select distinct * from `countrytable` group by `currencyName`");
+			$result = $db_con->query($sql);
+			
+			$countries = array();
+			if ($result && mysqli_num_rows($result) > 0) {
+					
+				while ($row = $result->fetch_array()){
+					$country = new Country(
+						$row[Country::kCol_CountryCode],
+						$row[Country::kCol_CurrencyCode],
+						$row[Country::kCol_CurrencySymbol],
+						$row[Country::kCol_CurrencyIsRight],
+						$row[Country::kCol_CurrencyName],
+						$row[Country::kCol_CountryName]);
+						
 					$countries[] = $country;
 				}
 				

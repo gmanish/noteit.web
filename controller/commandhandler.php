@@ -1385,6 +1385,32 @@ class CommandHandler extends CommandHandlerBase {
 		}
 	}
 	
+	public static function do_get_currencies() {
+		
+		$ipAddress = isset($_REQUEST[Command::$arg1]) ? $_REQUEST[Command::$arg1] : $_SERVER['REMOTE_ADDR'];  
+			
+		try {
+			$nativeCountry = NoteItDB::list_country($ipAddress);
+			$countries = NoteItDB::list_currencies();
+            $arr = array(
+                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
+                 JSONCodes::kRetMessage => "",
+                 Command::$arg1 => $ipAddress,
+                 Command::$arg2 => $nativeCountry,
+                 Command::$arg3 => $countries);
+			
+			echo(json_encode($arr));
+		}
+		catch (exception $e)
+		{
+            $arr = array(
+                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
+                 JSONCodes::kRetMessage => $e->getMessage());
+
+             echo(json_encode($arr));
+		}
+	}
+
 	public static function do_item_report() {
 		try
 		{

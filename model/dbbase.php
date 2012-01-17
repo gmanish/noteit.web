@@ -52,6 +52,10 @@ if(class_exists('DbBase') != TRUE)
                 if ($this->db_con->connect_error) {
                     throw new Exception('Could not connect to Server: ' . $this->db_con->error);
                 }
+				
+				if (!$this->db_con->set_charset("utf8")) {
+					throw new Exception('Could not set charset to utf8. PHP version 5.2.3 or greater required');			
+				}
             }
 		}
 		
