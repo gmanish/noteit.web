@@ -584,7 +584,12 @@ class NoteItDB extends DbBase
 	
 	public function list_units($unit_type, &$functor_obj, $function_name='iterate_unit')
 	{
-		$sql = sprintf("SELECT * FROM `units` WHERE `unitType`=%d OR `unitType`=%d", $unit_type, 0);
+		$sql = sprintf("SELECT * FROM `units` 
+						ORDER BY 
+							CASE WHEN `unitType`=0 THEN 1 
+								 WHEN `unitType`=%d THEN 2 
+								 ELSE 3  
+							END", $unit_type);
 		$result = $this->get_db_con()->query($sql);
 		if ($result || mysqli_num_rows($this->get_db_con()) > 0)
 		{

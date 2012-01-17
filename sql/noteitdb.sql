@@ -547,3 +547,8 @@ INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('pound'
 INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('pint', 'pt', 2);
 INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('quart', 'qt', 2);
 INSERT INTO `units` (`unitName`, `unitAbbreviation`, `unitType`) VALUES ('gallon', 'gal', 2);
+
+# Uncategorized is a special category. It is assumed to be present in the db with id = 1
+INSERT INTO `shopitemcategories` (`categoryID`, `categoryName`, `userID_FK`, `categoryRank`)
+VALUES
+	(1, 'Uncategorized', 1, 1);

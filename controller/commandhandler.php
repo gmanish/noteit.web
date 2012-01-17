@@ -839,9 +839,8 @@ class CommandHandler extends CommandHandlerBase {
 			if ($user_ID <= 0 		|| 
 				$item_name == "" 	|| 
 				$list_ID <= 0 		|| 
-				$category_ID <= 0 	|| 
 				$item_unit_id <= 0)
-				throw new Exception("Error Processing Request (" . __FILE__ . __LINE__ . ")");
+				throw new Exception("Error Processing Request");
 
             if ($item_name != "")
             {

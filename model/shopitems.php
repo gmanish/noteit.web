@@ -117,7 +117,7 @@ class ShopItems extends TableBase
 					$isTransactional = $this->get_db_con()->autocommit(FALSE);
 					if (!$isTransactional) {
 						throw new Exception("Could Not Create Transaction");	
-					}	
+					}
 					
 					$sql = sprintf("INSERT INTO `shopitemscatalog` (`itemName`, `itemBarcode`) 
 								VALUES ('%s', '%s')",
@@ -171,7 +171,7 @@ class ShopItems extends TableBase
 				
 				$result = $this->get_db_con()->query($sql);
 				if ($result == FALSE) {
-					throw new Exception("Error Adding Item.");
+					throw new Exception("Error Adding Item. (" . $this->get_db_con()->errorno . ")");
 				}
 				
 				$instance_id =  $this->get_db_con()->insert_id; 
