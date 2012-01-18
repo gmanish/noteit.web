@@ -81,7 +81,7 @@ if(class_exists('CategoryTable') != TRUE) {
 			
 			$result = $this->get_db_con()->query($sql);
 			if ($result == FALSE) {
-				throw new Exception("SQL exec failed (". $this->get_db_con()->errorno . ")");
+				throw new Exception("SQL exec failed (". $this->get_db_con()->errno . ")");
 			}
 	
 			while ($row = mysqli_fetch_array($result)) {
@@ -172,7 +172,7 @@ if(class_exists('CategoryTable') != TRUE) {
 			
 			$result = $this->get_db_con()->query($sql);
 			if ($result == FALSE) {
-				throw new Exception("SQL exec failed (" . $this->get_db_con()->errorno . ")");
+				throw new Exception("SQL exec failed (" . $this->get_db_con()->errno . ")");
 			}			
 		}
 	
@@ -260,7 +260,7 @@ if(class_exists('CategoryTable') != TRUE) {
 	        if ($result == FALSE || mysqli_num_rows($result) <= 0) {
 	            throw new Exception(
 	            	"Database operation failed (" . 
-	            	$this->get_db_con()->errorno . ")");
+	            	$this->get_db_con()->errno . ")");
 			}
 	
 	        $row = mysqli_fetch_array($result);
@@ -354,7 +354,7 @@ if(class_exists('CategoryTable') != TRUE) {
 				if (!$result) {
 					throw new Exception(
 						"Unable to Create Factory Categories for User (" . 
-						$connection->errorno . ")");
+						$connection->errno . ")");
 				}
 			}
 		}

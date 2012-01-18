@@ -60,7 +60,7 @@ class ShopListTable extends TableBase
 		
 		$result = $this->get_db_con()->query($sql);
 		if ($result == FALSE) {
-			throw new Exception("SQL exec failed (" . $this->get_db_con()->errorno . ")");
+			throw new Exception("SQL exec failed (" . $this->get_db_con()->errno . ")");
 		}
 		
 		while ($row = mysqli_fetch_array($result)) {
@@ -98,7 +98,7 @@ class ShopListTable extends TableBase
 		if ($result == FALSE) {
 			throw new Exception(
 				"Failed to add Shopping List (" . 
-				$this->get_db_con()->errorno . ")");
+				$this->get_db_con()->errno . ")");
 		}
 		
 		return $this->get_db_con()->insert_id;
@@ -127,7 +127,7 @@ class ShopListTable extends TableBase
 				if ($result == FALSE) {
 					throw new Exception(
 						"Error deleting Shopping List (" . 
-						$this->get_db_con()->errorno . ")");
+						$this->get_db_con()->errno . ")");
 				}
 				
 				$sql = sprintf(
@@ -142,7 +142,7 @@ class ShopListTable extends TableBase
 				if ($result == FALSE) {
 					throw new Exception(
 						"Error deleting Shopping List (",
-						$this->get_db_con()->errorno . ")");
+						$this->get_db_con()->errno . ")");
 				}
 				
 				$this->get_db_con()->commit();
@@ -185,7 +185,7 @@ class ShopListTable extends TableBase
 		
 		$result = $this->get_db_con()->query($sql);
 		if ($result == FALSE) {
-			throw new Exception ("Failed to rename list: (" . $this->get_db_con()->errorno);
+			throw new Exception ("Failed to rename list: (" . $this->get_db_con()->errno);
 		}
 	}
 }

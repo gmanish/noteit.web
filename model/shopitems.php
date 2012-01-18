@@ -13,6 +13,15 @@ class SuggestedItem
 	}	
 }
 
+class BarcodeFormat {
+	const BARCODE_FORMAT_UNKNOWN 	= 1; 
+	const BARCODE_FORMAT_UPC_A		= 2;
+	const BARCODE_FORMAT_UPC_E		= 3;
+	const BARCODE_FORMAT_EAN_8		= 4;
+	const BARCODE_FORMAT_EAN_13		= 5;
+	const BARCODE_FORMAT_RSS_14		= 6;
+}
+
 class ShopItem
 {
     const SHOPITEM_INSTANCEID       = 1;    // 1 << 0
@@ -43,6 +52,7 @@ class ShopItem
 	public $_is_purchased = 0; // TINYINT should be 0 or 1
 	public $_is_asklater = 0; // TINYINT should be 0 or 1
 	public $_barcode = "";
+	public $_barcode_format = BarcodeFormat::BARCODE_FORMAT_UNKNOWN;
 	
 	function __construct(
         $instance_id,
@@ -56,7 +66,8 @@ class ShopItem
         $unit_id = 3 /* General Unit */,
 		$is_purchased = FALSE,
 		$is_asklater = FALSE,
-		$barcode = "")
+		$barcode = "",
+		$barcode_format = BarcodeFormat::BARCODE_FORMAT_UNKNOWN)
     {
         $this->_instance_id = $instance_id;
         $this->_item_id = $item_id;
@@ -70,6 +81,7 @@ class ShopItem
 		$this->_is_purchased = $is_purchased;
 		$this->_is_asklater = $is_asklater;
 		$this->_barcode = $barcode;
+		$this->_barcode_format = $barcode_format;
     }
 }
 
@@ -92,6 +104,7 @@ class ShopItems extends TableBase
 	const kColIsPurchased	= 'isPurchased';
 	const kColIsAskLater	= 'isAskLater';
 	const kColBarcode		= 'itemBarcode';
+	const kColBarcodeFormat = 'itemBarcodeFormat';
 	
 	protected $user_pref;
 
@@ -101,14 +114,29 @@ class ShopItems extends TableBase
 		$this->user_pref = $user_pref;
     }	
 
-    function add_item($list_id, $category_id, $item_name, $unit_cost, $item_quantity, $unit_id, $is_asklater, $barcode)
+    function add_item(
+    	$list_id, 
+    	$category_id, 
+    	$item_name, 
+    	$unit_cost, 
+    	$item_quantity, 
+    	$unit_id, 
+    	$is_asklater, 
+    	$barcode,
+		$barcode_format)
     {
     	if (!self::USE_STORED_PROC) {
     		
     		$class_ID = 0;
-    		$sql = sprintf("SELECT `itemID` FROM `shopitemscatalog` WHERE `%s`='%s' LIMIT 1", 
-					self::kColItemName,
-					$this->get_db_con()->escape_string($item_name));
+    		$sql = sprintf("SELECT `itemID` 
+    						FROM `shopitemscatalog` 
+    						WHERE `%s`='%s'", 
+							self::kColItemName,
+							$this->get_db_con()->escape_string($item_name));
+			if ($barcode) {
+				$sql .= " AND " . self::kColBarcode . $this->get_db_con()->escape_string($barcode);
+			}
+			$sql .= " LIMIT 1";
 
 			$isTransactional = FALSE;
 			$result = $this->get_db_con()->query($sql);
@@ -122,10 +150,11 @@ class ShopItems extends TableBase
 						throw new Exception("Could Not Create Transaction");	
 					}
 					
-					$sql = sprintf("INSERT INTO `shopitemscatalog` (`itemName`, `itemBarcode`) 
-								VALUES ('%s', '%s')",
+					$sql = sprintf("INSERT INTO `shopitemscatalog` (`itemName`, `itemBarcode`, `itemBarcodeFormat`) 
+								VALUES ('%s', '%s', '%d')",
 								$this->get_db_con()->escape_string($item_name),
-								$this->get_db_con()->escape_string($barcode));
+								$this->get_db_con()->escape_string($barcode),
+								$barcode_format);
 						
 					$result = $this->get_db_con()->query($sql);
 					if ($result == FALSE) {
@@ -174,7 +203,7 @@ class ShopItems extends TableBase
 				
 				$result = $this->get_db_con()->query($sql);
 				if ($result == FALSE) {
-					throw new Exception("Error Adding Item. (" . $this->get_db_con()->errorno . ")");
+					throw new Exception("Error Adding Item. (" . $this->get_db_con()->errno . ")");
 				}
 				
 				$instance_id =  $this->get_db_con()->insert_id; 
@@ -225,7 +254,7 @@ class ShopItems extends TableBase
     	$sql = "";
     	if ($show_purchased_items <= 0) {
 	        $sql = sprintf(
-					"SELECT si.*, sic.itemName, sic.itemBarcode FROM `%s` AS si " .
+					"SELECT si.*, sic.itemName, sic.itemBarcode, sic.itemBarcodeFormat FROM `%s` AS si " .
 					"INNER JOIN `shopitemscatalog` AS sic " .
 					"INNER JOIN `shopitemcategories` AS sicg " .
 					"ON si.itemID_FK=sic.itemID AND si.`categoryID_FK`=sicg.`categoryID` " .
@@ -236,7 +265,7 @@ class ShopItems extends TableBase
 	                $list_id);
 		} else {
 	        $sql = sprintf(
-					"SELECT si.*, sic.itemName, sic.itemBarcode FROM `%s` AS si
+					"SELECT si.*, sic.itemName, sic.itemBarcode, sic.itemBarcodeFormat FROM `%s` AS si
 					INNER JOIN `shopitemscatalog` AS sic
 					INNER JOIN `shopitemcategories` AS sicg
 					ON si.itemID_FK=sic.itemID AND si.`categoryID_FK`=sicg.`categoryID`
@@ -273,7 +302,8 @@ class ShopItems extends TableBase
                 $row[self::kColUnitID],
 				$row[self::kColIsPurchased],
 				$row[self::kColIsAskLater],
-				is_null($row[self::kColBarcode]) ? "" : $row[self::kColBarcode]);
+				is_null($row[self::kColBarcode]) ? "" : $row[self::kColBarcode],
+				is_null($row[self::kColBarcodeFormat]) ? BarcodeFormat::BARCODE_FORMAT_UNKNOWN : $row[self::kColBarcodeFormat]);
 
             call_user_func(
                 array($functor_obj, $function_name), // invoke the callback function
@@ -288,7 +318,7 @@ class ShopItems extends TableBase
 
     function get_item($instance_id)
     {
-        $sql = sprintf("SELECT si.*, sic.itemName , sic.itemBarcode 
+        $sql = sprintf("SELECT si.*, sic.itemName , sic.itemBarcode, sic.itemBarcodeFormat 
         		FROM `%s` AS si 
         		inner join `shopitemscatalog` AS sic  
         		ON si.itemID_FK = sic.itemID  
@@ -317,7 +347,8 @@ class ShopItems extends TableBase
                 $row[self::kColUnitID],
 				$row[self::kColIsPurchased],
 				$row[self::kColIsAskLater],
-				is_null($row[self::kColBarcode]) ? "" : $row[self::kColBarcode]);
+				is_null($row[self::kColBarcode]) ? "" : $row[self::kColBarcode],
+				is_null($row[self::kColBarcodeFormat]) ? BarcodeFormat::BARCODE_FORMAT_UNKNOWN : $row[self::kColBarcodeFormat]);
 
             if ($result)
                 $result->free();
@@ -444,17 +475,16 @@ class ShopItems extends TableBase
 									`unitID_FK`,
 									`categoryID_FK`,
 									`isPurchased`,
-									`isAskLater`
+									`isAskLater` 
 							from shopitems as si
 							where instanceID=%d and `userID_FK`=%d",
 						$target_list_id,
 						$instance_id,
 						parent::GetUserID());
-		
 		$result = $this->get_db_con()->query($sql);
 		
         if ($result == FALSE)
-            throw new Exception('The copy operation failed (' . $this->get_db_con()->errorno . ')');
+            throw new Exception('The copy operation failed (' . $this->get_db_con()->errno . ')');
 		
 		return $this->get_db_con()->insert_id;
 	}
@@ -486,20 +516,21 @@ class ShopItems extends TableBase
 		return $suggestions;
 	}
 	
-	function searchitem_barcode($barcode) {
+	function searchitem_barcode($barcode, $barcodeFormat) {
 		
-		$sql = sprintf("SELECT SI.*, SIC.itemName, SIC.itemBarcode 
+		$sql = sprintf("SELECT SI.*, SIC.itemName, SIC.itemBarcode, SIC.itemBarcodeFormat  
 						FROM shopitemscatalog SIC
 						LEFT JOIN shopitems SI
 						ON SIC.itemID=SI.itemID_FK
-						WHERE SIC.itemBarcode = '%s'
+						WHERE SIC.itemBarcode = '%s' AND SIC.itemBarcodeFormat = %d
 						ORDER BY SI.datePurchased DESC
 						LIMIT 1",
-						$barcode);
+						$barcode,
+						$barcodeFormat);
 						
 		$result = $this->get_db_con()->query($sql);
 		if ($result == FALSE) {
-			throw new Exception('Error Executing Barcode Search in Database (' . $this->get_db_con()->errorno . ')'); 
+			throw new Exception('Error Executing Barcode Search in Database (' . $this->get_db_con()->errno . ')'); 
 		}
 		
 		$row = $result->fetch_array();
@@ -516,7 +547,8 @@ class ShopItems extends TableBase
                 is_null($row[self::kColUnitID]) 	? 0  : $row[self::kColUnitID],
 				0, // isPurchased is not yet, so 0
 				is_null($row[self::kColIsAskLater]) ? 0  : $row[self::kColIsAskLater],
-				is_null($row[self::kColBarcode])    ? "" : $row[self::kColBarcode]);
+				is_null($row[self::kColBarcode])    ? "" : $row[self::kColBarcode],
+				is_null($row[self::kColBarcodeFormat]) ? BarcodeFormat::BARCODE_FORMAT_UNKNOWN : $row[self::kColBarcodeFormat]);
 		} else {
 			// Shall we try google
 			$google_api_key = "AIzaSyA9IqL-QR5YezowBLgMIwwDvd_lDtWcSlo";
@@ -560,7 +592,8 @@ class ShopItems extends TableBase
 				                1, // unit
 								0, // isPurchased is not yet, so 0
 								0, // isAskLater
-								$barcode);
+								$barcode,
+								$barcodeFormat);
 				    		// String currency = inventories.getJSONObject(0).getString("currency");
 				    		// if (currency.equals(mUserPrefs.mCurrencyCode)) {
 			    	    		// item.mUnitPrice = (float) inventories.getJSONObject(0).getDouble("price");
@@ -588,10 +621,15 @@ class ShopItems extends TableBase
 				FROM `shopitemscatalog` 
 				WHERE `itemName`='%s' LIMIT 1", 
 				$this->get_db_con()->escape_string($item->_item_name));
+
+		if ($item->_barcode != "") {
+			$sql .= " AND " . self::kColBarcode . $this->get_db_con()->escape_string($barcode);
+		}
+		$sql .= " LIMIT 1";
 				
 		$result = $this->get_db_con()->query($sql);
 		if ($result == FALSE) {
-            throw new Exception('Could not find matching entry in Catalog (' . $this->get_db_con()->errorno . ')');
+            throw new Exception('Could not find matching entry in Catalog (' . $this->get_db_con()->errno . ')');
 		}
 		
 		$row = mysqli_fetch_array($result);
@@ -603,12 +641,15 @@ class ShopItems extends TableBase
 		else
 		{
 			// No item was found create a new record for this name
-			$sql = sprintf("INSERT INTO `shopitemscatalog` (`itemName`) VALUES ('%s')",
-						$this->get_db_con()->escape_string($item->_item_name));
+			$sql = sprintf("INSERT INTO `shopitemscatalog` (`itemName`, `itemBarcode`, `itemBarcodeFormat`) 
+							VALUES ('%s', '%s', %d)",
+							$this->get_db_con()->escape_string($item->_item_name),
+							$this->get_db_con()->escape_string($item->_barcode),
+							$item->_barcode_format);
 			
 			$result = $this->get_db_con()->query($sql);
 			if ($result == FALSE) {
-				throw new Exception('Could not create Catalog entry (' . $this->get_db_con()->errorno . ')');
+				throw new Exception('Could not create Catalog entry (' . $this->get_db_con()->errno . ')');
 			}
 			
 			$new_itemid = $this->get_db_con()->insert_id;

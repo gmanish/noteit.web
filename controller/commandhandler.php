@@ -20,7 +20,8 @@ function shopitem_obj_to_array($shop_item_obj) {
         ShopItems::kColUnitID           => $shop_item_obj->_unit_id,
 		ShopItems::kColIsPurchased		=> $shop_item_obj->_is_purchased,
 		ShopItems::kColIsAskLater		=> $shop_item_obj->_is_asklater,
-		ShopItems::kColBarcode			=> $shop_item_obj->_barcode);
+		ShopItems::kColBarcode			=> $shop_item_obj->_barcode,
+		ShopItems::kColBarcodeFormat	=> $shop_item_obj->_barcode_format);
 
     return $shop_item_array;
 }
@@ -754,7 +755,8 @@ class CommandHandler extends CommandHandlerBase {
 
 	public static function do_search_barcode() {
 		
-		$barcode = isset($_REQUEST['arg1']) ? $_REQUEST['arg1'] : "";
+		$barcode 		= isset($_REQUEST['arg1']) ? $_REQUEST['arg1'] : "";
+		$barcodeFormat 	= isset($_REQUEST['arg2']) ? $_REQUEST['arg2'] : BarcodeFormat::BARCODE_FORMAT_UNKNOWN;
         try
         {
             $user_ID = -1;
@@ -774,11 +776,12 @@ class CommandHandler extends CommandHandlerBase {
 			}
 			
             $noteit_db = NoteItDB::login_user_id($user_ID);
-            $item = $noteit_db->get_shopitems_table()->searchitem_barcode($barcode);
+            $item = $noteit_db->get_shopitems_table()->searchitem_barcode($barcode, $barcodeFormat);
             $arr = array(
                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
                 JSONCodes::kRetMessage => "",
-                Command::$arg1 => $item != null ? shopitem_obj_to_array($item) : "");
+                Command::$arg1 => $item != NULL ? shopitem_obj_to_array($item) : "",
+				Command::$arg2 => $item != NULL ? 1 : 0);
 
             $json_str = json_encode($arr);
             $noteit_db = NULL;
@@ -863,6 +866,7 @@ class CommandHandler extends CommandHandlerBase {
 		$item_ispurchased 	= isset($_REQUEST[Command::$arg8]) ? intval($_REQUEST[Command::$arg8]) : 0; // 0 or 1
 		$item_isasklater 	= isset($_REQUEST[Command::$arg9]) ? intval($_REQUEST[Command::$arg9]) : 0; // 0 or 1
 		$item_barcode 		= isset($_REQUEST[Command::$arg10]) ? $_REQUEST[Command::$arg10] : "";
+		$item_barcodeformat	= isset($_REQUEST[Command::$arg11]) ? $_REQUEST[Command::$arg11] : BarcodeFormat::BARCODE_FORMAT_UNKNOWN;
 		
        try
         {
@@ -895,7 +899,8 @@ class CommandHandler extends CommandHandlerBase {
                     $item_quantity,
                     $item_unit_id,
                     $item_isasklater,
-                    $item_barcode);
+                    $item_barcode,
+					$item_barcodeformat);
 					
 	            $noteit_db = NULL;
 
@@ -912,7 +917,8 @@ class CommandHandler extends CommandHandlerBase {
 						$item_unit_id,
 						$item_ispurchased,
 						$item_isasklater,
-						$item_barcode);
+						$item_barcode,
+						$item_barcodeformat);
 				
 				$item_array = array();
 				$item_array[] = shopitem_obj_to_array($newItem);
