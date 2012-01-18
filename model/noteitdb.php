@@ -106,7 +106,7 @@ class NoteItDB extends DbBase
 
 		$this->shop_list_db = new ShopListTable($this, $userID);
 		$this->cat_list_db = new CategoryTable($this, $userID);
-		$this->shop_items_db = new ShopItems($this, $userID);
+		$this->shop_items_db = new ShopItems($this, $userID, $this->user_pref);
 		$this->reports = new Reports($this, $userID);
  	}
 	

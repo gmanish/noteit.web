@@ -69,7 +69,7 @@ class ShopItem
         $this->_unit_id = $unit_id;
 		$this->_is_purchased = $is_purchased;
 		$this->_is_asklater = $is_asklater;
-		$this->_barcode = "";
+		$this->_barcode = $barcode;
     }
 }
 
@@ -93,9 +93,12 @@ class ShopItems extends TableBase
 	const kColIsAskLater	= 'isAskLater';
 	const kColBarcode		= 'itemBarcode';
 	
-    function __construct($db_base, $user_ID)
+	protected $user_pref;
+
+    function __construct($db_base, $user_ID, $user_pref)
     {
         parent::__construct($db_base, $user_ID);
+		$this->user_pref = $user_pref;
     }	
 
     function add_item($list_id, $category_id, $item_name, $unit_cost, $item_quantity, $unit_id, $is_asklater, $barcode)
@@ -482,6 +485,95 @@ class ShopItems extends TableBase
 
 		return $suggestions;
 	}
+	
+	function searchitem_barcode($barcode) {
+		
+		$sql = sprintf("SELECT SI.*, SIC.itemName, SIC.itemBarcode 
+						FROM shopitemscatalog SIC
+						LEFT JOIN shopitems SI
+						ON SIC.itemID=SI.itemID_FK
+						WHERE SIC.itemBarcode = '%s'
+						ORDER BY SI.datePurchased DESC
+						LIMIT 1",
+						$barcode);
+						
+		$result = $this->get_db_con()->query($sql);
+		if ($result == FALSE) {
+			throw new Exception('Error Executing Barcode Search in Database (' . $this->get_db_con()->errorno . ')'); 
+		}
+		
+		$row = $result->fetch_array();
+		if ($row) {
+            return new ShopItem(
+                is_null($row[self::kColInstanceID]) ? 0  : $row[self::kColInstanceID],
+                is_null($row[self::kColItemID])		? 0  : $row[self::kColItemID],
+                is_null($row[self::kColUserID]) 	? 0  : $row[self::kColUserID],
+                is_null($row[self::kColListID]) 	? 0  : $row[self::kColListID],
+                is_null($row[self::kColCategoryID]) ? 0  : $row[self::kColCategoryID],
+                $row[self::kColItemName],
+                is_null($row[self::kColUnitCost]) 	? 0  : $row[self::kColUnitCost],
+                is_null($row[self::kColQuantity]) 	? 0  : $row[self::kColQuantity],
+                is_null($row[self::kColUnitID]) 	? 0  : $row[self::kColUnitID],
+				0, // isPurchased is not yet, so 0
+				is_null($row[self::kColIsAskLater]) ? 0  : $row[self::kColIsAskLater],
+				is_null($row[self::kColBarcode])    ? "" : $row[self::kColBarcode]);
+		} else {
+			// Shall we try google
+			$google_api_key = "AIzaSyA9IqL-QR5YezowBLgMIwwDvd_lDtWcSlo";
+			$searchURL = "https://www.googleapis.com/shopping/search/v1/public/products";
+    		
+    		$args = "key=" . urlencode($google_api_key);
+    		$args .= "&country=" . urlencode("US");
+    		$args .= "&q=" . urlencode($barcode);
+			$args .= "&alt=json";
+			
+			$result = file_get_contents($searchURL . "?" . $args);
+			if (!$result) {
+				throw new Exception('Error Executing Barcode Search in Provider.');
+			} else {
+				$json = json_decode($result);
+		    	for ($index = $json->startIndex; $index < $json->totalItems; $index++) {
+		    			
+		    		$itemJSON = $json->items[$index];
+					if (!is_null($itemJSON)) {
+						
+			    		$product 	 = $itemJSON->product;
+			    		$inventories = $product->inventories;
+			    		
+			    		if (!is_null($product->inventories)) {
+			    			$item_price = 0; 
+			    			$inventory = $inventories[0];
+			    			if (!is_null($inventory->currency) && 
+			    				$this->user_pref->currencyCode == $inventory->currency) {
+								$item_price = !is_null($inventory->price) ? $inventory->price : 0;
+							}
+							
+				    		return new ShopItem(                
+				    			0,
+				                0,
+				                0,
+				                0,
+				                1, // Uncategorized
+				                !is_null($product->title) ? $product->title : "", 
+				                $item_price,
+				                1, // quantity
+				                1, // unit
+								0, // isPurchased is not yet, so 0
+								0, // isAskLater
+								$barcode);
+				    		// String currency = inventories.getJSONObject(0).getString("currency");
+				    		// if (currency.equals(mUserPrefs.mCurrencyCode)) {
+			    	    		// item.mUnitPrice = (float) inventories.getJSONObject(0).getDouble("price");
+				    		// }
+			    		}
+					}
+		    	} 
+				
+				return NULL;
+			}
+		}
+	}
+	
 	// Creates an entry for the $item->_item_name in the `shopitemscatalog` 
 	// table if it does not exist, return the id if the entry is present
 	function create_catalog_entry($item)

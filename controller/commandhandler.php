@@ -752,6 +752,48 @@ class CommandHandler extends CommandHandlerBase {
         }
 	}
 
+	public static function do_search_barcode() {
+		
+		$barcode = isset($_REQUEST['arg1']) ? $_REQUEST['arg1'] : "";
+        try
+        {
+            $user_ID = -1;
+
+            if (isset($_SESSION['USER_ID'])) {
+                $user_ID = $_SESSION['USER_ID'];
+			}
+            else {
+                $user_ID = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
+                if ($user_ID == 0) {
+                    throw new Exception("Session Expired. Please log in again.");
+                }
+            }
+
+			if ($user_ID <= 0 || $barcode == "") {
+				throw new Exception("Error Processing Request.");
+			}
+			
+            $noteit_db = NoteItDB::login_user_id($user_ID);
+            $item = $noteit_db->get_shopitems_table()->searchitem_barcode($barcode);
+            $arr = array(
+                JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
+                JSONCodes::kRetMessage => "",
+                Command::$arg1 => $item != null ? shopitem_obj_to_array($item) : "");
+
+            $json_str = json_encode($arr);
+            $noteit_db = NULL;
+            echo($json_str);
+        }
+        catch(Exception $e)
+        {
+            $arr = array(
+                JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
+                JSONCodes::kRetMessage => $e->getMessage());
+
+            echo(json_encode($arr));
+        }
+	}
+
     /*  This function is called asynchronously. It's important to note that all output
         from this function should be JSON encoded. No returning HTML headers and Tags.
     */

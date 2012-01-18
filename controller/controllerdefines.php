@@ -20,6 +20,7 @@
 	class Handler
 	{
 		public static $do_get_countries		= 'do_get_countries';
+		public static $do_get_currencies	= 'do_get_currencies';
 		public static $do_get_units			= 'do_get_units';
 		
 		public static $do_register 			= 'do_register';
@@ -55,6 +56,7 @@
 		public static $do_mark_all_done		= 'do_mark_all_done';
 		public static $do_get_pending_cost	= 'do_get_pending_cost';
 		public static $do_get_instances		= 'do_get_instances';
+		public static $do_search_barcode	= 'do_search_barcode';
 		
 		public static $do_category_report	= 'do_category_report';
 		public static $do_item_report		= 'do_item_report';
