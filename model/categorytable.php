@@ -322,7 +322,7 @@ if(class_exists('CategoryTable') != TRUE) {
 				
 			if ($user_id > 0 && $connection) {
 					
-				$sql = "INSERT INTO `SHOPITEMCATEGORIES` (`categoryName`, `userID_FK`, `categoryRank`)
+				$sql = "INSERT INTO `shopitemcategories` (`categoryName`, `userID_FK`, `categoryRank`)
 						VALUES
 							('Apparel & Jewelry', 		$user_id, 1),
 							('Bath & Beauty', 			$user_id, 2),
