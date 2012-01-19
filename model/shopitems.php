@@ -133,11 +133,14 @@ class ShopItems extends TableBase
     						WHERE `%s`='%s'", 
 							self::kColItemName,
 							$this->get_db_con()->escape_string($item_name));
-			if ($barcode) {
-				$sql .= " AND " . self::kColBarcode . $this->get_db_con()->escape_string($barcode);
+			if (!empty($barcode)) {
+				$sql .= " AND " . self::kColBarcode . '=' .  $this->get_db_con()->escape_string($barcode);
+				if (!empty($barcode_format)) {
+					$sql .= " AND " . self::kColBarcodeFormat . '=' . $barcode_format;
+				}
 			}
 			$sql .= " LIMIT 1";
-
+			
 			$isTransactional = FALSE;
 			$result = $this->get_db_con()->query($sql);
 			if ($result == FALSE || mysqli_num_rows($result) <= 0) {
@@ -622,8 +625,11 @@ class ShopItems extends TableBase
 				WHERE `itemName`='%s' LIMIT 1", 
 				$this->get_db_con()->escape_string($item->_item_name));
 
-		if ($item->_barcode != "") {
-			$sql .= " AND " . self::kColBarcode . $this->get_db_con()->escape_string($barcode);
+		if (!empty($item->_barcode)) {
+			$sql .= " AND " . self::kColBarcode . "=" . $this->get_db_con()->escape_string($barcode);
+			if (!empty($item->_barcode_format)) {
+				$sql .= " AND " . self::kColBarcodeFormat . "=" . $item->_barcode_format;
+			}
 		}
 		$sql .= " LIMIT 1";
 				

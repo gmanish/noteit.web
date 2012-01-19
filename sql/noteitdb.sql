@@ -73,11 +73,11 @@ CREATE TABLE IF NOT EXISTS `shopitemcategories` (
 CREATE TABLE `shopitemscatalog` (
   `itemID` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `itemName` varchar(50) NOT NULL,
-  `itemBarcode` varchar(11) DEFAULT NULL,
+  `itemBarcode` varchar(15) DEFAULT '',
+  `itemBarcodeFormat` tinyint(1) DEFAULT '1' COMMENT 'const BARCODE_FORMAT_UNKNOWN 	= 1; \nconst BARCODE_FORMAT_UPC_A	= 2;\nconst BARCODE_FORMAT_UPC_E	= 3;\nconst BARCODE_FORMAT_EAN_8	= 4;\nconst BARCODE_FORMAT_EAN_13	= 5;\nconst BARCODE_FORMAT_RSS_14	= 6',
   PRIMARY KEY (`itemID`),
-  UNIQUE KEY `itemName` (`itemName`)
+  UNIQUE KEY `item_UNIQUE` (`itemBarcode`,`itemBarcodeFormat`,`itemName`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 # -----------------------------------------------------------------
 # Create the `shopitems` table
 # -----------------------------------------------------------------

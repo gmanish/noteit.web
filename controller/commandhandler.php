@@ -756,7 +756,7 @@ class CommandHandler extends CommandHandlerBase {
 	public static function do_search_barcode() {
 		
 		$barcode 		= isset($_REQUEST['arg1']) ? $_REQUEST['arg1'] : "";
-		$barcodeFormat 	= isset($_REQUEST['arg2']) ? $_REQUEST['arg2'] : BarcodeFormat::BARCODE_FORMAT_UNKNOWN;
+		$barcodeFormat 	= isset($_REQUEST['arg2']) ? intval($_REQUEST['arg2']) : BarcodeFormat::BARCODE_FORMAT_UNKNOWN;
         try
         {
             $user_ID = -1;
@@ -765,7 +765,7 @@ class CommandHandler extends CommandHandlerBase {
                 $user_ID = $_SESSION['USER_ID'];
 			}
             else {
-                $user_ID = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
+                $user_ID = isset($_REQUEST[Command::$arg3]) ? intval($_REQUEST[Command::$arg3]) : 0;
                 if ($user_ID == 0) {
                     throw new Exception("Session Expired. Please log in again.");
                 }
