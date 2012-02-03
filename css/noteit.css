@@ -6,7 +6,7 @@ body {
 	color: #000;
 	font-size: 100%;
 	line-height: 1.4;
-    background: #483e29;
+	background: #483e29;
 	font: 100%/1.4 Verdana, Arial, Helvetica, sans-serif;
 }
 
@@ -46,12 +46,15 @@ a:hover, a:active, a:focus {
 	min-height: auto;
 	background: #a2881b;
 	margin: 0 auto;
-	/* gecko based browsers */
-	background: -moz-linear-gradient(top, #fcd42a, #a2881b);
-	/* webkit based browsers */
-	background: -webkit-gradient(linear, left top, left bottom, from(#fcd42a), to(#a2881b));
-	
-	filter:progid:DXImageTransform.Microsoft.Gradient (endColorstr='#a2881b', startColorstr='#fcd42a', gradientType='0');
+    background: url("../img/notebook.gif") repeat;
+	background-repeat-x: repeat;
+	background-repeat-y: repeat;
+	background-attachment: initial;
+	background-position-x: initial;
+	background-position-y: initial;
+	background-origin: initial;
+	background-clip: initial;
+	background-color: initial;
 	color: #000000; /* text colour (black) */
 
 	padding: 5px; /* distance from border edge to text */

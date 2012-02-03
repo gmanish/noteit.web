@@ -539,19 +539,19 @@ class ShopItems extends TableBase
 		$row = $result->fetch_array();
 		if ($row) {
             return new ShopItem(
-                is_null($row[self::kColInstanceID]) ? 0  : $row[self::kColInstanceID],
-                is_null($row[self::kColItemID])		? 0  : $row[self::kColItemID],
-                is_null($row[self::kColUserID]) 	? 0  : $row[self::kColUserID],
-                is_null($row[self::kColListID]) 	? 0  : $row[self::kColListID],
-                is_null($row[self::kColCategoryID]) ? 0  : $row[self::kColCategoryID],
+                !is_null($row[self::kColInstanceID]) 	? $row[self::kColInstanceID] 	: 0,
+                !is_null($row[self::kColItemID])		? $row[self::kColItemID] 		: 0,
+                !is_null($row[self::kColUserID]) 		? $row[self::kColUserID]  		: 0,
+                !is_null($row[self::kColListID]) 		? $row[self::kColListID]  		: 0, 
+                !is_null($row[self::kColCategoryID]) 	? $row[self::kColCategoryID]  	: 1, // Uncategorized
                 $row[self::kColItemName],
-                is_null($row[self::kColUnitCost]) 	? 0  : $row[self::kColUnitCost],
-                is_null($row[self::kColQuantity]) 	? 0  : $row[self::kColQuantity],
-                is_null($row[self::kColUnitID]) 	? 0  : $row[self::kColUnitID],
+                !is_null($row[self::kColUnitCost]) 		? $row[self::kColUnitCost]  	: 0,
+                !is_null($row[self::kColQuantity]) 		? $row[self::kColQuantity]  	: 1, // Default
+                !is_null($row[self::kColUnitID]) 		? $row[self::kColUnitID]  		: 1, // unit
 				0, // isPurchased is not yet, so 0
-				is_null($row[self::kColIsAskLater]) ? 0  : $row[self::kColIsAskLater],
-				is_null($row[self::kColBarcode])    ? "" : $row[self::kColBarcode],
-				is_null($row[self::kColBarcodeFormat]) ? BarcodeFormat::BARCODE_FORMAT_UNKNOWN : $row[self::kColBarcodeFormat]);
+				!is_null($row[self::kColIsAskLater]) 	? $row[self::kColIsAskLater]  	: 0,
+				!is_null($row[self::kColBarcode])    	? $row[self::kColBarcode] 		: "",
+				!is_null($row[self::kColBarcodeFormat]) ? $row[self::kColBarcodeFormat] : BarcodeFormat::BARCODE_FORMAT_UNKNOWN);
 		} else {
 			// Shall we try google
 			$google_api_key = "AIzaSyA9IqL-QR5YezowBLgMIwwDvd_lDtWcSlo";

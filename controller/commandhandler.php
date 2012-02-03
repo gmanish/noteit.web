@@ -27,7 +27,6 @@ function shopitem_obj_to_array($shop_item_obj) {
 }
 
 class ListFunctorShopItems {
-    
 	public $_items = array();
 
     function __construct(& $items_array) {

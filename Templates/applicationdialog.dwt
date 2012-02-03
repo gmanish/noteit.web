@@ -31,6 +31,9 @@
 		border:				thin;
 		border-radius:		20px;
 		padding:			20px;
+		filter: DropShadow(Color=CCCCCC, OffX=5px, OffY=5px, Positive=1);
+		-moz-box-shadow: 10px 5px 10px #CCC;
+		-webkit-box-shadow: #CCCCCC 10px 5px 10px;
 	}
 	
 	.error_box {
