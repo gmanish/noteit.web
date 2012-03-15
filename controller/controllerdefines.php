@@ -60,6 +60,9 @@
 		
 		public static $do_category_report	= 'do_category_report';
 		public static $do_item_report		= 'do_item_report';
+		
+		public static $do_like_item			= 'do_like_item';
+		public static $do_dislike_item		= 'do_dislike_item';
 	}
 	
 	class HandlerExitStatus

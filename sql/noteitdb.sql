@@ -108,6 +108,20 @@ CREATE TABLE IF NOT EXISTS`shopitems` (
   CONSTRAINT `Ref_05_FK` FOREIGN KEY (`categoryID_FK`) REFERENCES `shopitemcategories` (`categoryID`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+# -----------------------------------------------------------------
+# Create the `shopitems_metadata` table
+# -----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `shopitems_metadata` (
+  `itemId_FK` int(11) unsigned NOT NULL,
+  `userId_FK` int(11) unsigned NOT NULL,
+  `vote` tinyint(4) DEFAULT NULL,
+  `date_voted` datetime DEFAULT NULL,
+  PRIMARY KEY (`itemId_FK`,`userId_FK`),
+  KEY `Ref_UserId_FKA` (`userId_FK`),
+  CONSTRAINT `Ref_itemId_FK` FOREIGN KEY (`itemId_FK`) REFERENCES `shopitemscatalog` (`itemID`),
+  CONSTRAINT `Ref_UserId_FKA` FOREIGN KEY (`userId_FK`) REFERENCES `users` (`userID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 -- --------------------------------------------------------------------------------
 -- Routine DDL
 -- --------------------------------------------------------------------------------

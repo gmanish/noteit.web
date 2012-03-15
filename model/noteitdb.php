@@ -6,6 +6,7 @@ require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "categorytable.php");
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "shopitems.php");
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "reports.php");
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "geoip.inc");
+require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "metadatatable.php");
 
 class Country {
 	const kCol_CountryCode = 'countryCode';
@@ -84,6 +85,7 @@ class NoteItDB extends DbBase
     protected $shop_items_db;
 	protected $user_pref;
 	protected $reports;
+	protected $metadata_db;
 		
 	protected function __construct($userID)
 	{
@@ -108,6 +110,7 @@ class NoteItDB extends DbBase
 		$this->cat_list_db = new CategoryTable($this, $userID);
 		$this->shop_items_db = new ShopItems($this, $userID, $this->user_pref);
 		$this->reports = new Reports($this, $userID);
+		$this->metadata_db = new MetadataTable($this, $userID);
  	}
 	
 	public function __destruct() {
@@ -141,6 +144,9 @@ class NoteItDB extends DbBase
         return $this->shop_items_db;
     }
     
+	public function &get_metadata_table() {
+		return $this->metadata_db;
+	}
 	public static function register_user(
 								$userName,
 								$password, 
