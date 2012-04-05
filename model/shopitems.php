@@ -210,6 +210,7 @@ class ShopItems extends TableBase
 				}
 				
 				$instance_id =  $this->get_db_con()->insert_id; 
+				
 				if ($isTransactional == TRUE) {
 					$this->get_db_con()->commit();
 					$this->get_db_con()->autocommit(TRUE);
@@ -360,6 +361,29 @@ class ShopItems extends TableBase
         }
     }
 
+	function get_item_price($classID) {
+		$sql = sprintf("select * from shopitems as si
+						inner join users as u
+						on si.`userID_FK`=u.`userID`
+						where si.itemID_FK=%d and u.`currencyCode`='%s'
+						order by 
+							(case when userID_FK=%d then 1
+							else 2 END), dateAdded 
+						limit 1",
+						$classID,
+						$this->get_user_currency(),
+						$this->GetUserID());
+		$result = $this->get_db_con()->query($sql);
+		if ($result != FALSE && mysqli_num_rows($result) == 1) {
+			$row = $result->fetch_array();
+			if ($row) {
+				return floatval($row['unitCost']);
+			}	
+		} else {
+			return 0.0;
+		}
+	}
+	
     function edit_item($instance_id, $item, $item_flags /* one of SHOPITEM_* flags */)
     {
 		$sql = sprintf('UPDATE %s SET', self::kTableName);

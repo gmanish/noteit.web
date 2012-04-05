@@ -7,6 +7,7 @@ require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "shopitems.php");
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "reports.php");
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "geoip.inc");
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "metadatatable.php");
+require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "shopitemprice.php");
 
 class Country {
 	const kCol_CountryCode = 'countryCode';
@@ -80,6 +81,7 @@ class NoteItDB extends DbBase
 
 	protected $db_userID;
 	protected $db_username;
+	protected $db_userCurrency;
 	protected $shop_list_db;
 	protected $cat_list_db;
     protected $shop_items_db;
@@ -98,6 +100,7 @@ class NoteItDB extends DbBase
 		if ($result != FALSE || mysqli_num_rows($result) == 1) {
 			$row = $result->fetch_array();
 			$this->db_username = $row['firstName'] . " " . $row['lastName'];
+			$this->db_userCurrency = $row['currencyCode'];
 			$this->user_pref = new UserPreference(
 							$row[Country::kCol_CountryCode], 
 							$row[Country::kCol_CurrencyCode]);
@@ -132,6 +135,10 @@ class NoteItDB extends DbBase
 		return $this->db_username;
 	}
 	
+	public function get_db_userCurrency() {
+		return $this->db_userCurrency;
+	}
+	
 	public function &get_shoplist_table() {
 		return $this->shop_list_db;
 	}
@@ -147,6 +154,7 @@ class NoteItDB extends DbBase
 	public function &get_metadata_table() {
 		return $this->metadata_db;
 	}
+		
 	public static function register_user(
 								$userName,
 								$password, 

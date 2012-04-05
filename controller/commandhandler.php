@@ -1608,6 +1608,41 @@ class CommandHandler extends CommandHandlerBase {
              echo(json_encode($arr));
 		}
 	}
+	
+	public static function do_get_item_price() {
+		try {
+			$user_ID = -1;
+			
+			if (isset($_SESSION['USER_ID'])) {
+				$user_ID = $_SESSION['USER_ID'];
+			} else {
+			    $user_ID = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
+			}
+			
+			$itemId = isset($_REQUEST[Command::$arg1]) ? intval($_REQUEST[Command::$arg1]) : 0;
+			if ($user_ID <= 0 || $itemId <= 0) {
+				throw new Exception("Error Processing Request.");
+			}
+
+			$noteit_db = NoteItDB::login_user_id($user_ID);
+			$price = $noteit_db->get_shopitems_table()->get_item_price($itemId);
+			$noteit_db = NULL;
+			
+			$arr = array(
+				JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
+				JSONCodes::kRetMessage => "",
+				Command::$arg1 => $price);
+				
+			echo(json_encode($arr));
+
+		} catch (exception $e) {
+            $arr = array(
+                 JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
+                 JSONCodes::kRetMessage => $e->getMessage());
+
+             echo(json_encode($arr));
+		}
+	}
 } // class CommandHandler
 	
 	

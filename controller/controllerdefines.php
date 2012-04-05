@@ -63,6 +63,7 @@
 		
 		public static $do_like_item			= 'do_like_item';
 		public static $do_dislike_item		= 'do_dislike_item';
+		public static $do_get_item_price	= 'do_get_item_price';
 	}
 	
 	class HandlerExitStatus

@@ -29,8 +29,16 @@ class TableBase {
 		return $this->db_user_ID;
 	}
 	
+	public function get_db_object() {
+		return $this->db_base;	
+	}
+	
     public function get_db_con() {
         return $this->db_base->get_db_con();
     }
+	
+	public function get_user_currency() {
+		return $this->db_base->get_db_userCurrency();
+	}
 }
 ?>
