@@ -1,7 +1,7 @@
 CREATE DATABASE IF NOT EXISTS `noteitdb` CHARSET = utf8;
 USE noteitdb;
 
-CREATE TABLE `countrytable` (
+CREATE TABLE IF NOT EXISTS `countrytable` (
   `countryCode` varchar(2) NOT NULL DEFAULT '',
   `currencyCode` varchar(3) NOT NULL,
   `currencySymbol` varchar(4) NOT NULL DEFAULT '',
@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS `shopitemcategories` (
 # -----------------------------------------------------------------
 # Create the `shopitemscatalog` table
 # -----------------------------------------------------------------
-CREATE TABLE `shopitemscatalog` (
+CREATE TABLE IF NOT EXISTS `shopitemscatalog` (
   `itemID` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `itemName` varchar(50) NOT NULL,
   `itemBarcode` varchar(15) DEFAULT '',
@@ -121,146 +121,6 @@ CREATE TABLE IF NOT EXISTS `shopitems_metadata` (
   CONSTRAINT `Ref_itemId_FK` FOREIGN KEY (`itemId_FK`) REFERENCES `shopitemscatalog` (`itemID`),
   CONSTRAINT `Ref_UserId_FKA` FOREIGN KEY (`userId_FK`) REFERENCES `users` (`userID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------------------------------
--- Routine DDL
--- --------------------------------------------------------------------------------
-DELIMITER //
-
-CREATE DEFINER=`root`@`localhost` FUNCTION `add_category`(
-  `categoryName` VARCHAR(25), 
-  `userID` INT) RETURNS int(11)
-   DETERMINISTIC
- BEGIN
-  
-  DECLARE newIndex INT;
-  
-  SELECT (max(categoryID) + 1)
-  INTO newIndex
-  FROM shopitemcategories;
-
-  INSERT INTO shopitemcategories (categoryID, categoryName, userID_FK) 
-  VALUES (newIndex, categoryName, userID);
-
-  return newIndex;
-
-END
-//
-
-# -----------------------------------------------------------------
-# Create the procedure `add_shop_item`
-# -----------------------------------------------------------------
-DELIMITER //
-CREATE 
-  DEFINER = `root`@`localhost` 
-  FUNCTION `add_shop_item`(`userID` INT,
-    `listID` INT,
-    `categoryID` INT,
-    `inItemName` VARCHAR(50),
-    `unitCost` DECIMAL(11, 2),
-    `quantity` DECIMAL(11, 2),
-    `unitID` INT,
-    `isAskLater` TINYINT) 
-  RETURNS INT(11)
-  DETERMINISTIC
-  COMMENT 'Adds a new item in the shopping list. Returns ID of the new Item. NOTE: The item must already be present in the shopitemscatalog or should be added there as well.'
-BEGIN
-  DECLARE thisItemID INT;
-
-  -- We need an exact match on `itemName`
-  SELECT `itemID`
-  INTO thisItemID
-  FROM `shopitemscatalog`
-  WHERE `itemName` = inItemName AND `userID_FK` = userID
-  LIMIT 1;
-
-  IF thisItemID IS NULL THEN
-    -- A record of this item does not exist in the `shopitemcatelog` table; create one
-    INSERT INTO `shopitemscatalog` (
-        `itemName`, 
-        `itemPrice`, 
-        `userID_FK`, 
-        `categoryID_FK`) 
-    VALUES (inItemName, unitCost, userID, categoryID);
-
-    SET thisItemID = @@last_insert_id;
-  END IF;
-
-  INSERT INTO `shopitems` (
-      `userID_FK`, 
-      `itemID_FK`, 
-      `dateAdded`, 
-      `listID_FK`, 
-      `unitCost`, 
-      `quantity`, 
-      `unitID_FK`, 
-      `categoryID_FK`,
-      `isAskLater`) 
-  VALUES (userID, thisItemID, curdate(), listID, unitCost, quantity, unitID, categoryID, isAskLater);
-
-  RETURN @@last_insert_id;
-END
-//
-
-# -----------------------------------------------------------------
-# Create the procedure `delete_category`
-# -----------------------------------------------------------------
-DELIMITER //
-CREATE 
-  DEFINER = `root`@`localhost` 
-  PROCEDURE `delete_category`(
-    category_ID INT,
-    user_ID INT)
-BEGIN
-  -- Delete all items contained in this list.
-  UPDATE `shopitemscatalog`
-  SET `shopitemscatalog`.`categoryID_FK` = 0
-  WHERE 
-    `shopitemscatalog`.`userID_FK` = user_ID 
-    AND
-    `shopitemscatalog`.`categoryID_FK` = category_ID;
-
-  DELETE `shopitemcategories`
-  FROM
-    `shopitemcategories`
-  WHERE
-    `shopitemcategories`.`categoryID` = category_ID
-    AND
-    `shopitemcategories`.`userID_FK` = user_ID;
-END
-//
-
-# -----------------------------------------------------------------
-# Create the procedure `delete_shopping_list`
-# -----------------------------------------------------------------
-DELIMITER //
-CREATE 
-  DEFINER = `root`@`localhost` 
-  PROCEDURE `delete_shopping_list`(
-    list_ID INT,
-    user_ID INT)
-BEGIN
-DELETE 
-
-FROM shopitems
-WHERE shopitems.userID_FK = user_ID AND shopitems.`listID_FK` = list_ID;
-
-DELETE 
-FROM shoplists
-WHERE shoplists.`listID` = list_ID AND shoplists.`userID_FK` = user_ID;
-
--- Delete all items contained in this list.
--- DELETE shopitems, shoplists
---  FROM shopitems
---  LEFT JOIN shoplists
---  ON shopitems.listID_FK = shoplists.listID
---    AND shopitems.userID_FK = shoplists.userID_FK
---  WHERE shoplists.listID = list_ID AND shoplists.userID_FK = user_ID;
-
-END
-//
-
-DELIMITER ;
 
 # -----------------------------------------------------------------
 # Insert Countries And Currencies

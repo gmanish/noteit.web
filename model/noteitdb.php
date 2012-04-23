@@ -7,7 +7,6 @@ require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "shopitems.php");
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "reports.php");
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "geoip.inc");
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "metadatatable.php");
-require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "shopitemprice.php");
 
 class Country {
 	const kCol_CountryCode = 'countryCode';
