@@ -53,6 +53,7 @@ class ShopItem
 	public $_is_asklater = 0; // TINYINT should be 0 or 1
 	public $_barcode = "";
 	public $_barcode_format = BarcodeFormat::BARCODE_FORMAT_UNKNOWN;
+	public $_voteCount = 0;
 	
 	function __construct(
         $instance_id,
@@ -67,7 +68,8 @@ class ShopItem
 		$is_purchased = FALSE,
 		$is_asklater = FALSE,
 		$barcode = "",
-		$barcode_format = BarcodeFormat::BARCODE_FORMAT_UNKNOWN)
+		$barcode_format = BarcodeFormat::BARCODE_FORMAT_UNKNOWN,
+		$vote_count = 0)
     {
         $this->_instance_id = $instance_id;
         $this->_item_id = $item_id;
@@ -82,6 +84,7 @@ class ShopItem
 		$this->_is_asklater = $is_asklater;
 		$this->_barcode = $barcode;
 		$this->_barcode_format = $barcode_format;
+		$this->_voteCount = $vote_count;
     }
 }
 
@@ -105,6 +108,7 @@ class ShopItems extends TableBase
 	const kColIsAskLater	= 'isAskLater';
 	const kColBarcode		= 'itemBarcode';
 	const kColBarcodeFormat = 'itemBarcodeFormat';
+	const kColVoteCount		= 'voteCount';
 	
 	protected $user_pref;
 
@@ -258,23 +262,54 @@ class ShopItems extends TableBase
     	$sql = "";
     	if ($show_purchased_items <= 0) {
 	        $sql = sprintf(
-					"SELECT si.*, sic.itemName, sic.itemBarcode, sic.itemBarcodeFormat FROM `%s` AS si " .
-					"INNER JOIN `shopitemscatalog` AS sic " .
-					"INNER JOIN `shopitemcategories` AS sicg " .
-					"ON si.itemID_FK=sic.itemID AND si.`categoryID_FK`=sicg.`categoryID` " .
-					"WHERE si.userID_FK=%d AND si.listID_FK=%d AND si.isPurchased <= 0 " . 
-					"ORDER BY sicg.`categoryRank` ASC ",
-	                self::kTableName,
-	                parent::GetUserID(),
-	                $list_id);
+				 		"SELECT 
+							si.*, 
+							sic.itemName, 
+							sic.itemBarcode, 
+							sic.itemBarcodeFormat,
+							(SELECT 
+								SUM(vote) 
+							 FROM shopitems_metadata 
+							 WHERE 
+							 	`itemId_FK`=si.`itemID_FK`) as voteCount
+					 	FROM `%s` AS si
+					 	INNER JOIN `shopitemscatalog` AS sic
+					 	INNER JOIN `shopitemcategories` AS sicg
+						ON 
+							si.itemID_FK=sic.itemID AND 
+							si.`categoryID_FK`=sicg.`categoryID`
+						WHERE 
+							si.userID_FK=%d AND 
+							si.listID_FK=%d AND 
+							si.isPurchased <= 0 
+						ORDER BY 
+							sicg.`categoryRank` ASC",
+		                self::kTableName,
+		                parent::GetUserID(),
+		                $list_id);
 		} else {
 	        $sql = sprintf(
-					"SELECT si.*, sic.itemName, sic.itemBarcode, sic.itemBarcodeFormat FROM `%s` AS si
+					"SELECT 
+						si.*, 
+						sic.itemName, 
+						sic.itemBarcode, 
+						sic.itemBarcodeFormat,
+						(SELECT 
+							SUM(vote) 
+						FROM shopitems_metadata 
+						WHERE 
+						 	`itemId_FK`=si.`itemID_FK`) as voteCount
+					FROM `%s` AS si
 					INNER JOIN `shopitemscatalog` AS sic
 					INNER JOIN `shopitemcategories` AS sicg
-					ON si.itemID_FK=sic.itemID AND si.`categoryID_FK`=sicg.`categoryID`
-					WHERE si.userID_FK=%d AND si.listID_FK=%d
-					ORDER BY sicg.`categoryRank` ASC",
+					ON 
+						si.itemID_FK=sic.itemID AND 
+						si.`categoryID_FK`=sicg.`categoryID`
+					WHERE 
+						si.userID_FK=%d AND 
+						si.listID_FK=%d
+					ORDER BY 
+						sicg.`categoryRank` ASC",
 	                self::kTableName,
 	                parent::GetUserID(),
 	                $list_id);
@@ -307,7 +342,8 @@ class ShopItems extends TableBase
 				$row[self::kColIsPurchased],
 				$row[self::kColIsAskLater],
 				is_null($row[self::kColBarcode]) ? "" : $row[self::kColBarcode],
-				is_null($row[self::kColBarcodeFormat]) ? BarcodeFormat::BARCODE_FORMAT_UNKNOWN : $row[self::kColBarcodeFormat]);
+				is_null($row[self::kColBarcodeFormat]) ? BarcodeFormat::BARCODE_FORMAT_UNKNOWN : $row[self::kColBarcodeFormat],
+				is_null($row['voteCount']) ? 0 : $row['voteCount']);
 
             call_user_func(
                 array($functor_obj, $function_name), // invoke the callback function
@@ -322,14 +358,27 @@ class ShopItems extends TableBase
 
     function get_item($instance_id)
     {
-        $sql = sprintf("SELECT si.*, sic.itemName , sic.itemBarcode, sic.itemBarcodeFormat 
-        		FROM `%s` AS si 
-        		inner join `shopitemscatalog` AS sic  
-        		ON si.itemID_FK = sic.itemID  
-        		WHERE si.userID_FK = %d and si.instanceID = %d  LIMIT 1",
-                self::kTableName,
-                parent::GetUserID(),
-                $instance_id);
+        $sql = sprintf(
+        		"SELECT 
+					si.*, 
+					sic.itemName , 
+					sic.itemBarcode, 
+					sic.itemBarcodeFormat,
+					(SELECT 
+						SUM(vote) 
+					FROM shopitems_metadata 
+					WHERE 
+					 	`itemId_FK`=si.`itemID_FK`) as voteCount
+				FROM `%s` AS si 
+				INNER JOIN `shopitemscatalog` AS sic  
+				ON 
+					si.itemID_FK = sic.itemID  
+				WHERE 
+					si.userID_FK = %d AND 
+					si.instanceID = %d  LIMIT 1",
+				self::kTableName,
+				parent::GetUserID(),
+				$instance_id);
 
         NI::TRACE('ShopItems::get_item SQL: ' . $sql, __FILE__, __LINE__);
         $result = $this->get_db_con()->query($sql);
@@ -352,7 +401,8 @@ class ShopItems extends TableBase
 				$row[self::kColIsPurchased],
 				$row[self::kColIsAskLater],
 				is_null($row[self::kColBarcode]) ? "" : $row[self::kColBarcode],
-				is_null($row[self::kColBarcodeFormat]) ? BarcodeFormat::BARCODE_FORMAT_UNKNOWN : $row[self::kColBarcodeFormat]);
+				is_null($row[self::kColBarcodeFormat]) ? BarcodeFormat::BARCODE_FORMAT_UNKNOWN : $row[self::kColBarcodeFormat],
+				is_null($row['voteCount']) ? 0 : $row['voteCount']);
 
             if ($result)
                 $result->free();
@@ -545,15 +595,29 @@ class ShopItems extends TableBase
 	
 	function searchitem_barcode($barcode, $barcodeFormat) {
 		
-		$sql = sprintf("SELECT SI.*, SIC.itemName, SIC.itemBarcode, SIC.itemBarcodeFormat  
-						FROM shopitemscatalog SIC
-						LEFT JOIN shopitems SI
-						ON SIC.itemID=SI.itemID_FK
-						WHERE SIC.itemBarcode = '%s' AND SIC.itemBarcodeFormat = %d
-						ORDER BY SI.datePurchased DESC
-						LIMIT 1",
-						$barcode,
-						$barcodeFormat);
+		$sql = sprintf(
+				"SELECT 
+					SI.*, 
+					SIC.itemName, 
+					SIC.itemBarcode, 
+					SIC.itemBarcodeFormat,
+					(SELECT 
+						SUM(vote) 
+					FROM shopitems_metadata 
+					WHERE 
+					 	itemId_FK=SIC.itemID) as voteCount
+				FROM shopitemscatalog SIC
+				LEFT JOIN shopitems SI
+				ON 
+					SIC.itemID=SI.itemID_FK
+				WHERE 
+					SIC.itemBarcode = '%s' AND 
+					SIC.itemBarcodeFormat = %d
+				ORDER BY 
+					SI.datePurchased DESC
+				LIMIT 1",
+				$barcode,
+				$barcodeFormat);
 						
 		$result = $this->get_db_con()->query($sql);
 		if ($result == FALSE) {
@@ -575,7 +639,8 @@ class ShopItems extends TableBase
 				0, // isPurchased is not yet, so 0
 				!is_null($row[self::kColIsAskLater]) 	? $row[self::kColIsAskLater]  	: 0,
 				!is_null($row[self::kColBarcode])    	? $row[self::kColBarcode] 		: "",
-				!is_null($row[self::kColBarcodeFormat]) ? $row[self::kColBarcodeFormat] : BarcodeFormat::BARCODE_FORMAT_UNKNOWN);
+				!is_null($row[self::kColBarcodeFormat]) ? $row[self::kColBarcodeFormat] : BarcodeFormat::BARCODE_FORMAT_UNKNOWN,
+				!is_null($row['voteCount']) 			? $row['voteCount'] : 0);
 		} else {
 			// Shall we try google
 			$google_api_key = "AIzaSyA9IqL-QR5YezowBLgMIwwDvd_lDtWcSlo";
@@ -620,7 +685,8 @@ class ShopItems extends TableBase
 								0, // isPurchased is not yet, so 0
 								0, // isAskLater
 								$barcode,
-								$barcodeFormat);
+								$barcodeFormat,
+								0);
 				    		// String currency = inventories.getJSONObject(0).getString("currency");
 				    		// if (currency.equals(mUserPrefs.mCurrencyCode)) {
 			    	    		// item.mUnitPrice = (float) inventories.getJSONObject(0).getDouble("price");
@@ -769,7 +835,7 @@ class ShopItems extends TableBase
                 $row[self::kColQuantity],
                 $row[self::kColUnitID],
 				1,
-				0);
+				0); 
 				
             call_user_func(
                 array($functor_obj, $function_name), // invoke the callback function

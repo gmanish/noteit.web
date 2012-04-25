@@ -21,7 +21,8 @@ function shopitem_obj_to_array($shop_item_obj) {
 		ShopItems::kColIsPurchased		=> $shop_item_obj->_is_purchased,
 		ShopItems::kColIsAskLater		=> $shop_item_obj->_is_asklater,
 		ShopItems::kColBarcode			=> $shop_item_obj->_barcode,
-		ShopItems::kColBarcodeFormat	=> $shop_item_obj->_barcode_format);
+		ShopItems::kColBarcodeFormat	=> $shop_item_obj->_barcode_format,
+		ShopItems::kColVoteCount		=> $shop_item_obj->_voteCount);
 
     return $shop_item_array;
 }
@@ -1557,12 +1558,13 @@ class CommandHandler extends CommandHandlerBase {
 			}
 			
 			$noteit_db = NoteItDB::login_user_id($user_ID);
-			$noteit_db->get_metadata_table()->do_like_item($itemId);
+			$likeCount = $noteit_db->get_metadata_table()->do_like_item($itemId);
 			$noteit_db = NULL;
 			
 			$arr = array(
 				JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
-				JSONCodes::kRetMessage => "");
+				JSONCodes::kRetMessage => "",
+				ShopItems::kColVoteCount => $likeCount);
 				
 			echo(json_encode($arr));
 
@@ -1591,12 +1593,13 @@ class CommandHandler extends CommandHandlerBase {
 			}
 			
 			$noteit_db = NoteItDB::login_user_id($user_ID);
-			$noteit_db->get_metadata_table()->do_dislike_item($itemId);
+			$likeCount = $noteit_db->get_metadata_table()->do_dislike_item($itemId);
 			$noteit_db = NULL;
 			
 			$arr = array(
 				JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
-				JSONCodes::kRetMessage => "");
+				JSONCodes::kRetMessage => "",
+				ShopItems::kColVoteCount => $likeCount);
 				
 			echo(json_encode($arr));
 

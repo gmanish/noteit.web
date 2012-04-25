@@ -38,6 +38,8 @@ if (class_exists("MetadataTable") != TRUE) {
 				throw new Exception("Error Liking Item (" .
 					$this->get_db_con()->errno . ")");
 			}
+			// Return the count of likes
+			return $this->do_count_likes($itemId);
 		}
 		
 		function do_dislike_item($itemId) {
@@ -60,6 +62,21 @@ if (class_exists("MetadataTable") != TRUE) {
 			} else if (result == FALSE){
 				throw new Exception("Error Disliking Item (" . 
 					$this->get_db_con()->errno . ")");
+			}
+			// Return the count of likes
+			return $this->do_count_likes($itemId);
+		}
+		
+		function do_count_likes($itemId) {
+			
+			$sql = sprintf("SELECT SUM(`vote`) FROM `shopitems_metadata` WHERE `itemId_FK`=%d", $itemId);
+			$result = $this->get_db_con()->query($sql);
+			if ($result == FALSE) {
+				return 0;
+			} else {
+				$row = $result->fetch_row();
+				$result->free();
+				return $row[0];
 			}
 		}
 	}
