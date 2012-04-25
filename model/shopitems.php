@@ -213,13 +213,14 @@ class ShopItems extends TableBase
 					throw new Exception("Error Adding Item. (" . $this->get_db_con()->errno . ")");
 				}
 				
-				$instance_id =  $this->get_db_con()->insert_id; 
+				$instance_id = $this->get_db_con()->insert_id; 
 				
 				if ($isTransactional == TRUE) {
 					$this->get_db_con()->commit();
 					$this->get_db_con()->autocommit(TRUE);
 				}
-				return $instance_id;
+				
+				return $this->get_item($instance_id);
 				
 			} catch (Exception $e) {
 				if ($isTransactional) {

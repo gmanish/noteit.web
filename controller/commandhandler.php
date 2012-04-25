@@ -891,7 +891,7 @@ class CommandHandler extends CommandHandlerBase {
             if ($item_name != "")
             {
                 $noteit_db = NoteItDB::login_user_id($user_ID);
-                $new_ID = $noteit_db->get_shopitems_table()->add_item(
+                $new_item = $noteit_db->get_shopitems_table()->add_item(
                     $list_ID,
                     $category_ID,
                     $item_name,
@@ -904,24 +904,8 @@ class CommandHandler extends CommandHandlerBase {
 					
 	            $noteit_db = NULL;
 
-				// Construct a new shop item with the details to return to caller
-				$newItem = new ShopItem(
-						$new_ID, 
-						0, // We don't have class ID here
-						$user_ID,
-						$list_ID,
-						$category_ID, 
-						$item_name, 
-						$item_unit_cost, 
-						$item_quantity, 
-						$item_unit_id,
-						$item_ispurchased,
-						$item_isasklater,
-						$item_barcode,
-						$item_barcodeformat);
-				
 				$item_array = array();
-				$item_array[] = shopitem_obj_to_array($newItem);
+				$item_array[] = shopitem_obj_to_array($new_item);
 
                 $arr = array(
                     JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
