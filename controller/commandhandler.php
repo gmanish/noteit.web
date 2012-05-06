@@ -240,8 +240,7 @@ class CommandHandler extends CommandHandlerBase {
        
         try
         {
-		    $countryCode = isset($_REQUEST[Command::$arg1]) ? $_REQUEST[Command::$arg1] : "";
-			$currencyCode = isset($_REQUEST[Command::$arg2]) ? $_REQUEST[Command::$arg2] : "";
+			$currencyId = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : Country::kDefault_CurrencyId;
 
 		    $user_ID = -1;
 
@@ -254,10 +253,10 @@ class CommandHandler extends CommandHandlerBase {
                 }
             }
 
-        	if (($countryCode == "" && $countryCode == "") || $user_ID <= 0)
+        	if ($user_ID <= 0 || $currencyId <= 0)
 				throw new Exception("Invalid Preferences");
 			
-			$prefs = new UserPreference($countryCode, $currencyCode);
+			$prefs = new UserPreference($currencyId);
             $noteit_db = NoteItDB::login_user_id($user_ID);
            	$noteit_db->save_preferences($prefs);
             $noteit_db = NULL;
@@ -1422,13 +1421,14 @@ class CommandHandler extends CommandHandlerBase {
 			
 		try {
 			$nativeCountry = NoteItDB::list_country($ipAddress);
-			$countries = NoteItDB::list_currencies();
+			$nativeCurrency = NoteItDB::get_currency_for_country($nativeCountry->countryCode);
+			$currencies = NoteItDB::list_currencies();
             $arr = array(
                  JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
                  JSONCodes::kRetMessage => "",
                  Command::$arg1 => $ipAddress,
-                 Command::$arg2 => $nativeCountry,
-                 Command::$arg3 => $countries);
+                 Command::$arg2 => $nativeCurrency,
+                 Command::$arg3 => $currencies);
 			
 			echo(json_encode($arr));
 		}

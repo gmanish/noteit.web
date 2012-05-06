@@ -9,44 +9,80 @@ require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "geoip.inc");
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "metadatatable.php");
 
 class Country {
-	const kCol_CountryCode = 'countryCode';
-	const kCol_CountryName = 'countryName';
-	const kCol_CurrencyCode = 'currencyCode';
-	const kCol_CurrencySymbol = 'currencySymbol';
-	const kCol_CurrencyIsRight = 'currencyIsRight';
-	const kCol_CurrencyName = 'currencyName';
 	
-	public $countryCode = "";
-	public $countryName = "";
-	public $currencyCode = "";
-	public $currencySymbol = "";
-	public $currencyIsRight = 0;
-	public $currencyName = "";
+	const kTable_CountryTable 	= 'countrytable';
+
+	const kCol_CountryId		= 'id';
+	const kCol_CountryCode 		= 'countryCode';
+	const kCol_CountryName 		= 'countryName';
+	const kCol_CurrencyId		= 'currencyid';
+	
+	const kDefault_CountryId	= '211';
+	const kDefault_CountryCode	= 'US';
+	const kDefault_CountryName	= 'UNITED STATES';
+	const kDefault_CurrencyId	= '135';
+	
+	public $countryId			= 0;
+	public $countryCode 		= "";
+	public $countryName 		= "";
+	public $currencyId 			= 0;
 	
 	public function __construct(
+		$countryId,
 		$countryCode, 
+		$countryName,
+		$currencyId) {
+		
+		$this->countryId		= $countryId;
+		$this->countryCode 		= $countryCode;
+		$this->countryName 		= $countryName;
+		$this->currencyId		= $currencyId;
+	}	
+}
+
+class Currency {
+	
+	const kTable_CurrencyTable	= 'currencytable';
+	
+	const kCol_CurrencyId 		= 'currencyid';
+	const kCol_CurrencyCode 	= 'currencyCode';
+	const kCol_CurrencySymbol 	= 'currencySymbol';
+	const kCol_CurrencyIsRight 	= 'currencyIsRight';
+	const kCol_CurrencyName 	= 'currencyName';
+	
+	public $currencyId			= 0;
+	public $currencyCode 		= "";
+	public $currencySymbol 		= "";
+	public $currencyIsRight 	= 0;
+	public $currencyName 		= "";
+	
+	public function __construct(
+		$currencyId,
 		$currencyCode, 
 		$currencySymbol, 
 		$currencyIsRight, 
-		$currencyName,
-		$countryName) {
-		$this->countryCode = $countryCode;
-		$this->currencyCode = $currencyCode;
-		$this->currencySymbol = $currencySymbol;
-		$this->currencyIsRight = $currencyIsRight;
-		$this->currencyName = $currencyName;
-		$this->countryName = $countryName;
-	}	
+		$currencyName) {
+
+		$this->currencyId 		= $currencyId;
+		$this->currencyCode 	= $currencyCode;
+		$this->currencySymbol 	= $currencySymbol;
+		$this->currencyIsRight 	= $currencyIsRight;
+		$this->currencyName 	= $currencyName;
+	}
 }
 
 class Unit
 {
-	public $unitID = 0;
-	public $unitName = "";
-	public $unitAbbreviation = "";
-	public $unitType = 1; // Default Metric System
+	public $unitID 				= 0;
+	public $unitName 			= "";
+	public $unitAbbreviation 	= "";
+	public $unitType 			= 1; // Default Metric System
 	
-	public function __construct($unitID, $unitName, $unitAbbreviation, $unitType)
+	public function __construct(
+		$unitID, 
+		$unitName,
+		$unitAbbreviation, 
+		$unitType)
 	{
 		$this->unitID = $unitID;
 		$this->unitName = $unitName;
@@ -56,12 +92,10 @@ class Unit
 }
 
 class UserPreference {
-	public $countryCode = "";
-	public $currencyCode = "";
+	public $currencyId = 0;
 	
-	public function __construct($countryCode, $currencyCode) {
-		$this->countryCode = $countryCode;
-		$this->currencyCode = $currencyCode;
+	public function __construct($currencyId) {
+		$this->currencyId = $currencyId;
 	}	
 }
 
@@ -74,13 +108,13 @@ class NoteItDB extends DbBase
     const kColUserFirstName		= 'firstName';
     const kColUserLastName		= 'lastName';
 	const kColUserPassword 		= 'userPassword';
-	const kColCountryCode		= 'countryCode';
-	const kColCurrencyCode		= 'currencyCode';
+	const kColCurrencyId		= 'currencyId';
+	
 	const kMIN_PASSWORD_LENGTH 	= 6;
 
 	protected $db_userID;
 	protected $db_username;
-	protected $db_userCurrency;
+	protected $db_userCurrencyId;
 	protected $shop_list_db;
 	protected $cat_list_db;
     protected $shop_items_db;
@@ -99,10 +133,8 @@ class NoteItDB extends DbBase
 		if ($result != FALSE || mysqli_num_rows($result) == 1) {
 			$row = $result->fetch_array();
 			$this->db_username = $row['firstName'] . " " . $row['lastName'];
-			$this->db_userCurrency = $row['currencyCode'];
-			$this->user_pref = new UserPreference(
-							$row[Country::kCol_CountryCode], 
-							$row[Country::kCol_CurrencyCode]);
+			$this->db_userCurrencyId = $row['currencyId'];
+			$this->user_pref = new UserPreference($row[self::kColCurrencyId]);
 			$result->free();
 		}
         else 
@@ -212,19 +244,25 @@ class NoteItDB extends DbBase
 			$salt = $config['SALT'];
 			$salted_hash = sha1($salt . $password);
 			 
+			$ipAddress = $_SERVER['REMOTE_ADDR'];
+			$nativeCountry = NoteItDB::list_country($ipAddress);
+			$nativeCurrency = NoteItDB::get_currency_for_country($nativeCountry->countryCode);
+				
 			// try to register this user
 			$sql = sprintf(
-				"INSERT INTO `%s` (`%s`,`%s`,`%s`, `%s`) 
-				VALUES ('%s', '%s', '%s', UNHEX('%s'))", 
-				self::kTableUsers,
-				self::kColUserEmail,
-				self::kColUserFirstName,
-				self::kColUserLastName,
-				self::kColUserPassword,
-				$db_con->escape_string($emailID),
-				$db_con->escape_string($firstName),
-				$db_con->escape_string($lastName),
-				$salted_hash);
+					"INSERT INTO `%s` (`%s`,`%s`,`%s`, `%s`, `%s`) 
+					VALUES ('%s', '%s', '%s', UNHEX('%s'), %d)", 
+					self::kTableUsers,
+					self::kColUserEmail,
+					self::kColUserFirstName,
+					self::kColUserLastName,
+					self::kColUserPassword,
+					self::kColCurrencyId,
+					$db_con->escape_string($emailID),
+					$db_con->escape_string($firstName),
+					$db_con->escape_string($lastName),
+					$salted_hash,
+					$nativeCurrency->currencyId);
 			
 			$noteit_db = NULL;
 			$isTransactional = $db_con->autocommit(FALSE);
@@ -392,13 +430,9 @@ class NoteItDB extends DbBase
 				
 			$sql = sprintf(
 				"UPDATE `users` 
-				SET `%s`='%s', `%s`='%s' 
-				WHERE `%s`=%d", 
-				self::kColCountryCode,
-				$preferences->countryCode,
-				self::kColCurrencyCode,
-				$preferences->currencyCode,
-				self::kColUserID,
+				SET `" . self::kColCurrencyId . "`=%d 
+				WHERE `" . self::kColUserID . "`=%d", 
+				$preferences->currencyId,
 				$this->db_userID);
 				
 			$result = $this->get_db_con()->query($sql);
@@ -412,7 +446,12 @@ class NoteItDB extends DbBase
 	{
 		global $config;
 		
-		$country = new Country("US", "USD", "$", 1, "US Dollar", "UNITED STATES");
+		$country = new Country(
+				Country::kDefault_CountryId,
+				Country::kDefault_CountryCode,
+				Country::kDefault_CountryName,
+				Country::kDefault_CurrencyId);
+		
 		if (!file_exists($config['GEOIP_DB'])) {
 			throw new Exception("A required database was not found. Server Installation is corrupt.");
 		}
@@ -446,17 +485,15 @@ class NoteItDB extends DbBase
 								 	$countryCode);
 					
 					$result = $db_con->query($sql);
-					if ($result && mysqli_num_rows($result) > 0) {
+					if ($result && mysqli_num_rows($result) == 1) {
 							
 						while ($row = $result->fetch_array()){
 							
 							$country = new Country(
+								$row[Country::kCol_CountryId],
 								$row[Country::kCol_CountryCode],
-								$row[Country::kCol_CurrencyCode],
-								$row[Country::kCol_CurrencySymbol],
-								$row[Country::kCol_CurrencyIsRight],
-								$row[Country::kCol_CurrencyName],
-								$row[Country::kCol_CountryName]);
+								$row[Country::kCol_CountryName],
+								$row[Country::kCol_CurrencyId]);
 						}
 			            $result->free();
 					}
@@ -513,12 +550,10 @@ class NoteItDB extends DbBase
 					
 				while ($row = $result->fetch_array()){
 					$country = new Country(
-						$row[Country::kCol_CountryCode],
-						$row[Country::kCol_CurrencyCode],
-						$row[Country::kCol_CurrencySymbol],
-						$row[Country::kCol_CurrencyIsRight],
-						$row[Country::kCol_CurrencyName],
-						$row[Country::kCol_CountryName]);
+							$row[Country::kCol_CountryId],							
+							$row[Country::kCol_CountryCode],
+							$row[Country::kCol_CountryName],
+							$row[Country::kCol_CurrencyId]);
 						
 					$countries[] = $country;
 				}
@@ -539,6 +574,58 @@ class NoteItDB extends DbBase
 		}		
 	}
 
+	public static function get_currency_for_country($countryCode) {
+
+		global $config;
+		$db_con = NULL;
+		
+		try {
+			$db_con = new MySQLi(
+					$config['MYSQL_SERVER'],
+					$config['MYSQL_USER'],
+					$config['MYSQL_PASSWD'],
+					$config['MYSQL_DB']);
+			
+			if (mysqli_connect_error()) {
+				throw new Exception(
+						'Could not connect to Server' . "(" .
+						mysqli_connect_errno() . ")");
+			}
+				
+			if (!$db_con->set_charset("utf8")) {
+				throw new Exception('Could not set charset to utf8. PHP version 5.2.3 or greater required');			
+			}
+			
+			$sql = sprintf("SELECT CUT.* 
+					FROM `countrytable` AS COT
+					INNER JOIN `currencytable` AS CUT
+					ON COT.`currencyid` = CUT.`currencyid`
+					WHERE COT.`countrycode` = '%s'", $countryCode);
+			$result = $db_con->query($sql);
+			
+			$currency = NULL;
+			if ($result && mysqli_num_rows($result) > 0) {
+				
+				while($row = $result->fetch_array()) {
+					$currency = new Currency(
+						$row[Currency::kCol_CurrencyId],
+						$row[Currency::kCol_CurrencyCode],
+						$row[Currency::kCol_CurrencySymbol],
+						$row[Currency::kCol_CurrencyIsRight],
+						$row[Currency::kCol_CurrencyName]);
+					break;					
+				}
+			}
+			return $currency;
+			
+		} catch (Exception $e) {
+			
+			$db_con->close();
+			$db_con = NULL;
+			throw $e;
+		}
+	}
+	
 	public static function list_currencies() {
         	
         global $config;
@@ -561,29 +648,28 @@ class NoteItDB extends DbBase
 				throw new Exception('Could not set charset to utf8. PHP version 5.2.3 or greater required');			
 			}
 			
-	 		$sql = sprintf("select distinct * from `countrytable` group by `currencyName`");
+	 		$sql = sprintf("select distinct * from `currencytable` group by `currencyName`");
 			$result = $db_con->query($sql);
 			
-			$countries = array();
+			$currencies = array();
 			if ($result && mysqli_num_rows($result) > 0) {
 					
 				while ($row = $result->fetch_array()){
-					$country = new Country(
-						$row[Country::kCol_CountryCode],
-						$row[Country::kCol_CurrencyCode],
-						$row[Country::kCol_CurrencySymbol],
-						$row[Country::kCol_CurrencyIsRight],
-						$row[Country::kCol_CurrencyName],
-						$row[Country::kCol_CountryName]);
+					$currency = new Currency(
+						$row[Currency::kCol_CurrencyId],
+						$row[Currency::kCol_CurrencyCode],
+						$row[Currency::kCol_CurrencySymbol],
+						$row[Currency::kCol_CurrencyIsRight],
+						$row[Currency::kCol_CurrencyName]);
 						
-					$countries[] = $country;
+					$currencies[] = $currency;
 				}
 				
 	            $result->free();
 				$db_con->close();
 				$db_con = NULL;
 				
-				return $countries;
+				return $currencies;
 			} else {
 				throw new Exception("Could not fetch currency related data.");
 			}

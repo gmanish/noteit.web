@@ -88,6 +88,16 @@ class ShopItem
     }
 }
 
+class ShopItemsPrice
+{
+	const kTableName 		= 'shopitems_price';
+	const kColClassId		= 'classID_FK';
+	const kColCurrencyCode	= 'currencyCode_FK';
+	const kColUnitID		= 'unitID_FK';
+	const kColDateAdded		= 'date_added';
+	const kColItemPrice		= 'itemPrice';
+}
+
 class ShopItems extends TableBase
 {
 	const USE_STORED_PROC  	= FALSE;
@@ -220,6 +230,8 @@ class ShopItems extends TableBase
 					$this->get_db_con()->autocommit(TRUE);
 				}
 				
+//				$this->add_price(
+//					$class_ID, $currencyCode, $unitID, $dateAdded, $itemPrice, $itemQuantity);
 				return $this->get_item($instance_id);
 				
 			} catch (Exception $e) {
@@ -847,6 +859,41 @@ class ShopItems extends TableBase
         
         if ($result)
         	$result->free();
+	}
+	
+	private function add_price(
+		$classID, 
+		$currencyCode, 
+		$unitID, 
+		$dateAdded,
+		$itemPrice,
+		$itemQuantity) {
+		
+		if ($classID > 0 && 
+			$currencyCode != '' && 
+			$unitID > 0 && 
+			($totalPrice = ($itemPrice * $itemQuantity)) > 0) {
+			
+			$sql = sprintf("
+						INSERT INTO
+							`shopitems_price` (
+							`classID_FK`,
+							`currencyCode_FK`,
+							`unitID_FK`,
+							`date_added`,
+							`itemPrice`)
+						VALUES
+							(%d, %s, %d, CURDATE(), %f)",
+						$classID, 
+						$currencyCode,
+						$unitID,
+						$totalPrice);
+			$result = $this->get_db_con()->query($sql);
+			if (!$result == FALSE && $this->get_db_con()->errno != 1062) {	
+				// Ignore Duplicate PK Error since by design, we insert only one record of price per (item, currencyCode, unitId, date)
+				throw new Exception("Error updating item price. (" . $this->get_db_con()->errno . ")");
+			}
+		}
 	}
 }
 ?>
