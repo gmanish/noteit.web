@@ -98,19 +98,20 @@ CREATE TABLE IF NOT EXISTS `shopitemscatalog` (
 # -----------------------------------------------------------------
 # Create the `shopitems` table
 # -----------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `shopitems` (
-  `instanceID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `userID_FK` int(11) unsigned NOT NULL,
-  `itemID_FK` int(11) unsigned NOT NULL,
-  `dateAdded` date NOT NULL,
-  `datePurchased` date DEFAULT NULL,
-  `listID_FK` int(11) unsigned NOT NULL,
-  `unitCost` decimal(11,2) unsigned zerofill DEFAULT NULL COMMENT 'Cost per unit. So:\\n   total cost = cost  X quantity',
-  `quantity` decimal(11,2) unsigned zerofill DEFAULT NULL,
-  `unitID_FK` int(10) unsigned NOT NULL,
-  `categoryID_FK` int(11) unsigned NOT NULL DEFAULT '0',
-  `isPurchased` tinyint(1) DEFAULT '0',
-  `isAskLater` tinyint(1) NOT NULL DEFAULT '0',
+CREATE TABLE `shopitems` (
+  `instanceID` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `userID_FK` INT(11) UNSIGNED NOT NULL,
+  `itemID_FK` INT(11) UNSIGNED NOT NULL,
+  `dateAdded` DATE NOT NULL,
+  `datePurchased` DATE DEFAULT NULL,
+  `listID_FK` INT(11) UNSIGNED NOT NULL,
+  `unitCost` DECIMAL(11,2) UNSIGNED ZEROFILL DEFAULT NULL COMMENT 'Cost per unit. So:\\n   total cost = cost  X quantity',
+  `quantity` DECIMAL(11,2) UNSIGNED ZEROFILL DEFAULT NULL,
+  `unitID_FK` INT(10) UNSIGNED NOT NULL,
+  `categoryID_FK` INT(11) UNSIGNED NOT NULL DEFAULT '0',
+  `isPurchased` TINYINT(1) DEFAULT '0',
+  `isAskLater` TINYINT(1) NOT NULL DEFAULT '0',
+  `currencyId` SMALLINT(2) UNSIGNED NOT NULL DEFAULT '135',
   PRIMARY KEY (`instanceID`),
   UNIQUE KEY `instanceID_UNIQUE` (`instanceID`),
   KEY `Ref_01_FK` (`userID_FK`),
@@ -118,12 +119,14 @@ CREATE TABLE IF NOT EXISTS `shopitems` (
   KEY `Ref_03_FK` (`listID_FK`),
   KEY `Ref_04_FK` (`unitID_FK`),
   KEY `Ref_05_FK` (`categoryID_FK`),
+  KEY `Ref_CurrencyTable_Id` (`currencyId`),
+  CONSTRAINT `Ref_CurrencyTable_Id` FOREIGN KEY (`currencyId`) REFERENCES `currencytable` (`currencyid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `Ref_01_FK` FOREIGN KEY (`userID_FK`) REFERENCES `users` (`userID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `Ref_02_FK` FOREIGN KEY (`itemID_FK`) REFERENCES `shopitemscatalog` (`itemID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `Ref_03_FK` FOREIGN KEY (`listID_FK`) REFERENCES `shoplists` (`listID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `Ref_04_FK` FOREIGN KEY (`unitID_FK`) REFERENCES `units` (`unitID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `Ref_05_FK` FOREIGN KEY (`categoryID_FK`) REFERENCES `shopitemcategories` (`categoryID`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=INNODB DEFAULT CHARSET=UTF8;
 
 # -----------------------------------------------------------------
 # Create the `shopitems_metadata` table
