@@ -1,6 +1,7 @@
 <?php
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '../lib/noteitcommon.php';
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'tablebase.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'samplevariance.php';
 
 class SuggestedItem
 {
@@ -224,14 +225,19 @@ class ShopItems extends TableBase
 				}
 				
 				$instance_id = $this->get_db_con()->insert_id; 
+
+				$this->add_price(
+						$class_ID,
+						$this->user_pref->currencyId,
+						$unit_id,
+						$unit_cost,
+						$item_quantity);
 				
 				if ($isTransactional == TRUE) {
 					$this->get_db_con()->commit();
 					$this->get_db_con()->autocommit(TRUE);
 				}
 				
-//				$this->add_price(
-//					$class_ID, $currencyCode, $unitID, $dateAdded, $itemPrice, $itemQuantity);
 				return $this->get_item($instance_id);
 				
 			} catch (Exception $e) {
@@ -428,7 +434,7 @@ class ShopItems extends TableBase
 		$sql = sprintf("select * from shopitems as si
 						inner join users as u
 						on si.`userID_FK`=u.`userID`
-						where si.itemID_FK=%d and u.`currencyCode`='%s'
+						where si.itemID_FK=%d and u.`currencyId`=%d
 						order by 
 							(case when userID_FK=%d then 1
 							else 2 END), dateAdded 
@@ -681,7 +687,7 @@ class ShopItems extends TableBase
 			    			$item_price = 0; 
 			    			$inventory = $inventories[0];
 			    			if (!is_null($inventory->currency) && 
-			    				$this->user_pref->currencyCode == $inventory->currency) {
+			    				$this->user_pref->get_currencycode() == $inventory->currency) {
 								$item_price = !is_null($inventory->price) ? $inventory->price : 0;
 							}
 							
@@ -863,36 +869,69 @@ class ShopItems extends TableBase
 	
 	private function add_price(
 		$classID, 
-		$currencyCode, 
+		$currencyId, 
 		$unitID, 
-		$dateAdded,
 		$itemPrice,
 		$itemQuantity) {
 		
+// 		echo "class Id: " . $classID, 
+// 			"currency Id: " . $currencyId, 
+// 			"unit Id: " . $unitID, 
+// 			"item Price: " . $itemPrice, 
+// 			"item Quantity: " . $itemQuantity;
+		
 		if ($classID > 0 && 
-			$currencyCode != '' && 
+			$currencyId > 0 && 
 			$unitID > 0 && 
-			($totalPrice = ($itemPrice * $itemQuantity)) > 0) {
+			$itemPrice > 0) {
 			
 			$sql = sprintf("
 						INSERT INTO
 							`shopitems_price` (
 							`classID_FK`,
-							`currencyCode_FK`,
+							`currencyId_FK`,
 							`unitID_FK`,
 							`date_added`,
 							`itemPrice`)
 						VALUES
-							(%d, %s, %d, CURDATE(), %f)",
+							(%d, %d, %d, CURDATE(), %f)",
 						$classID, 
-						$currencyCode,
+						$currencyId,
 						$unitID,
-						$totalPrice);
+						$itemPrice);
+
 			$result = $this->get_db_con()->query($sql);
-			if (!$result == FALSE && $this->get_db_con()->errno != 1062) {	
-				// Ignore Duplicate PK Error since by design, we insert only one record of price per (item, currencyCode, unitId, date)
+			if ($result == FALSE && $this->get_db_con()->errno != 1062) {	
+				// Ignore Duplicate PK Error since by design, we insert only one record of price per (item, currencyId, unitId, date)
 				throw new Exception("Error updating item price. (" . $this->get_db_con()->errno . ")");
 			}
+		}
+	}
+	
+	public function calculate_stats($classId, $currencyId, $unitId) {
+		
+		// Calculate the mean and sample variance for the samples recorded in the last 6 months
+		$date_today = new DateTime();
+		$date_to = $date_today->format("Y-m-d");
+		
+		$date_today->sub(new DateInterval('P6M')); // Six months before today
+		$date_from = $date_today->format("Y-m-d");
+		
+		$sql = sprintf("SELECT `itemPrice` 
+						FROM `shopitems_price`
+						WHERE `classID_FK`=%d AND `currencyId_FK`=%d AND `unitID_FK`=%d",
+						$classId,
+						$currencyId,
+						$unitId);
+		$result = $this->get_db_con()->query($sql);
+		if ($result) {
+			$variance = new SampleVariance();
+			while ($row = mysqli_fetch_array($result)) {
+				$variance->push($row['itemPrice']);
+			}
+			return $variance;			
+		} else {
+			return NULL;
 		}
 	}
 }

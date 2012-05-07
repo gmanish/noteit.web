@@ -92,11 +92,23 @@ class Unit
 }
 
 class UserPreference {
+	
 	public $currencyId = 0;
+	public $currencyCode = "";
 	
 	public function __construct($currencyId) {
+		
 		$this->currencyId = $currencyId;
-	}	
+	}
+	
+	public function get_currencycode() {
+		
+		if ($this->currencyCode == "") {
+			return $this->currencyCode = NoteItDB::get_currencycode_for_id($currencyId);
+		} else {
+			return $this->currencyCode;
+		}
+	}
 }
 
 class NoteItDB extends DbBase
@@ -114,7 +126,6 @@ class NoteItDB extends DbBase
 
 	protected $db_userID;
 	protected $db_username;
-	protected $db_userCurrencyId;
 	protected $shop_list_db;
 	protected $cat_list_db;
     protected $shop_items_db;
@@ -133,7 +144,6 @@ class NoteItDB extends DbBase
 		if ($result != FALSE || mysqli_num_rows($result) == 1) {
 			$row = $result->fetch_array();
 			$this->db_username = $row['firstName'] . " " . $row['lastName'];
-			$this->db_userCurrencyId = $row['currencyId'];
 			$this->user_pref = new UserPreference($row[self::kColCurrencyId]);
 			$result->free();
 		}
@@ -167,7 +177,7 @@ class NoteItDB extends DbBase
 	}
 	
 	public function get_db_userCurrency() {
-		return $this->db_userCurrency;
+		return $this->user_pref->currencyId;
 	}
 	
 	public function &get_shoplist_table() {
@@ -620,6 +630,55 @@ class NoteItDB extends DbBase
 			
 		} catch (Exception $e) {
 			
+			$db_con->close();
+			$db_con = NULL;
+			throw $e;
+		}
+	}
+	
+	public static function get_currencycode_for_id($currencyId) {
+		
+		global $config;
+		$db_con = NULL;
+		
+		try {
+			$db_con = new MySQLi(
+					$config['MYSQL_SERVER'],
+					$config['MYSQL_USER'],
+					$config['MYSQL_PASSWD'],
+					$config['MYSQL_DB']);
+		
+			if (mysqli_connect_error()) {
+				throw new Exception(
+						'Could not connect to Server' . "(" .
+						mysqli_connect_errno() . ")");
+			}
+				
+			if (!$db_con->set_charset("utf8")) {
+				throw new Exception('Could not set charset to utf8. PHP version 5.2.3 or greater required');
+			}
+				
+			$sql = sprintf("select `currencyCode` from `currencytable` where `currencyid`=%d", $currencyId);
+			$result = $db_con->query($sql);
+				
+			$currencyCode = "";
+			if ($result && mysqli_num_rows($result) > 0) {
+					
+				while ($row = $result->fetch_array()){
+					$currencyCode = $row[Currency::kCol_CurrencyCode];
+					break;
+				}
+		
+				$result->free();
+				$db_con->close();
+				$db_con = NULL;
+		
+				return $currencyCode;
+			} else {
+				throw new Exception("Could not fetch currency related data.");
+			}
+		} catch (Exception $e) {
+		
 			$db_con->close();
 			$db_con = NULL;
 			throw $e;
