@@ -2,6 +2,18 @@ CREATE DATABASE IF NOT EXISTS `noteitdb` CHARSET = utf8;
 USE noteitdb;
 
 # -----------------------------------------------------------------
+# Create the currencytable
+# -----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `currencytable` (
+  `currencyid` smallint(2) unsigned NOT NULL AUTO_INCREMENT,
+  `currencyCode` varchar(3) NOT NULL DEFAULT '',
+  `currencySymbol` varchar(4) NOT NULL DEFAULT '',
+  `currencyIsRight` tinyint(1) DEFAULT NULL,
+  `currencyName` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`currencyid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+# -----------------------------------------------------------------
 # Create the countrytable
 # -----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `countrytable` (
@@ -13,18 +25,6 @@ CREATE TABLE IF NOT EXISTS `countrytable` (
   UNIQUE KEY `countryCurrency_UNIQUE` (`countryCode`,`currencyid`,`countryName`),
   KEY `Ref_CurrencyTable_CurrencyID` (`currencyid`),
   CONSTRAINT `Ref_CurrencyTable_CurrencyID` FOREIGN KEY (`currencyid`) REFERENCES `currencytable` (`currencyid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-# -----------------------------------------------------------------
-# Create the currencytable
-# -----------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `currencytable` (
-  `currencyid` smallint(2) unsigned NOT NULL AUTO_INCREMENT,
-  `currencyCode` varchar(3) NOT NULL DEFAULT '',
-  `currencySymbol` varchar(4) NOT NULL DEFAULT '',
-  `currencyIsRight` tinyint(1) DEFAULT NULL,
-  `currencyName` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`currencyid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 # -----------------------------------------------------------------
@@ -70,6 +70,20 @@ CREATE TABLE IF NOT EXISTS `shoplists` (
 ) ENGINE = INNODB DEFAULT CHARSET = utf8;
 
 # -----------------------------------------------------------------
+# Create the shoplists_sharing table
+# -----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `shoplists_sharing` (
+  `list_id_FK` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id_FK` int(11) unsigned NOT NULL,
+  `user_perms` tinyint(1) unsigned NOT NULL DEFAULT '7',
+  PRIMARY KEY (`list_id_FK`,`user_id_FK`),
+  KEY `SSRef_UserID_FK` (`user_id_FK`),
+  KEY `SSRef_ListID_FK` (`list_id_FK`),
+  CONSTRAINT `SSRef_ListID_FK` FOREIGN KEY (`list_id_FK`) REFERENCES `shoplists` (`listID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `SSRef_UserID_FK` FOREIGN KEY (`user_id_FK`) REFERENCES `users` (`userID`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+# -----------------------------------------------------------------
 # Create the shopitemcategories table
 # -----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `shopitemcategories` (
@@ -98,7 +112,7 @@ CREATE TABLE IF NOT EXISTS `shopitemscatalog` (
 # -----------------------------------------------------------------
 # Create the `shopitems` table
 # -----------------------------------------------------------------
-CREATE TABLE `shopitems` (
+CREATE TABLE IF NOT EXISTS `shopitems` (
   `instanceID` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   `userID_FK` INT(11) UNSIGNED NOT NULL,
   `itemID_FK` INT(11) UNSIGNED NOT NULL,
@@ -163,6 +177,165 @@ CREATE TABLE IF NOT EXISTS `shopitems_price` (
 # -----------------------------------------------------------------
 # Insert Countries And Currencies
 # -----------------------------------------------------------------
+LOCK TABLES `currencytable` WRITE;
+/*!40000 ALTER TABLE `currencytable` DISABLE KEYS */;
+
+INSERT INTO `currencytable` (`currencyid`, `currencyCode`, `currencySymbol`, `currencyIsRight`, `currencyName`)
+VALUES
+	(1,'N/A','N/A',0,'No universal currency'),
+	(2,'AED','',0,'UAE Dirham'),
+	(3,'AFN','؋',0,'Afghani'),
+	(4,'ALL','Lek',0,'Lek'),
+	(5,'AMD','',0,'Armenian Dram'),
+	(6,'ANG','',0,'Netherlands Antillean Guilder'),
+	(7,'AOA','',0,'Kwanza'),
+	(8,'ARS','$',0,'Argentine Peso'),
+	(9,'AUD','$',0,'Australian Dollar'),
+	(10,'AWG','ƒ',0,'Aruban Florin'),
+	(11,'AZN','ман',0,'Azerbaijanian Manat'),
+	(12,'BAM','KM',0,'Convertible Mark'),
+	(13,'BBD','$',0,'Barbados Dollar'),
+	(14,'BDT','',0,'Taka'),
+	(15,'BGN','лв',0,'Bulgarian Lev'),
+	(16,'BHD','',0,'Bahraini Dinar'),
+	(17,'BIF','FBu',0,'Burundi Franc'),
+	(18,'BMD','$',0,'Bermudian Dollar'),
+	(19,'BND','$',0,'Brunei Dollar'),
+	(20,'BOV','',0,'Mvdol'),
+	(21,'BRL','R$',0,'Brazilian Real'),
+	(22,'BSD','$',0,'Bahamian Dollar'),
+	(23,'BWP','P',0,'Pula'),
+	(24,'BYR','p.',0,'Belarussian Ruble'),
+	(25,'BZD','BZ$',0,'Belize Dollar'),
+	(26,'CAD','$',0,'Canadian Dollar'),
+	(27,'CHF','',0,'Swiss Franc'),
+	(28,'CHW','CWF',0,'WIR Franc'),
+	(29,'CLP','$',0,'Chilean Peso'),
+	(30,'CNY','¥',0,'Yuan Renminbi'),
+	(31,'CRC','₡',0,'Costa Rican Colon'),
+	(32,'CUP','₱',0,'Cuban Peso'),
+	(33,'CVE','CVE',0,'Cape Verde Escudo'),
+	(34,'CZK','Kč',0,'Czech Koruna'),
+	(35,'DJF','DJF',0,'Djibouti Franc'),
+	(36,'DKK','kr',0,'Danish Krone'),
+	(37,'DOP','RD$',0,'Dominican Peso'),
+	(38,'DZD','دج',0,'Algerian Dinar'),
+	(39,'EGP','£',0,'Egyptian Pound'),
+	(40,'ERN','Nfk',0,'Nakfa'),
+	(41,'ETB','Br',0,'Ethiopian Birr'),
+	(42,'EUR','€',0,'Euro'),
+	(43,'FJD','$',0,'Fiji Dollar'),
+	(44,'FKP','£',0,'Falkland Islands Pound'),
+	(45,'GBP','£',0,'Pound Sterling'),
+	(46,'GEL','ლ',0,'Lari'),
+	(47,'GHS','¢',0,'Ghana Cedi'),
+	(48,'GIP','£',0,'Gibraltar Pound'),
+	(49,'GMD','D',0,'Dalasi'),
+	(50,'GNF','GF',0,'Guinea Franc'),
+	(51,'GTQ','Q',0,'Quetzal'),
+	(52,'GYD','$',0,'Guyana Dollar'),
+	(53,'HKD','$',0,'Hong Kong Dollar'),
+	(54,'HNL','L',0,'Lempira'),
+	(55,'HRK','kn',0,'Croatian Kuna'),
+	(56,'HUF','Ft',0,'Forint'),
+	(57,'IDR','Rp',0,'Rupiah'),
+	(58,'ILS','₪',0,'New Israeli Sheqel'),
+	(59,'INR','Rs',0,'Indian Rupee'),
+	(60,'IQD','ع.د',0,'Iraqi Dinar'),
+	(61,'IRR','﷼',0,'Iranian Rial'),
+	(62,'ISK','kr',0,'Iceland Krona'),
+	(63,'JMD','J$',0,'Jamaican Dollar'),
+	(64,'JOD','JD',0,'Jordanian Dinar'),
+	(65,'JPY','¥',0,'Yen'),
+	(66,'KES','KSh',0,'Kenyan Shilling'),
+	(67,'KGS','лв',0,'Som'),
+	(68,'KHR','៛',0,'Riel'),
+	(69,'KRW','₩',0,'Won'),
+	(70,'KWD','د.ك',0,'Kuwaiti Dinar'),
+	(71,'KYD','$',0,'Cayman Islands Dollar'),
+	(72,'KZT','лв',0,'Tenge'),
+	(73,'LBP','£',0,'Lebanese Pound'),
+	(74,'LKR','₨',0,'Sri Lanka Rupee'),
+	(75,'LRD','$',0,'Liberian Dollar'),
+	(76,'LTL','Lt',0,'Lithuanian Litas'),
+	(77,'LVL','Ls',0,'Latvian Lats'),
+	(78,'LYD','',0,'Libyan Dinar'),
+	(79,'MAD','',0,'Moroccan Dirham'),
+	(80,'MDL','',0,'Moldovan Leu'),
+	(81,'MGA','',0,'Malagasy Ariary'),
+	(82,'MKD','ден',0,'Denar'),
+	(83,'MMK','K',0,'Kyat'),
+	(84,'MNT','₮',0,'Tugrik'),
+	(85,'MOP','',0,'Pataca'),
+	(86,'MRO','',0,'Ouguiya'),
+	(87,'MUR','₨',0,'Mauritius Rupee'),
+	(88,'MVR','',0,'Rufiyaa'),
+	(89,'MWK','MK',0,'Kwacha'),
+	(90,'MXV','',0,'Mexican Unidad de Inversion (UDI)'),
+	(91,'MYR','RM',0,'Malaysian Ringgit'),
+	(92,'MZN','MT',0,'Mozambique Metical'),
+	(93,'NGN','₦',0,'Naira'),
+	(94,'NIO','C$',0,'Cordoba Oro'),
+	(95,'NOK','kr',0,'Norwegian Krone'),
+	(96,'NPR','Rs',0,'Nepalese Rupee'),
+	(97,'NZD','',0,'New Zealand Dollar'),
+	(98,'OMR','﷼',0,'Rial Omani'),
+	(99,'PEN','S/.',0,'Nuevo Sol'),
+	(100,'PGK','K',0,'Kina'),
+	(101,'PHP','₱',0,'Philippine Peso'),
+	(102,'PKR','₨',0,'Pakistan Rupee'),
+	(103,'PLN','zł',0,'Zloty'),
+	(104,'PYG','Gs',0,'Guarani'),
+	(105,'QAR','﷼',0,'Qatari Rial'),
+	(106,'RON','lei',0,'New Romanian Leu'),
+	(107,'RSD','Дин.',0,'Serbian Dinar'),
+	(108,'RUB','руб',0,'Russian Ruble'),
+	(109,'RWF','FRw',0,'Rwanda Franc'),
+	(110,'SAR','﷼',0,'Saudi Riyal'),
+	(111,'SBD','$',0,'Solomon Islands Dollar'),
+	(112,'SCR','₨',0,'Seychelles Rupee'),
+	(113,'SDG','£',0,'Sudanese Pound'),
+	(114,'SEK','kr',0,'Swedish Krona'),
+	(115,'SGD','$',0,'Singapore Dollar'),
+	(116,'SHP','£',0,'Saint Helena Pound'),
+	(117,'SLL','Le',0,'Leone'),
+	(118,'SOS','S',0,'Somali Shilling'),
+	(119,'SRD','$',0,'Surinam Dollar'),
+	(120,'SSP','£',0,'South Sudanese Pound'),
+	(121,'STD','Db',0,'Dobra'),
+	(122,'SYP','£',0,'Syrian Pound'),
+	(123,'SZL','E',0,'Lilangeni'),
+	(124,'THB','฿',0,'Baht'),
+	(125,'TJS','',0,'Somoni'),
+	(126,'TMT','',0,'Turkmenistan New Manat'),
+	(127,'TND','د.ت',0,'Tunisian Dinar'),
+	(128,'TOP','T$',0,'Pa’anga'),
+	(129,'TRY','TL',0,'Turkish Lira'),
+	(130,'TTD','TT$',0,'Trinidad and Tobago Dollar'),
+	(131,'TWD','NT$',0,'New Taiwan Dollar'),
+	(132,'TZS','TZS',0,'Tanzanian Shilling'),
+	(133,'UAH','₴',0,'Hryvnia'),
+	(134,'UGX','USh',0,'Uganda Shilling'),
+	(135,'USD','$',0,'US Dollar'),
+	(136,'USS','$',0,'US Dollar (Same day)'),
+	(137,'UYU','$U',0,'Peso Uruguayo'),
+	(138,'UZS','лв',0,'Uzbekistan Sum'),
+	(139,'VEF','Bs',0,'Bolivar Fuerte'),
+	(140,'VND','₫',0,'Dong'),
+	(141,'VUV','',0,'Vatu'),
+	(142,'WST','WS$',0,'Tala'),
+	(143,'XAF','CFA',0,'CFA Franc BEAC'),
+	(144,'XCD','$',0,'East Caribbean Dollar'),
+	(145,'XOF','',0,'CFA Franc BCEAO'),
+	(146,'XPF','',0,'CFP Franc'),
+	(147,'YER','﷼',0,'Yemeni Rial'),
+	(148,'ZAR','R',0,'Rand'),
+	(149,'ZMK','',0,'Zambian Kwacha'),
+	(150,'ZWL','Z$',0,'Zimbabwe Dollar');
+
+/*!40000 ALTER TABLE `currencytable` ENABLE KEYS */;
+UNLOCK TABLES;
+
 LOCK TABLES `countrytable` WRITE;
 /*!40000 ALTER TABLE `countrytable` DISABLE KEYS */;
 
@@ -417,172 +590,15 @@ VALUES
 
 UNLOCK TABLES;
 
-LOCK TABLES `currencytable` WRITE;
-/*!40000 ALTER TABLE `currencytable` DISABLE KEYS */;
-
-INSERT INTO `currencytable` (`currencyid`, `currencyCode`, `currencySymbol`, `currencyIsRight`, `currencyName`)
-VALUES
-	(1,'N/A','N/A',0,'No universal currency'),
-	(2,'AED','',0,'UAE Dirham'),
-	(3,'AFN','؋',0,'Afghani'),
-	(4,'ALL','Lek',0,'Lek'),
-	(5,'AMD','',0,'Armenian Dram'),
-	(6,'ANG','',0,'Netherlands Antillean Guilder'),
-	(7,'AOA','',0,'Kwanza'),
-	(8,'ARS','$',0,'Argentine Peso'),
-	(9,'AUD','$',0,'Australian Dollar'),
-	(10,'AWG','ƒ',0,'Aruban Florin'),
-	(11,'AZN','ман',0,'Azerbaijanian Manat'),
-	(12,'BAM','KM',0,'Convertible Mark'),
-	(13,'BBD','$',0,'Barbados Dollar'),
-	(14,'BDT','',0,'Taka'),
-	(15,'BGN','лв',0,'Bulgarian Lev'),
-	(16,'BHD','',0,'Bahraini Dinar'),
-	(17,'BIF','FBu',0,'Burundi Franc'),
-	(18,'BMD','$',0,'Bermudian Dollar'),
-	(19,'BND','$',0,'Brunei Dollar'),
-	(20,'BOV','',0,'Mvdol'),
-	(21,'BRL','R$',0,'Brazilian Real'),
-	(22,'BSD','$',0,'Bahamian Dollar'),
-	(23,'BWP','P',0,'Pula'),
-	(24,'BYR','p.',0,'Belarussian Ruble'),
-	(25,'BZD','BZ$',0,'Belize Dollar'),
-	(26,'CAD','$',0,'Canadian Dollar'),
-	(27,'CHF','',0,'Swiss Franc'),
-	(28,'CHW','CWF',0,'WIR Franc'),
-	(29,'CLP','$',0,'Chilean Peso'),
-	(30,'CNY','¥',0,'Yuan Renminbi'),
-	(31,'CRC','₡',0,'Costa Rican Colon'),
-	(32,'CUP','₱',0,'Cuban Peso'),
-	(33,'CVE','CVE',0,'Cape Verde Escudo'),
-	(34,'CZK','Kč',0,'Czech Koruna'),
-	(35,'DJF','DJF',0,'Djibouti Franc'),
-	(36,'DKK','kr',0,'Danish Krone'),
-	(37,'DOP','RD$',0,'Dominican Peso'),
-	(38,'DZD','دج',0,'Algerian Dinar'),
-	(39,'EGP','£',0,'Egyptian Pound'),
-	(40,'ERN','Nfk',0,'Nakfa'),
-	(41,'ETB','Br',0,'Ethiopian Birr'),
-	(42,'EUR','€',0,'Euro'),
-	(43,'FJD','$',0,'Fiji Dollar'),
-	(44,'FKP','£',0,'Falkland Islands Pound'),
-	(45,'GBP','£',0,'Pound Sterling'),
-	(46,'GEL','ლ',0,'Lari'),
-	(47,'GHS','¢',0,'Ghana Cedi'),
-	(48,'GIP','£',0,'Gibraltar Pound'),
-	(49,'GMD','D',0,'Dalasi'),
-	(50,'GNF','GF',0,'Guinea Franc'),
-	(51,'GTQ','Q',0,'Quetzal'),
-	(52,'GYD','$',0,'Guyana Dollar'),
-	(53,'HKD','$',0,'Hong Kong Dollar'),
-	(54,'HNL','L',0,'Lempira'),
-	(55,'HRK','kn',0,'Croatian Kuna'),
-	(56,'HUF','Ft',0,'Forint'),
-	(57,'IDR','Rp',0,'Rupiah'),
-	(58,'ILS','₪',0,'New Israeli Sheqel'),
-	(59,'INR','Rs',0,'Indian Rupee'),
-	(60,'IQD','ع.د',0,'Iraqi Dinar'),
-	(61,'IRR','﷼',0,'Iranian Rial'),
-	(62,'ISK','kr',0,'Iceland Krona'),
-	(63,'JMD','J$',0,'Jamaican Dollar'),
-	(64,'JOD','JD',0,'Jordanian Dinar'),
-	(65,'JPY','¥',0,'Yen'),
-	(66,'KES','KSh',0,'Kenyan Shilling'),
-	(67,'KGS','лв',0,'Som'),
-	(68,'KHR','៛',0,'Riel'),
-	(69,'KRW','₩',0,'Won'),
-	(70,'KWD','د.ك',0,'Kuwaiti Dinar'),
-	(71,'KYD','$',0,'Cayman Islands Dollar'),
-	(72,'KZT','лв',0,'Tenge'),
-	(73,'LBP','£',0,'Lebanese Pound'),
-	(74,'LKR','₨',0,'Sri Lanka Rupee'),
-	(75,'LRD','$',0,'Liberian Dollar'),
-	(76,'LTL','Lt',0,'Lithuanian Litas'),
-	(77,'LVL','Ls',0,'Latvian Lats'),
-	(78,'LYD','',0,'Libyan Dinar'),
-	(79,'MAD','',0,'Moroccan Dirham'),
-	(80,'MDL','',0,'Moldovan Leu'),
-	(81,'MGA','',0,'Malagasy Ariary'),
-	(82,'MKD','ден',0,'Denar'),
-	(83,'MMK','K',0,'Kyat'),
-	(84,'MNT','₮',0,'Tugrik'),
-	(85,'MOP','',0,'Pataca'),
-	(86,'MRO','',0,'Ouguiya'),
-	(87,'MUR','₨',0,'Mauritius Rupee'),
-	(88,'MVR','',0,'Rufiyaa'),
-	(89,'MWK','MK',0,'Kwacha'),
-	(90,'MXV','',0,'Mexican Unidad de Inversion (UDI)'),
-	(91,'MYR','RM',0,'Malaysian Ringgit'),
-	(92,'MZN','MT',0,'Mozambique Metical'),
-	(93,'NGN','₦',0,'Naira'),
-	(94,'NIO','C$',0,'Cordoba Oro'),
-	(95,'NOK','kr',0,'Norwegian Krone'),
-	(96,'NPR','Rs',0,'Nepalese Rupee'),
-	(97,'NZD','',0,'New Zealand Dollar'),
-	(98,'OMR','﷼',0,'Rial Omani'),
-	(99,'PEN','S/.',0,'Nuevo Sol'),
-	(100,'PGK','K',0,'Kina'),
-	(101,'PHP','₱',0,'Philippine Peso'),
-	(102,'PKR','₨',0,'Pakistan Rupee'),
-	(103,'PLN','zł',0,'Zloty'),
-	(104,'PYG','Gs',0,'Guarani'),
-	(105,'QAR','﷼',0,'Qatari Rial'),
-	(106,'RON','lei',0,'New Romanian Leu'),
-	(107,'RSD','Дин.',0,'Serbian Dinar'),
-	(108,'RUB','руб',0,'Russian Ruble'),
-	(109,'RWF','FRw',0,'Rwanda Franc'),
-	(110,'SAR','﷼',0,'Saudi Riyal'),
-	(111,'SBD','$',0,'Solomon Islands Dollar'),
-	(112,'SCR','₨',0,'Seychelles Rupee'),
-	(113,'SDG','£',0,'Sudanese Pound'),
-	(114,'SEK','kr',0,'Swedish Krona'),
-	(115,'SGD','$',0,'Singapore Dollar'),
-	(116,'SHP','£',0,'Saint Helena Pound'),
-	(117,'SLL','Le',0,'Leone'),
-	(118,'SOS','S',0,'Somali Shilling'),
-	(119,'SRD','$',0,'Surinam Dollar'),
-	(120,'SSP','£',0,'South Sudanese Pound'),
-	(121,'STD','Db',0,'Dobra'),
-	(122,'SYP','£',0,'Syrian Pound'),
-	(123,'SZL','E',0,'Lilangeni'),
-	(124,'THB','฿',0,'Baht'),
-	(125,'TJS','',0,'Somoni'),
-	(126,'TMT','',0,'Turkmenistan New Manat'),
-	(127,'TND','د.ت',0,'Tunisian Dinar'),
-	(128,'TOP','T$',0,'Pa’anga'),
-	(129,'TRY','TL',0,'Turkish Lira'),
-	(130,'TTD','TT$',0,'Trinidad and Tobago Dollar'),
-	(131,'TWD','NT$',0,'New Taiwan Dollar'),
-	(132,'TZS','TZS',0,'Tanzanian Shilling'),
-	(133,'UAH','₴',0,'Hryvnia'),
-	(134,'UGX','USh',0,'Uganda Shilling'),
-	(135,'USD','$',0,'US Dollar'),
-	(136,'USS','$',0,'US Dollar (Same day)'),
-	(137,'UYU','$U',0,'Peso Uruguayo'),
-	(138,'UZS','лв',0,'Uzbekistan Sum'),
-	(139,'VEF','Bs',0,'Bolivar Fuerte'),
-	(140,'VND','₫',0,'Dong'),
-	(141,'VUV','',0,'Vatu'),
-	(142,'WST','WS$',0,'Tala'),
-	(143,'XAF','CFA',0,'CFA Franc BEAC'),
-	(144,'XCD','$',0,'East Caribbean Dollar'),
-	(145,'XOF','',0,'CFA Franc BCEAO'),
-	(146,'XPF','',0,'CFP Franc'),
-	(147,'YER','﷼',0,'Yemeni Rial'),
-	(148,'ZAR','R',0,'Rand'),
-	(149,'ZMK','',0,'Zambian Kwacha'),
-	(150,'ZWL','Z$',0,'Zimbabwe Dollar');
-
-/*!40000 ALTER TABLE `currencytable` ENABLE KEYS */;
-UNLOCK TABLES;
-
 # -----------------------------------------------------------------
 # Populate factory users into the users table. User with ID = 0 is
 # the `root` user. There are special cases throughout code for this user.
 # [TODO]: How to force `root` user to have id=0??
 # -----------------------------------------------------------------
-INSERT INTO `users` (`emailID`, `firstName`, `lastName`, `userPassword`) VALUES ('mrmangu@hotmail.com', 'Manish', 'Gupta', UNHEX('3530280EDB5AA715929266D1D6F0423ABC27B104'));
-INSERT INTO `users` (`emailID`, `firstName`, `lastName`, `userPassword`) VALUES ('gmanish@gmail.com', 'Manish', 'Gupta', UNHEX('3530280EDB5AA715929266D1D6F0423ABC27B104'));
+INSERT INTO `users` (`emailID`, `firstName`, `lastName`, `userPassword`, `currencyId`) 
+	VALUES ('mrmangu@hotmail.com', 'Manish', 'Gupta', UNHEX('3530280EDB5AA715929266D1D6F0423ABC27B104'), 59);
+INSERT INTO `users` (`emailID`, `firstName`, `lastName`, `userPassword`, `currencyId`) 
+	VALUES ('gmanish@gmail.com', 'Manish', 'Gupta', UNHEX('3530280EDB5AA715929266D1D6F0423ABC27B104'), 59);
 
 # -----------------------------------------------------------------
 # Populate factory units into the units table
