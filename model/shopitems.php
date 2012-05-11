@@ -1,6 +1,7 @@
 <?php
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '../lib/noteitcommon.php';
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'tablebase.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'shopitem.php';
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'samplevariance.php';
 
 class SuggestedItem
@@ -21,72 +22,6 @@ class BarcodeFormat {
 	const BARCODE_FORMAT_EAN_8		= 4;
 	const BARCODE_FORMAT_EAN_13		= 5;
 	const BARCODE_FORMAT_RSS_14		= 6;
-}
-
-class ShopItem
-{
-    const SHOPITEM_INSTANCEID       = 1;    // 1 << 0
-    const SHOPITEM_USERID           = 2;    // 1 << 1
-    const SHOPITEM_LISTID           = 4;    // 1 << 2
-    const SHOPITEM_CATEGORYID       = 8;    // 1 << 3
-    const SHOPITEM_ITEMNAME         = 16;   // 1 << 4
-    const SHOPITEM_UNITCOST         = 32;   // 1 << 5
-    const SHOPITEM_QUANTITY         = 64;   // 1 << 6
-    const SHOPITEM_UNITID           = 128;  // 1 << 7
-    const SHOPITEM_DATEADDED        = 256;  // 1 << 8
-    const SHOPITEM_DATEPURCHASED    = 512;  // 1 << 9
-	const SHOPITEM_CLASSID			= 1024; // 1 << 10
-	const SHOPITEM_ISPURCHASED		= 2048; // 1 << 11
-	const SHOPITEM_ISASKLATER		= 4096; // 1 << 12
-
-    public $_instance_id = 0;
-    public $_item_id = 0;
-    public $_user_id = 0;
-    public $_list_id = 0;
-    public $_category_id = 0;
-    public $_item_name = '';
-    public $_unit_cost = 0.00;
-    public $_quantity = 0.00;
-    public $_unit_id = 0;
-    public $_date_added;
-    public $_date_purchased;
-	public $_is_purchased = 0; // TINYINT should be 0 or 1
-	public $_is_asklater = 0; // TINYINT should be 0 or 1
-	public $_barcode = "";
-	public $_barcode_format = BarcodeFormat::BARCODE_FORMAT_UNKNOWN;
-	public $_voteCount = 0;
-	
-	function __construct(
-        $instance_id,
-        $item_id = 0,
-        $user_id = 0,
-        $list_id = 0,
-        $category_id = 0,
-        $item_name = '',
-        $unit_cost = 0.00,
-        $quantity = 1.00,
-        $unit_id = 3 /* General Unit */,
-		$is_purchased = FALSE,
-		$is_asklater = FALSE,
-		$barcode = "",
-		$barcode_format = BarcodeFormat::BARCODE_FORMAT_UNKNOWN,
-		$vote_count = 0)
-    {
-        $this->_instance_id = $instance_id;
-        $this->_item_id = $item_id;
-        $this->_user_id = $user_id;
-        $this->_list_id = $list_id;
-        $this->_category_id = $category_id;
-        $this->_item_name = $item_name;
-        $this->_unit_cost = $unit_cost;
-        $this->_quantity = $quantity;
-        $this->_unit_id = $unit_id;
-		$this->_is_purchased = $is_purchased;
-		$this->_is_asklater = $is_asklater;
-		$this->_barcode = $barcode;
-		$this->_barcode_format = $barcode_format;
-		$this->_voteCount = $vote_count;
-    }
 }
 
 class ShopItemsPrice
@@ -141,6 +76,14 @@ class ShopItems extends TableBase
 		$barcode_format)
     {
     	if (!self::USE_STORED_PROC) {
+    		
+    		$parentList = ShoppingList::create_from_db(
+    				$this->get_db_con(), 
+    				$list_id, 
+    				parent::GetUserID());
+    		
+    		if (!Permissions::can_write(parent::GetUserID(), $parentList))
+				throw new Exception("You don't have permissions to perform this operation.");
     		
     		$class_ID = 0;
     		$sql = sprintf("SELECT `itemID` 
@@ -278,6 +221,14 @@ class ShopItems extends TableBase
         & $functor_obj,
         $function_name="iterate_row")
     {
+   		$parentList = ShoppingList::create_from_db(
+							$this->get_db_con(), 
+							$list_id, 
+							parent::GetUserID());
+    		
+  		if (!Permissions::can_read(parent::GetUserID(), $parentList))
+			throw new Exception("You don't have permissions to perform this operation.");
+  		
     	$sql = "";
     	if ($show_purchased_items <= 0) {
 	        $sql = sprintf(
@@ -298,13 +249,11 @@ class ShopItems extends TableBase
 							si.itemID_FK=sic.itemID AND 
 							si.`categoryID_FK`=sicg.`categoryID`
 						WHERE 
-							si.userID_FK=%d AND 
 							si.listID_FK=%d AND 
 							si.isPurchased <= 0 
 						ORDER BY 
 							sicg.`categoryRank` ASC",
 		                self::kTableName,
-		                parent::GetUserID(),
 		                $list_id);
 		} else {
 	        $sql = sprintf(
@@ -325,12 +274,10 @@ class ShopItems extends TableBase
 						si.itemID_FK=sic.itemID AND 
 						si.`categoryID_FK`=sicg.`categoryID`
 					WHERE 
-						si.userID_FK=%d AND 
 						si.listID_FK=%d
 					ORDER BY 
 						sicg.`categoryRank` ASC",
 	                self::kTableName,
-	                parent::GetUserID(),
 	                $list_id);
 	        if ($move_purchased_items_to_bottom)
 				$sql .= ", isPurchased asc ";
@@ -377,7 +324,7 @@ class ShopItems extends TableBase
 
     function get_item($instance_id)
     {
-        $sql = sprintf(
+    	$sql = sprintf(
         		"SELECT 
 					si.*, 
 					sic.itemName , 
@@ -393,10 +340,8 @@ class ShopItems extends TableBase
 				ON 
 					si.itemID_FK = sic.itemID  
 				WHERE 
-					si.userID_FK = %d AND 
 					si.instanceID = %d  LIMIT 1",
 				self::kTableName,
-				parent::GetUserID(),
 				$instance_id);
 
         NI::TRACE('ShopItems::get_item SQL: ' . $sql, __FILE__, __LINE__);
@@ -406,39 +351,51 @@ class ShopItems extends TableBase
 
         if ($row = mysqli_fetch_array($result, MYSQL_ASSOC))
         {
-            NI::TRACE('ShopItems::get_item() returned row: ' . print_r($row, TRUE), __FILE__, __LINE__);
-            $thisItem = new ShopItem(
-                $row[self::kColInstanceID],
-                $row[self::kColItemID],
-                $row[self::kColUserID],
-                $row[self::kColListID],
-                $row[self::kColCategoryID],
-                $row[self::kColItemName],
-                $row[self::kColUnitCost],  // unit cost
-                $row[self::kColQuantity],
-                $row[self::kColUnitID],
-				$row[self::kColIsPurchased],
-				$row[self::kColIsAskLater],
-				is_null($row[self::kColBarcode]) ? "" : $row[self::kColBarcode],
-				is_null($row[self::kColBarcodeFormat]) ? BarcodeFormat::BARCODE_FORMAT_UNKNOWN : $row[self::kColBarcodeFormat],
-				is_null($row['voteCount']) ? 0 : $row['voteCount']);
+            $result->free();
+        	
+        	$parentList = ShoppingList::create_from_db(
+        			$this->get_db_con(),
+        			intval($row[self::kColListID]),
+        			parent::GetUserID());
+        	        	
+        	if (Permissions::can_read(parent::GetUserID(), $parentList)) {
 
-            if ($result)
-                $result->free();
-
-            return $thisItem;
+	        	NI::TRACE('ShopItems::get_item() returned row: ' . print_r($row, TRUE), __FILE__, __LINE__);
+	            $thisItem = new ShopItem(
+	                $row[self::kColInstanceID],
+	                $row[self::kColItemID],
+	                $row[self::kColUserID],
+	                $row[self::kColListID],
+	                $row[self::kColCategoryID],
+	                $row[self::kColItemName],
+	                $row[self::kColUnitCost],  // unit cost
+	                $row[self::kColQuantity],
+	                $row[self::kColUnitID],
+					$row[self::kColIsPurchased],
+					$row[self::kColIsAskLater],
+					is_null($row[self::kColBarcode]) ? "" : $row[self::kColBarcode],
+					is_null($row[self::kColBarcodeFormat]) ? BarcodeFormat::BARCODE_FORMAT_UNKNOWN : $row[self::kColBarcodeFormat],
+					is_null($row['voteCount']) ? 0 : $row['voteCount']);
+	            	
+	            	return $thisItem;
+        	} else {
+        		throw new Exception("You don't have permissions to perform this operation.");
+        	}
+        } else {
+        	throw new Exception("Item not found.");
         }
     }
 
 	function get_item_price($classID) {
-		$sql = sprintf("select * from shopitems as si
-						inner join users as u
-						on si.`userID_FK`=u.`userID`
-						where si.itemID_FK=%d and u.`currencyId`=%d
-						order by 
-							(case when userID_FK=%d then 1
-							else 2 END), dateAdded 
-						limit 1",
+		
+		$sql = sprintf("SELECT * FROM shopitems si
+						INNER JOIN users AS u
+						ON si.`userID_FK`=u.`userID`
+						WHERE si.itemID_FK=%d AND u.`currencyId`=%d
+						ORDER BY 
+							(CASE WHEN userID_FK=%d THEN 1
+							ELSE 2 END), dateAdded 
+						LIMIT 1",
 						$classID,
 						$this->get_user_currency(),
 						$this->GetUserID());
@@ -455,133 +412,161 @@ class ShopItems extends TableBase
 	
     function edit_item($instance_id, $item, $item_flags /* one of SHOPITEM_* flags */)
     {
-		$sql = sprintf('UPDATE %s SET', self::kTableName);
-        $prev_column_added = FALSE;
-		
-        if ($item_flags & ShopItem::SHOPITEM_LISTID)
-        {
-            $sql .= ' ' . self::kColListID . '=' . $item->_list_id;
-            $prev_column_added = TRUE;
-        }
-
-        if ($item_flags & ShopItem::SHOPITEM_CATEGORYID)
-        {
-            $sql .= ' ' . self::kColCategoryID . '=' . $item->_category_id;
-            $prev_column_added = TRUE;
-        }
-
-       if ($item_flags & ShopItem::SHOPITEM_ITEMNAME)
-        {
-		   // If the name has been updated we have to special case it as
-		   // names are stored in the `shopitemscatalog` table
-		   $item_classid = $this->create_catalog_entry($item);
-            if ($prev_column_added)
-                $sql .= ', ';
+    	$thisItem = $this->get_item($instance_id);
+       	$parentList = ShoppingList::create_from_db(
+      			$this->get_db_con(),
+      			intval($thisItem->_list_id),
+       			parent::GetUserID());
+        	
+       	if (!Permissions::can_write(parent::GetUserID(), $parentList)) {
+    	
+	       	$sql = sprintf('UPDATE %s SET', self::kTableName);
+	        $prev_column_added = FALSE;
 			
-            $sql .= ' ' . self::kColItemID . '=' . $item_classid;
-            $prev_column_added = TRUE;
-        }
-
-		if ($item_flags & ShopItem::SHOPITEM_UNITCOST)
-        {
-            if ($prev_column_added)
-                $sql .= ', ';
-            $sql .= ' ' . self::kColUnitCost . '=' . $item->_unit_cost;
-            $prev_column_added = TRUE;
-        }
-
-		if ($item_flags & ShopItem::SHOPITEM_ISASKLATER)
-		{
-			if ($prev_column_added)
-				$sql .= ',';
-			$sql .= ' ' . self::kColIsAskLater . '=' . $item->_is_asklater;
-			$prev_column_added = TRUE;
-		}
-			
-        if ($item_flags & ShopItem::SHOPITEM_QUANTITY)
-        {
-            if ($prev_column_added)
-                 $sql .= ', ';
-            $sql .= ' ' . self::kColQuantity . '=' . $item->_quantity;
-            $prev_column_added = TRUE;
-        }
-
-        if ($item_flags & ShopItem::SHOPITEM_UNITID)
-        {
-            if ($prev_column_added)
-                $sql .= ', ';
-            $sql .= ' ' . self::kColUnitID . '=' . $item->_unit_id;
-            $prev_column_added = TRUE;
-        }
-		
-		if ($item_flags & ShopItem::SHOPITEM_ISPURCHASED)
-		{
-			if ($prev_column_added)
-				$sql .= ', ';
-			$sql .= ' ' . self::kColIsPurchased . '=' . $item->_is_purchased;
-			
-			if ($item->_is_purchased > 0) {
-				$sql .= ', ' . self::kColDatePurchased . "='" . $item->_date_purchased->format('Y-m-d') . "'";
+	        if ($item_flags & ShopItem::SHOPITEM_LISTID)
+	        {
+	            $sql .= ' ' . self::kColListID . '=' . $item->_list_id;
+	            $prev_column_added = TRUE;
+	        }
+	
+	        if ($item_flags & ShopItem::SHOPITEM_CATEGORYID)
+	        {
+	            $sql .= ' ' . self::kColCategoryID . '=' . $item->_category_id;
+	            $prev_column_added = TRUE;
+	        }
+	
+	       if ($item_flags & ShopItem::SHOPITEM_ITEMNAME)
+	        {
+			   // If the name has been updated we have to special case it as
+			   // names are stored in the `shopitemscatalog` table
+			   $item_classid = $this->create_catalog_entry($item);
+	            if ($prev_column_added)
+	                $sql .= ', ';
+				
+	            $sql .= ' ' . self::kColItemID . '=' . $item_classid;
+	            $prev_column_added = TRUE;
+	        }
+	
+			if ($item_flags & ShopItem::SHOPITEM_UNITCOST)
+	        {
+	            if ($prev_column_added)
+	                $sql .= ', ';
+	            $sql .= ' ' . self::kColUnitCost . '=' . $item->_unit_cost;
+	            $prev_column_added = TRUE;
+	        }
+	
+			if ($item_flags & ShopItem::SHOPITEM_ISASKLATER)
+			{
+				if ($prev_column_added)
+					$sql .= ',';
+				$sql .= ' ' . self::kColIsAskLater . '=' . $item->_is_asklater;
+				$prev_column_added = TRUE;
 			}
-			$prev_column_added = TRUE;
-		}
-
-        $sql .= '  WHERE ' . self::kColInstanceID . '=' . $item->_instance_id;
-		
-        $result = $this->get_db_con()->query($sql);
-        if ($result == FALSE)
-            throw new Exception('SQL exec failed ('. __FILE__ . __LINE__ . '): ' . $this->get_db_con()->error);
+				
+	        if ($item_flags & ShopItem::SHOPITEM_QUANTITY)
+	        {
+	            if ($prev_column_added)
+	                 $sql .= ', ';
+	            $sql .= ' ' . self::kColQuantity . '=' . $item->_quantity;
+	            $prev_column_added = TRUE;
+	        }
+	
+	        if ($item_flags & ShopItem::SHOPITEM_UNITID)
+	        {
+	            if ($prev_column_added)
+	                $sql .= ', ';
+	            $sql .= ' ' . self::kColUnitID . '=' . $item->_unit_id;
+	            $prev_column_added = TRUE;
+	        }
+			
+			if ($item_flags & ShopItem::SHOPITEM_ISPURCHASED)
+			{
+				if ($prev_column_added)
+					$sql .= ', ';
+				$sql .= ' ' . self::kColIsPurchased . '=' . $item->_is_purchased;
+				
+				if ($item->_is_purchased > 0) {
+					$sql .= ', ' . self::kColDatePurchased . "='" . $item->_date_purchased->format('Y-m-d') . "'";
+				}
+				$prev_column_added = TRUE;
+			}
+	
+	        $sql .= '  WHERE ' . self::kColInstanceID . '=' . $item->_instance_id;
+			
+	        $result = $this->get_db_con()->query($sql);
+	        if ($result == FALSE)
+	            throw new Exception('SQL exec failed ('. __FILE__ . __LINE__ . '): ' . $this->get_db_con()->error);
+       	} else {
+       		throw new Exception("You don't have permissions to perform this operation.");
+       	}
     }
 
     function delete_item($instance_id)
     {
-        $sql = sprintf("DELETE FROM `%s` 
-        		WHERE %s = %d AND %s = %d ",
-                self::kTableName,
-                self::kColUserID,
-                parent::GetUserID(),
-                self::kColInstanceID,
-                $instance_id);
-
-        NI::TRACE('ShopItems::delete_item SQL: ' . $sql, __FILE__, __LINE__);
-        $result = $this->get_db_con()->query($sql);
-        if ($result == FALSE)
-            throw new Exception('SQL exec failed ('. __FILE__ . __LINE__ . '): ' . $this->get_db_con()->error);
+    	$thisItem = $this->get_item($instance_id);
+       	$parentList = ShoppingList::create_from_db(
+      			$this->get_db_con(),
+      			intval($thisItem->_list_id),
+       			parent::GetUserID());
+       	
+       	if (Permissions::can_delete(parent::GetUserID(), $parentList)) {
+       		
+	    	$sql = sprintf("DELETE FROM `%s` 
+	        		WHERE %s = %d ",
+	                self::kTableName,
+	                self::kColInstanceID,
+	                $instance_id);
+	
+	        NI::TRACE('ShopItems::delete_item SQL: ' . $sql, __FILE__, __LINE__);
+	        $result = $this->get_db_con()->query($sql);
+	        if ($result == FALSE) {
+	            throw new Exception('SQL exec failed ('. __FILE__ . __LINE__ . '): ' . $this->get_db_con()->error);
+	        }
+       	} else {
+       		throw new Exception("You don't have permissions to perform this operation.");
+       	}
     }
 
 	function copy_item($instance_id, $target_list_id)
 	{
-		$sql = sprintf("insert into shopitems (
-						`userID_FK`,
-						`itemID_FK`,
-						`dateAdded`,
-						`listID_FK`,
-						`unitCost`,
-						`quantity`,
-						`unitID_FK`,
-						`categoryID_FK`,
-						`isPurchased`,
-						`isAskLater`)
-							select `userID_FK`,
-									`itemID_FK`,
-									curDate(),
-									%d,
-									`unitCost`,
-									`quantity`,
-									`unitID_FK`,
-									`categoryID_FK`,
-									`isPurchased`,
-									`isAskLater` 
-							from shopitems as si
-							where instanceID=%d and `userID_FK`=%d",
-						$target_list_id,
-						$instance_id,
-						parent::GetUserID());
-		$result = $this->get_db_con()->query($sql);
+		$targetList = ShoppingList::create_from_db($this->get_db_con(), $target_list_id, parent::GetUserID());
 		
-        if ($result == FALSE)
-            throw new Exception('The copy operation failed (' . $this->get_db_con()->errno . ')');
-		
+		if (Permissions::can_write(parent::GetUserID(), $targetList)) {
+			
+			$sql = sprintf("insert into shopitems (
+							`userID_FK`,
+							`itemID_FK`,
+							`dateAdded`,
+							`listID_FK`,
+							`unitCost`,
+							`quantity`,
+							`unitID_FK`,
+							`categoryID_FK`,
+							`isPurchased`,
+							`isAskLater`)
+								select `userID_FK`,
+										`itemID_FK`,
+										curDate(),
+										%d,
+										`unitCost`,
+										`quantity`,
+										`unitID_FK`,
+										`categoryID_FK`,
+										`isPurchased`,
+										`isAskLater` 
+								from shopitems as si
+								where instanceID=%d and `userID_FK`=%d",
+							$target_list_id,
+							$instance_id,
+							parent::GetUserID());
+			$result = $this->get_db_con()->query($sql);
+			
+	        if ($result == FALSE) {
+	            throw new Exception('The copy operation failed (' . $this->get_db_con()->errno . ')');
+	        }
+		} else {
+			throw new Exception("You don't have permissions to perform this operation.");
+		}	
 		return $this->get_db_con()->insert_id;
 	}
 	
@@ -775,24 +760,30 @@ class ShopItems extends TableBase
 
 	function mark_all_done($list_Id, $done, $date_purchased) {
 		
-		$sql = sprintf("UPDATE `%s` 
-						SET `%s`=%d,
-						`%s`='%s'
-						WHERE `%s`=%d and `%s`=%d and `%s`=%d", 
-						self::kTableName, 
-						self::kColIsPurchased,
-						$done,
-						self::kColDatePurchased,
-						$date_purchased->format('Y-m-d'),
-						self::kColUserID,
-						parent::GetUserID(),
-						self::kColListID,
-						$list_Id,
-						self::kColIsPurchased,
-						$done > 0 ? 0 : 1);
-		$result = $this->get_db_con()->query($sql);
-		if (!$result)
-			throw new Exception("Error Updating Items.");
+		$thisList = ShoppingList::create_from_db($this->get_db_con(), $list_Id, parent::GetUserID());
+		
+		if (Permissions::can_write(parent::GetUserID(), $thisList)) {
+
+			$sql = sprintf("UPDATE `%s` 
+							SET `%s`=%d,
+							`%s`='%s'
+							WHERE `%s`=%d and `%s`=%d", 
+							self::kTableName, 
+							self::kColIsPurchased,
+							$done,
+							self::kColDatePurchased,
+							$date_purchased->format('Y-m-d'),
+							self::kColListID,
+							$list_Id,
+							self::kColIsPurchased,
+							$done > 0 ? 0 : 1);
+			
+			$result = $this->get_db_con()->query($sql);
+			if (!$result)
+				throw new Exception("Error Updating Items.");
+		} else {
+			throw new Exception("You don't have permissions to perform this operation.");
+		}
 	}
 	
 	// Returns the total items cost and cost of pending items
@@ -827,15 +818,20 @@ class ShopItems extends TableBase
         $function_name="iterate_row") {
 		
 		$num_instances = min($num_instances, 1); // Let's restrict till we know we need more
+		
 		$sql = sprintf(
 			"SELECT `instanceID`, `categoryID_FK`, `unitCost`, `quantity`, `unitID_FK` 
 			FROM `shopitems` 
-			WHERE `itemID_FK`=%d AND `isPurchased`=1 AND `unitCost` > 0 AND `userID_FK`=%d  
+			WHERE `itemID_FK`=%d AND 
+				`isPurchased`=1 AND 
+				`unitCost` > 0 AND 
+				`userID_FK`=%d
 			ORDER BY `datePurchased` DESC 
 			LIMIT %d", 
 			$class_id, 
 			parent::GetUserID(),
 			$num_instances);
+		
 		$result = $this->get_db_con()->query($sql);
 		if (!$result) {
 			throw new Exception("Could not fetch item history. (" . $this->get_db_con()->errno . ".");	
@@ -873,12 +869,6 @@ class ShopItems extends TableBase
 		$unitID, 
 		$itemPrice,
 		$itemQuantity) {
-		
-// 		echo "class Id: " . $classID, 
-// 			"currency Id: " . $currencyId, 
-// 			"unit Id: " . $unitID, 
-// 			"item Price: " . $itemPrice, 
-// 			"item Quantity: " . $itemQuantity;
 		
 		if ($classID > 0 && 
 			$currencyId > 0 && 

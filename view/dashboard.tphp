@@ -11,10 +11,10 @@ else
 $noteit_db = NoteItDB::login_user_id($userID);
 
 class ListFunctorShopListHTML {
-	public function iterate_row($list_id, $list_name)
+	public function iterate_row(ShoppingList $shop_list)
 	{
-		echo "<option value=$list_id>";
-		echo $list_name;
+		echo "<option value=$shop_list->listID>";
+		echo $shop_list->listName;
 		echo "</option>";
 	}
 }
