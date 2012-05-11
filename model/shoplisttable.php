@@ -104,6 +104,7 @@ class ShopListTable extends TableBase
 					!is_null($row['user_perms']) ? intval($row['user_perms']) : 0);
 
 			if (Permissions::can_read(parent::GetUserID(), $thisList)) {
+				
 				call_user_func(
 					array($functor_obj, $function_name), // invoke the callback function
 					$thisList);

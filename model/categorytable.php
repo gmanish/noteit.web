@@ -58,8 +58,17 @@ if(class_exists('CategoryTable') != TRUE) {
 	    const kCol_UserID 		= 'userID_FK';
 		const kCol_CategoryRank = 'categoryRank';
 		
+		const kSystemCategory	= 1;
+		
 		function __construct($db_base, $user_ID) {
 			parent::__construct($db_base, $user_ID);
+		}
+		
+		protected function is_owned($categoryID) {
+			
+			$category = $this->get_category($categoryID);
+			return ($category->userID_FK == self::GetUserID() && 
+					$category->userID_FK != self::kSystemCategory);
 		}
 		
 		function list_all(
@@ -68,10 +77,37 @@ if(class_exists('CategoryTable') != TRUE) {
 			$function_name='iterate_row') {
 				
 			if ($current_user_only == TRUE) {
+				// Return all categories associated with items in lists shared with this user
+				// Also return the categories created by this user
+				// And return the system categories as well
 				$sql = sprintf(
-					"SELECT * FROM `%s` WHERE `userID_FK`=%d ORDER BY `categoryRank`", 
-					self::kTableName	, 
-					parent::GetUserID());
+					"SELECT DISTINCT 
+						sic.categoryID, 
+						sic.categoryName, 
+						sic.userID_FK, 
+						sic.categoryRank 
+					FROM 
+						shopitemcategories sic
+					LEFT JOIN 
+						shopitems si
+					ON 
+						sic.`categoryID`=si.`categoryID_FK`
+					WHERE 
+						`listID_FK` IN (
+							SELECT DISTINCT 
+								`list_id_FK`
+							FROM 
+								shoplists_sharing
+							WHERE 
+								user_id_fk=%d
+						) OR 
+							sic.`userID_FK`=%d OR 
+							sic.userID_FK=%d
+					ORDER BY 
+						`categoryRank`", 
+					parent::GetUserID(),
+					parent::GetUserID(),
+					self::kSystemCategory);
 			}
 			else {
 				$sql = sprintf(
@@ -153,26 +189,31 @@ if(class_exists('CategoryTable') != TRUE) {
 			}
 	    }
 		
-		function edit_category($bitMask, $category) {
+		function edit_category($bitMask, Category $category) {
 			
-			$prev_col_added = FALSE;
-			$sql = sprintf("UPDATE `%s` SET ", self::kTableName);
-
-			if ($bitMask & Category::CATEGORY_NAME) {
-				$sql .= self::kCol_CategoryName . "='" . $category->_categoryName . "'";
-				$prev_col_added = TRUE; 
-			}
-			
-			if (!$prev_col_added ) {
-				throw new Exception("Nothing to Edit (" . $this->get_db_con()->errno . ")");
-			}
-			
-			$sql .= " WHERE `" . self::kCol_CategoryID . "`=" . $category->categoryID;
-			$sql .= " AND `" . self::kCol_UserID . "`=" . $category->userID_FK;
-			
-			$result = $this->get_db_con()->query($sql);
-			if ($result == FALSE) {
-				throw new Exception("SQL exec failed (" . $this->get_db_con()->errno . ")");
+			if (self::is_owned($category->categoryID)) {
+				
+				$prev_col_added = FALSE;
+				$sql = sprintf("UPDATE `%s` SET ", self::kTableName);
+	
+				if ($bitMask & Category::CATEGORY_NAME) {
+					$sql .= self::kCol_CategoryName . "='" . $category->_categoryName . "'";
+					$prev_col_added = TRUE; 
+				}
+				
+				if (!$prev_col_added ) {
+					throw new Exception("Nothing to Edit (" . $this->get_db_con()->errno . ")");
+				}
+				
+				$sql .= " WHERE `" . self::kCol_CategoryID . "`=" . $category->categoryID;
+				$sql .= " AND `" . self::kCol_UserID . "`=" . $category->userID_FK;
+				
+				$result = $this->get_db_con()->query($sql);
+				if ($result == FALSE) {
+					throw new Exception("SQL exec failed (" . $this->get_db_con()->errno . ")");
+				}
+			} else {
+				throw new Exception("You don't have permissions to perform this operation.");
 			}			
 		}
 	
@@ -180,72 +221,67 @@ if(class_exists('CategoryTable') != TRUE) {
 	    	
 			global $config;
 			
-	    	if ($config['USE_STORED_PROCS'] == FALSE) {
-	    		
-				$sql = sprintf("UPDATE `shopitemscatalog` 
-					SET categoryID_FK=1 
-					WHERE `userID_FK`=%d AND `categoryID_FK`=%d",
-					parent::GetUserID(),
-					$category_ID);
-	
-				$isTransactional = FALSE;
-				
-				try {
-					$isTransactional = $this->get_db_con()->autocommit(FALSE);
-					if ($isTransactional == FALSE) {
-						throw new Exception("Failed to Create Transaction.");
-					} 				
+			if (self::is_owned($category_ID)) {
+							
+				if ($config['USE_STORED_PROCS'] == FALSE) {
+		    		
+					$isTransactional = FALSE;
 					
-					$result = $this->get_db_con()->query($sql);
-					if ($result == FALSE) {
-						throw new Exception("Could not delete Category");
+					try {
+						$isTransactional = $this->get_db_con()->autocommit(FALSE);
+						if ($isTransactional == FALSE) {
+							throw new Exception("Failed to Create Transaction.");
+						} 				
+						
+						$sql = sprintf("UPDATE `shopitems` 
+							SET categoryID_FK=1 
+							WHERE `userID_FK`=%d AND `categoryID_FK`=%d",
+							parent::GetUserID(),
+							$category_ID);
+						
+						$result = $this->get_db_con()->query($sql);
+						if ($result == FALSE) {
+							throw new Exception("Could not delete Category");
+						}
+						
+						$sql = sprintf("DELETE `%s` FROM `%s` WHERE `%s`=%d AND `%s`=%d",
+							self::kTableName,
+							self::kTableName,
+							self::kCol_CategoryID,
+							$category_ID,
+							self::kCol_UserID,
+							parent::GetUserID());
+		
+						$result = $this->get_db_con()->query($sql);
+						if ($result == FALSE) {
+							throw new Exception("Could not delete Category");
+						}
+						
+						$this->get_db_con()->commit();
+						$this->get_db_con()->autocommit(TRUE);
+						
+					} catch (Exception $e) {
+						
+						if ($isTransactional) {
+							$this->get_db_con()->rollback();
+							$this->get_db_con()->autocommit(TRUE);
+						}
+						
+						throw $e;
 					}
-	
-					$sql = sprintf("UPDATE `shopitems` 
-						SET categoryID_FK=1 
-						WHERE `userID_FK`=%d AND `categoryID_FK`=%d",
-						parent::GetUserID(),
-						$category_ID);
-					
-					$result = $this->get_db_con()->query($sql);
-					if ($result == FALSE) {
-						throw new Exception("Could not delete Category");
-					}
-					
-					$sql = sprintf("DELETE `%s` FROM `%s` WHERE `%s`=%d AND `%s`=%d",
-						self::kTableName,
-						self::kTableName,
-						self::kCol_CategoryID,
+				} else {
+			        $sql = sprintf(
+						"call delete_category(%d, %d)",
 						$category_ID,
-						self::kCol_UserID,
-						parent::GetUserID());
-	
+						$this->GetUserID());
+			
 					$result = $this->get_db_con()->query($sql);
-					if ($result == FALSE) {
-						throw new Exception("Could not delete Category");
-					}
-					
-					$this->get_db_con()->commit();
-					$this->get_db_con()->autocommit(TRUE);
-					
-				} catch (Exception $e) {
-					if ($isTransactional) {
-						$this->get_db_con()->rollback();
-						$this->autocommit(TRUE);
-					}
-					
-					throw $e;
+			        if ($result == FALSE)
+			            throw new Exception("Could not delete Category");
 				}
 			} else {
-		        $sql = sprintf(
-					"call delete_category(%d, %d)",
-					$category_ID,
-					$this->GetUserID());
-		
-				$result = $this->get_db_con()->query($sql);
-		        if ($result == FALSE)
-		            throw new Exception("Could not delete Category");
-			}
+				throw new Exception("You don't have permissions to perform this operation.");
+			} 
 	    }
 	
 	    function get_category($category_ID) {
