@@ -159,17 +159,18 @@ CREATE TABLE IF NOT EXISTS `shopitems_metadata` (
 # -----------------------------------------------------------------
 # Create the `shopitems_price` table
 # -----------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `shopitems_price` (
+CREATE TABLE `shopitems_price` (
   `classID_FK` int(11) unsigned NOT NULL,
-  `currencyCode_FK` varchar(3) NOT NULL,
+  `currencyId_FK` smallint(2) unsigned NOT NULL,
   `unitID_FK` int(10) unsigned NOT NULL,
   `date_added` date NOT NULL,
   `itemPrice` decimal(11,2) unsigned NOT NULL,
-  PRIMARY KEY (`classID_FK`,`currencyCode_FK`,`unitID_FK`,`date_added`),
-  UNIQUE KEY `Ref_UNIQUE` (`classID_FK`,`currencyCode_FK`,`unitID_FK`,`date_added`),
+  PRIMARY KEY (`classID_FK`,`currencyId_FK`,`unitID_FK`,`date_added`),
+  UNIQUE KEY `Ref_UNIQUE` (`classID_FK`,`currencyId_FK`,`unitID_FK`,`date_added`),
   KEY `SIC_Ref_itemID` (`classID_FK`),
-  KEY `CT_Ref_currencyCode` (`currencyCode_FK`),
+  KEY `CT_Ref_currencyCode` (`currencyId_FK`),
   KEY `UNITS_Ref_unitID` (`unitID_FK`),
+  CONSTRAINT `CURRENCY_Ref_currencyId` FOREIGN KEY (`currencyId_FK`) REFERENCES `currencytable` (`currencyid`),
   CONSTRAINT `SIC_Ref_itemID` FOREIGN KEY (`classID_FK`) REFERENCES `shopitemscatalog` (`itemID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `UNITS_Ref_unitID` FOREIGN KEY (`unitID_FK`) REFERENCES `units` (`unitID`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
