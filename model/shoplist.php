@@ -5,7 +5,7 @@ if (!class_exists('ShoppingList')) {
 
 	// Note: the names of the class member variable are important as the objects will 
 	// directly be converted to JSON objects in order to send the info to client
-	class ShoppingList implements AccessControlledObject {
+	class ShoppingList extends AccessControlledObject {
 		
 		public $listID 			= 0;
 		public $listName 		= '';
@@ -74,7 +74,7 @@ if (!class_exists('ShoppingList')) {
 						!is_null($row['user_id_FK']) ? intval($row['user_id_FK']) : 0,
 						!is_null($row['user_perms']) ? intval($row['user_perms']) : 0);
 			} else {
-				throw new Exception("Failed to retrieve Shopping List (" . $this->get_db_con()->errno . ")");
+				throw new Exception("Failed to retrieve Shopping List (" . $db_con->errno . ")");
 			}
 		}
 		

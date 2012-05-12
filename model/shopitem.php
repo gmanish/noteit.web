@@ -6,7 +6,7 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'permissions.php';
 
 if (!class_exists('ShopItem')) {
 	
-	class ShopItem implements AccessControlledObject
+	class ShopItem
 	{
 		const SHOPITEM_INSTANCEID       = 1;    // 1 << 0
 		const SHOPITEM_USERID           = 2;    // 1 << 1
@@ -69,20 +69,6 @@ if (!class_exists('ShopItem')) {
 			$this->_barcode = $barcode;
 			$this->_barcode_format = $barcode_format;
 			$this->_voteCount = $vote_count;
-		}
-		
-		public function getOwnerId() {
-			return $this->_instance_id;
-		}
-		
-		public function getPerms() {
-			// TODO: Implement this
-			return Permissions::RWD;
-		}
-		
-		public function getSharedUserId() {
-			// TODO: Implement this
-			return 0;
 		}
 	}
 }

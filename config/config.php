@@ -2,7 +2,7 @@
 if (true) {
 	// Local Host
 	$config = array(
-		'APP_DIR'       		=> '~gmanish/noteit.web',
+		'APP_DIR'       		=> 'noteit.web',
 		'MYSQL_SERVER'  		=> '127.0.0.1',
 		'MYSQL_USER'    		=> 'root',
 		'MYSQL_PASSWD'  		=> 'pass123',

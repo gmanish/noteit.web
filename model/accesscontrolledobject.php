@@ -3,11 +3,11 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . "../lib/noteitcommon.php"
 
 if (!class_exists('AccessControlledObject')) {
 
-	interface AccessControlledObject {
+	abstract class AccessControlledObject {
 		
-		public function getOwnerId();
-		public function getPerms();
-		public function getSharedUserId();
+		abstract public function getOwnerId();
+		abstract public function getPerms();
+		abstract public function getSharedUserId();
 	} 
 }
 
