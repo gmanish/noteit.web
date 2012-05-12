@@ -7,6 +7,8 @@ require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "shopitems.php");
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "reports.php");
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "geoip.inc");
 require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "metadatatable.php");
+require_once( dirname(__FILE__) . DIRECTORY_SEPARATOR . "userinbox.php");
+
 
 class Country {
 	
@@ -132,7 +134,8 @@ class NoteItDB extends DbBase
 	protected $user_pref;
 	protected $reports;
 	protected $metadata_db;
-		
+	protected $userinbox_db;
+	
 	protected function __construct($userID)
 	{
         parent::__construct();
@@ -150,11 +153,12 @@ class NoteItDB extends DbBase
         else 
         	throw new Exception("Invalid User Credentials: " . $this->get_db_con()->error);
 
-		$this->shop_list_db = new ShopListTable($this, $userID);
-		$this->cat_list_db = new CategoryTable($this, $userID);
-		$this->shop_items_db = new ShopItems($this, $userID, $this->user_pref);
-		$this->reports = new Reports($this, $userID);
-		$this->metadata_db = new MetadataTable($this, $userID);
+		$this->shop_list_db 	= new ShopListTable($this, 	$userID);
+		$this->cat_list_db 		= new CategoryTable($this, 	$userID);
+		$this->shop_items_db 	= new ShopItems($this, 		$userID, $this->user_pref);
+		$this->reports 			= new Reports($this, 		$userID);
+		$this->metadata_db 		= new MetadataTable($this, 	$userID);
+		$this->userinbox_db 	= new UserInbox($this, 		$userID);
  	}
 	
 	public function __destruct() {
@@ -194,6 +198,10 @@ class NoteItDB extends DbBase
     
 	public function &get_metadata_table() {
 		return $this->metadata_db;
+	}
+	
+	public function &get_userinbox_table() {
+		return $this->userinbox_db;
 	}
 		
 	public static function register_user(

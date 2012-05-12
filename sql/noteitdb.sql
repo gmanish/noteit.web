@@ -176,6 +176,33 @@ CREATE TABLE `shopitems_price` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 # -----------------------------------------------------------------
+# Create the `messages` table
+# -----------------------------------------------------------------
+CREATE TABLE `messages` (
+  `messageid` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `from_userid` int(11) unsigned NOT NULL,
+  `date_received` datetime NOT NULL,
+  `subject` varchar(250) DEFAULT NULL,
+  `message` text,
+  PRIMARY KEY (`messageid`),
+  KEY `users_Ref_fromUserID` (`from_userid`),
+  CONSTRAINT `users_Ref_fromUserID` FOREIGN KEY (`from_userid`) REFERENCES `users` (`userID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+# -----------------------------------------------------------------
+# Create the `user_inbox` table
+# -----------------------------------------------------------------
+CREATE TABLE `user_inbox` (
+  `messageid_FK` int(11) unsigned NOT NULL,
+  `userid_FK` int(11) unsigned NOT NULL,
+  `is_read` tinyint(1) unsigned zerofill NOT NULL DEFAULT '0',
+  PRIMARY KEY (`messageid_FK`,`userid_FK`),
+  KEY `users_ref_userid` (`userid_FK`),
+  CONSTRAINT `messages_ref_messageid` FOREIGN KEY (`messageid_FK`) REFERENCES `messages` (`messageid`),
+  CONSTRAINT `users_ref_userid` FOREIGN KEY (`userid_FK`) REFERENCES `users` (`userID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+# -----------------------------------------------------------------
 # Insert Countries And Currencies
 # -----------------------------------------------------------------
 LOCK TABLES `currencytable` WRITE;

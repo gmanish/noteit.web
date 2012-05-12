@@ -65,6 +65,9 @@
 		public static $do_dislike_item		= 'do_dislike_item';
 		public static $do_get_item_price	= 'do_get_item_price';
 		public static $do_calculate_stats	= 'do_calculate_stats';
+		
+		public static $do_get_msg_headers	= 'do_get_msg_headers';
+		public static $do_get_msg			= 'do_get_msg';
 	}
 	
 	class HandlerExitStatus
