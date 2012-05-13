@@ -1744,6 +1744,42 @@ class CommandHandler extends CommandHandlerBase {
 			echo(json_encode($arr));
 		}
 	}
+	
+	public static function do_mark_msg_read() {
+		
+			try {
+			$user_Id = -1;
+		
+			if (isset($_SESSION['USER_ID'])) {
+				$user_ID = $_SESSION['USER_ID'];
+			} else {
+				$user_ID = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
+			}
+		
+			$message_Id = isset($_REQUEST[Command::$arg1]) ? intval($_REQUEST[Command::$arg1]) : 0;
+		
+			if ($user_ID <= 0 || $message_Id <= 0) {
+				throw new Exception("Error Processing Request.");
+			}
+		
+			$noteit_db = NoteItDB::login_user_id($user_ID);
+			$message = $noteit_db->get_userinbox_table()->mark_read($message_Id);
+			$noteit_db = NULL;
+		
+			$arr = array(
+					JSONCodes::kRetVal 		=> HandlerExitStatus::kCommandStatus_OK,
+					JSONCodes::kRetMessage	=> "");
+		
+			echo(json_encode($arr));
+		
+		} catch (exception $e) {
+			$arr = array(
+					JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
+					JSONCodes::kRetMessage => $e->getMessage());
+		
+			echo(json_encode($arr));
+		}
+	}
 } // class CommandHandler
 	
 	

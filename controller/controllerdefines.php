@@ -68,6 +68,7 @@
 		
 		public static $do_get_msg_headers	= 'do_get_msg_headers';
 		public static $do_get_msg			= 'do_get_msg';
+		public static $do_mark_msg_read		= 'do_mark_msg_read';
 	}
 	
 	class HandlerExitStatus

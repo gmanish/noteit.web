@@ -87,6 +87,20 @@ if (!class_exists('UserInbox')) {
 				throw new Exception("Error in retrieving message. (" . $this->get_db_con()->errno . ")");
 			}
 		}
+		
+		function mark_read($messageid) {
+			
+			$sql = sprintf("UPDATE `user_inbox` 
+					SET `is_read`=1
+					WHERE `messageid_FK`=%d AND `userid_FK`=%d",
+					$messageid,
+					self::GetUserID());
+			
+			$result = $this->get_db_con()->query($sql);
+			if ($result == FALSE) {
+				throw new Exception("Error in updating message status. (" . $this->get_db_con()->errno . ")");
+			}
+		}
 	}
 }
 ?>
