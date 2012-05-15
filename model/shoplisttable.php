@@ -285,7 +285,7 @@ class ShopListTable extends TableBase
 				
 				// Send a message to the users inbox
 				$user_name = $this->get_db_object()->get_db_username();
-				$text = sprintf("User " . (($user_name != '') ? $user_name : '') . 
+				$text = sprintf("User " . (($user_name != '') ? ($user_name . " ") : '') . 
 								"<%s> shared a Shopping List '%s' with you. It will now appear alongside your own Shopping Lists.\n\nThanks!\nNoteIt! Team",
 								$this->get_db_object()->get_db_useremail(),
 								$this_list->listName);
