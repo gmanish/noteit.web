@@ -15,23 +15,28 @@ if ($db_con->connect_error) {
 
 $file = fopen("../data/smart_ean_codes.csv", "r") 
 	or exit("Unable to open Barcode file!");
-	
+
+echo "<html><body>";
+echo "<table border=\"1\" cellpadding=\"5px\">";
 while(!feof($file))
 {
   	$line = fgets($file);
 	$pieces = explode(",", $line);
-	$sql = sprintf("INSERT INTO `shopitemscatalog`
+	$sql = sprintf("INSERT IGNORE INTO `shopitemscatalog`
 					(`itemName`, `itemBarcode`, `itemBarcodeFormat`)  
 					VALUES('%s', '%s', %d)", 
 					$pieces[1], $pieces[0], 5 /*EAN 13 Barcode */);
 	$result = $db_con->query($sql);
+	echo "<tr>";
 	if (!$result)
 		echo "Could not import ", $pieces[0], " ", $pieces[1], $db_con->error . "\n";
 	else 
-		echo "Imported :", $pieces[0], $pieces[1];
-	echo $line, "<br>";
-
+		echo "<td>", $pieces[0], "</td><td>", $pieces[1], "</td>";
+//	echo $line, "<br>";
+	echo "</tr>";
 }
+echo "</table>";
+echo "</html></body>";
 $db_con->close();
 fclose($file);
 ?>

@@ -81,7 +81,7 @@ if(class_exists('CategoryTable') != TRUE) {
 				// Also return the categories created by this user
 				// And return the system categories as well
 				$sql = sprintf(
-					"SELECT DISTINCT 
+					"SELECT DISTINCT
 						sic.categoryID, 
 						sic.categoryName, 
 						sic.userID_FK, 
@@ -93,21 +93,31 @@ if(class_exists('CategoryTable') != TRUE) {
 					ON 
 						sic.`categoryID`=si.`categoryID_FK`
 					WHERE 
-						`listID_FK` IN (
-							SELECT DISTINCT 
-								`list_id_FK`
-							FROM 
-								shoplists_sharing
-							WHERE 
-								user_id_fk=%d
-						) OR 
-							sic.`userID_FK`=%d OR 
-							sic.userID_FK=%d
-					ORDER BY 
+						`listID_FK` 
+					IN (
+						SELECT DISTINCT 
+							`list_id_FK`
+						FROM 
+							shoplists_sharing
+						WHERE 
+							user_id_fk=%d
+						) 
+					OR 
+						sic.`userID_FK`=%d OR 
+						sic.userID_FK=%d
+					ORDER BY (
+						CASE WHEN 
+							sic.userID_FK=%d 
+						THEN 
+							1
+						ELSE 
+							2
+						END), 
 						`categoryRank`", 
 					parent::GetUserID(),
 					parent::GetUserID(),
-					self::kSystemCategory);
+					self::kSystemCategory,
+					parent::GetUserID());
 			}
 			else {
 				$sql = sprintf(
