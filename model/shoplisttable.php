@@ -248,6 +248,55 @@ class ShopListTable extends TableBase
 			throw new Exception("You don't have permissions to perform this operation.");
 		}
 	}
+	
+	function share_list($list_ID, $user_email, $perms = Permissions::RWD) {
+		
+		$this_list = $this->get_list($list_ID);
+		
+		if (Permissions::can_read(self::GetUserID(), $this_list)) { 
+			
+			if ($this_list->getOwnerId() != self::GetUserID()) {
+				throw new Exception("You cannot share this list as you do not own it.");
+			}
+			
+			$sql = sprintf("SELECT `userID`, `firstName`, `lastName` from `users` WHERE `emailID`='%s'", $user_email);
+			
+			$result = $this->get_db_con()->query($sql);
+			if ($result == FALSE || mysqli_num_rows($result) == 0) {
+				throw new Exception("The supplied email ID is not registered with NoteIt!.");
+			}
+			
+			if ($row = mysqli_fetch_assoc($result)) {
+
+				$to_user_id = intval($row['userID']);
+				
+				// We wish to ignore errors if the list is already shared with given user
+				$sql = sprintf("INSERT IGNORE INTO
+						`shoplists_sharing` (`list_id_FK`, `user_id_FK`, `user_perms`)
+						VALUES (%d, %d, %d)",
+						$list_ID,
+						$to_user_id,
+						$perms);
+					
+				$result = $this->get_db_con()->query($sql);
+				if ($result == FALSE) {
+					throw new Exception("Error sharing list. (" . $this->get_db_con()->errno . ")");
+				}
+				
+				// Send a message to the users inbox
+				$user_name = $this->get_db_object()->get_db_username();
+				$text = sprintf("User " . (($user_name != '') ? $user_name : '') . 
+								"<%s> shared a Shopping List '%s' with you. It will now appear alongside your own Shopping Lists.\n\nThanks!\nNoteIt! Team",
+								$this->get_db_object()->get_db_useremail(),
+								$this_list->listName);
+				$subject = sprintf("<%s> Shared a Shopping List with you", $user_email);
+				$message = new Message(0, $to_user_id, $this->GetUserID(), '', $subject, $text, 0);
+				$inbox = $this->get_db_object()->get_inbox($to_user_id);
+				
+				$inbox->send_message($message);
+			}
+		}
+	}
 }
 }
 ?>

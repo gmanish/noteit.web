@@ -128,6 +128,7 @@ class NoteItDB extends DbBase
 
 	protected $db_userID;
 	protected $db_username;
+	protected $db_user_email;
 	protected $shop_list_db;
 	protected $cat_list_db;
     protected $shop_items_db;
@@ -147,6 +148,7 @@ class NoteItDB extends DbBase
 		if ($result != FALSE || mysqli_num_rows($result) == 1) {
 			$row = $result->fetch_array();
 			$this->db_username = $row['firstName'] . " " . $row['lastName'];
+			$this->db_user_email = $row['emailID'];
 			$this->user_pref = new UserPreference($row[self::kColCurrencyId]);
 			$result->free();
 		}
@@ -178,6 +180,10 @@ class NoteItDB extends DbBase
 	
 	public function get_db_username() {
 		return $this->db_username;
+	}
+	
+	public function get_db_useremail() {
+		return $this->db_user_email;
 	}
 	
 	public function get_db_userCurrency() {
@@ -772,5 +778,10 @@ class NoteItDB extends DbBase
 			throw new Exception("Error Processing Request (" . __FILE__ . __LINE__ . ")");
 		}
 	}
+	
+	public function get_inbox($user_id) {
+		
+		return new UserInbox($this, $user_id);
+	}	
 }
 ?>

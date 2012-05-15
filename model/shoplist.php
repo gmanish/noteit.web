@@ -14,7 +14,7 @@ if (!class_exists('ShoppingList')) {
 		public $perms			= 0;
 		public $shared_user_id	= 0;
 		
-		function __construct() {
+		private function __construct() {
 		}
 		
 		public static function create_from_fields(

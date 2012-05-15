@@ -38,6 +38,7 @@
         public static $do_add_shop_list 	= 'do_add_shop_list';
 		public static $do_delete_shop_list 	= 'do_delete_shop_list';
 		public static $do_edit_shop_list	= 'do_edit_shop_list';
+		public static $do_share_shop_list	= 'do_share_shop_list';
 
         public static $do_get_categories    = 'do_get_categories';
         public static $do_get_category      = 'do_get_category';

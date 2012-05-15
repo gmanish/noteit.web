@@ -101,6 +101,32 @@ if (!class_exists('UserInbox')) {
 				throw new Exception("Error in updating message status. (" . $this->get_db_con()->errno . ")");
 			}
 		}
+		
+		function send_message(Message $message) {
+			
+			$sql = sprintf("INSERT INTO `messages` (`from_userid`, `date_received`, `subject`, `message`) 
+							VALUES (%d, NOW(), '%s', '%s')",
+							$message->from_user_id,
+							$this->get_db_con()->escape_string($message->subject),
+							$this->get_db_con()->escape_string($message->text));
+			
+			$result = $this->get_db_con()->query($sql);
+			if ($result == FALSE) {
+				throw new Exception("Error in sending message. (" . $this->get_db_con()->errno . ")");
+			}
+			
+			$message_id = $this->get_db_con()->insert_id;
+			$sql = sprintf("INSERT INTO `user_inbox` (`messageid_FK`, `userid_FK`, `is_read`)
+							VALUES (%d, %d, %d)",
+							$message_id,
+							$this->GetUserID(),
+							0);
+			
+			$result = $this->get_db_con()->query($sql);
+			if ($result == FALSE) {
+				throw new Exception("Error in posting message to user's inbox. (" . $this->get_db_con()->errno . ")");
+			}
+		}
 	}
 }
 ?>
