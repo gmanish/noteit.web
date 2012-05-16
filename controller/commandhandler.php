@@ -558,6 +558,7 @@ class CommandHandler extends CommandHandlerBase {
 		$category_id = isset($_REQUEST[Command::$arg1]) ? intval($_REQUEST[Command::$arg1]) : 0;
 		$old_rank = isset($_REQUEST[Command::$arg2]) ? intval($_REQUEST[Command::$arg2]) : 0;
 		$new_rank = isset($_REQUEST[Command::$arg3]) ? intval($_REQUEST[Command::$arg3]) : 0;
+		$target_id = isset($_REQUEST[Command::$arg5]) ? intval($_REQUEST[Command::$arg5]) : 0;
 		
 		try {
            $user_ID = -1;
@@ -572,11 +573,11 @@ class CommandHandler extends CommandHandlerBase {
                 }
             }
 
-			if ($category_id <= 0 || $user_ID <= 0 || $old_rank < 0 || $new_rank < 0)
+			if ($category_id <= 0 || $user_ID <= 0 || $old_rank < 0 || $new_rank < 0 || $target_id <= 0)
 				throw new Exception("Error Processing Request");
 			
             $noteit_db = NoteItDB::login_user_id($user_ID);
-            $noteit_db->get_catlist_table()->reorder_category($category_id, $old_rank, $new_rank);
+            $noteit_db->get_catlist_table()->reorder_category($category_id, $target_id, $old_rank, $new_rank);
             $noteit_db = NULL;
 
             // Form a JSON string
