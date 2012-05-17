@@ -120,6 +120,7 @@ if(class_exists('CategoryTable') != TRUE) {
 					parent::GetUserID());
 			}
 			else {
+				throw new Exception("Not Implemented.");
 				$sql = sprintf(
 					"SELECT * FROM `%s` ORDER BY `categoryName`", 
 					self::kTableName);
@@ -320,7 +321,13 @@ if(class_exists('CategoryTable') != TRUE) {
 	        return $category;
 	    }
 		
-		function reorder_category($category_ID, $old_rank, $new_rank) {
+		function reorder_category($category_ID, $taget_category_ID, $old_rank, $new_rank) {
+			
+			if (!self::is_owned($category_ID))
+				throw new Exception("You cannot reorder shared (owned by other users) categories.");
+
+			if (!self::is_owned($taget_category_ID))
+				throw new Exception("You cannot reorder your categories around shared (owned by other users) categories.");
 			
 			$sql = "";
 			if ($old_rank < $new_rank) {
@@ -329,7 +336,7 @@ if(class_exists('CategoryTable') != TRUE) {
 								JOIN (
 					  				SELECT categoryID, (`categoryRank` - 1) as new_rank
 		  							FROM shopitemcategories
-		  							WHERE `categoryRank` between %d + 1 AND %d
+		  							WHERE `categoryRank` between %d + 1 AND %d AND `userID_FK`=%d
 		  							UNION ALL
 		  							SELECT %d as categoryID, %d as new_rank
 								) as r
@@ -337,6 +344,7 @@ if(class_exists('CategoryTable') != TRUE) {
 								SET `categoryRank` = new_rank", 
 								$old_rank,
 								$new_rank,
+								self::GetUserID(),
 								$category_ID,
 								$new_rank);
 								
@@ -346,13 +354,14 @@ if(class_exists('CategoryTable') != TRUE) {
 								JOIN ( 
 									SELECT categoryID, (`categoryRank` + 1) as new_rank 
 									FROM shopitemcategories 
-									WHERE `categoryRank` between %d AND %d - 1 
+									WHERE `categoryRank` between %d AND %d - 1 AND `userID_FK`=%d
 									UNION ALL 
 									SELECT %d as categoryID, %d as new_rank 
 								) as r USING (categoryID) 
 								SET `categoryRank` = new_rank",
 								$new_rank,
 								$old_rank,
+								self::GetUserID(),
 								$category_ID, 
 								$new_rank);
 			}

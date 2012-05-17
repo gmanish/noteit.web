@@ -28,6 +28,8 @@
 
 		public static $do_save_prefs		= 'do_save_prefs';
 		public static $do_change_password	= 'do_change_password';
+		public static $do_forgot_password	= 'do_forgot_password';
+		public static $do_reset_password	= 'do_reset_password';
 		
         // These functions do not redirect output or generate html.
         // They simply return the results as json encoded strings.
