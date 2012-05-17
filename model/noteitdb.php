@@ -851,7 +851,10 @@ class NoteItDB extends DbBase
 					if ($result == TRUE) {
 						// Don't return failure of error. We don't want people trying to guess what emails
 						// are registered with us. This just adds a little more security at cost of usability.
- 						self::send_reset_email($email_id, $userID, $salted_hash);
+ 						if (self::send_reset_email($email_id, $userID, $salted_hash))
+							echo "Message Sent";
+						else
+							echo "Falied to send message";
 					}
 				}
 			}
@@ -910,12 +913,18 @@ class NoteItDB extends DbBase
 					throw new Exception("Could Not Create Transaction");	
 				}
 					
-				$sql = sprintf("UPDATE `users` AS `usrs`
-								INNER JOIN `password_recovery` AS `pr` 
-								ON `usrs`.`userID`=`pr`.`user_id_FK` 
-								SET `userPassword`=UNHEX('%s')
-								WHERE `usrs`.`userID`=%d and `pr`.`recovery_passwd`=UNHEX('%s')
-								AND TIMESTAMPDIFF(HOUR, `pr`.`created_datetime`, NOW()) < 24",
+				$sql = sprintf("UPDATE 
+									`users` AS `usrs`
+								INNER JOIN 
+									`password_recovery` AS `pr` 
+								ON 
+									`usrs`.`userID`=`pr`.`user_id_FK` 
+								SET 
+									`userPassword`=UNHEX('%s')
+								WHERE 
+									`usrs`.`userID`=%d AND 
+									`pr`.`recovery_passwd`=UNHEX('%s') AND 
+									TIMESTAMPDIFF(HOUR, `pr`.`created_datetime`, NOW()) < 24",
 								$salted_hash,
 								$userID,
 								$token);
@@ -924,7 +933,22 @@ class NoteItDB extends DbBase
 				if ($result == FALSE) {
 					throw new Exception("Error in updating password. (" . $db_con->errno . ")");
 				} else if ($db_con->affected_rows == 0) {
-					throw new Exception("Could not set new password. The reset password link may have expired.");
+					throw new Exception("Could not set new password. The reset password link may 
+							have expired or you may have used the same password as the old one.");
+				}
+				
+				// Remove the reset password link from database
+				$sql = sprintf("DELETE FROM 
+									`password_recovery` 
+								WHERE 
+									`user_id_FK`=%d AND 
+									`recovery_passwd`=UNHEX('%s')",
+								$userID,
+								$token);
+				
+				$result = $db_con->query($sql);
+				if (!$result || $db_con->affected_rows <= 0) {
+					throw new Exception("An unknown error occurred while trying to reset password.");
 				}
 				
 				// End Transaction
@@ -1013,13 +1037,8 @@ class NoteItDB extends DbBase
 					$url);
 		
 		$headers = "From:" . $from;
-
 		echo $message;
-		
-		if (mail($to, $subject, $message, $headers))
-			echo "Message Sent";
-		else
-			echo "Falied to send message";
+		return mail($to, $subject, $message, $headers);
 	}
 	
 	static function is_valid_password($password) {
