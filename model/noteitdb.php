@@ -994,7 +994,7 @@ class NoteItDB extends DbBase
 		$url = $config['SERVER_ADDRESS'];
 		$url .= "/";
 		$url .= $config['APP_DIR'];
-		$url .= "/lostpassword.php?arg1=";
+		$url .= "/forgot_password.php?arg1=";
 		$url .= $userID;
 		$url .= "&arg2=";
 		$url .= $hashed_password;
@@ -1004,7 +1004,8 @@ class NoteItDB extends DbBase
 					We received a request for a lost password for this email ID. If you
 					did not initiate the request, please ignore this email.
 		
-					Use this following link within the next 24 hours to reset your password:
+					If you wish to reset your password, please use the following link 
+					within the next 24 hours:
 		
 					%s
 				
@@ -1015,11 +1016,10 @@ class NoteItDB extends DbBase
 
 		echo $message;
 		
-		$result = mail($to, $subject, $message, $headers);
-		if (!$result)
-			echo "Falied to send message";
-		else
+		if (mail($to, $subject, $message, $headers))
 			echo "Message Sent";
+		else
+			echo "Falied to send message";
 	}
 	
 	static function is_valid_password($password) {
