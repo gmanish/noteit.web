@@ -202,6 +202,18 @@ CREATE TABLE `user_inbox` (
   CONSTRAINT `users_ref_userid` FOREIGN KEY (`userid_FK`) REFERENCES `users` (`userID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+
+# -----------------------------------------------------------------
+# Create the `password_recovery` table
+# -----------------------------------------------------------------
+CREATE TABLE `password_recovery` (
+  `user_id_FK` int(11) unsigned NOT NULL,
+  `recovery_passwd` binary(20) NOT NULL DEFAULT '0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0',
+  `created_datetime` datetime NOT NULL,
+  PRIMARY KEY (`user_id_FK`),
+  CONSTRAINT `users_recovery_id` FOREIGN KEY (`user_id_FK`) REFERENCES `users` (`userID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 # -----------------------------------------------------------------
 # Insert Countries And Currencies
 # -----------------------------------------------------------------
