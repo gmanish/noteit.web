@@ -7,7 +7,7 @@ if (true) {
 		'MYSQL_USER'    		=> 'root',
 		'MYSQL_PASSWD'  		=> 'pass123',
 		'MYSQL_DB'      		=> 'noteitdb',
-		'GEOIP_DB'				=> '/Users/gmanish/Sites/noteit.web/data/GeoIP.dat',
+		'GEOIP_DB'				=> 'C:\Users\mgupta\Sources\www\noteit.web\data\GeoIP.dat',
 		'SALT'					=> 'G3480BFA037EE',
 		'USE_STORED_PROCS'		=> FALSE);
 } else {
