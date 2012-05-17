@@ -1818,6 +1818,62 @@ class CommandHandler extends CommandHandlerBase {
 			echo(json_encode($arr));
 		}
 	}
+	
+	public static function do_forgot_password() {
+		
+		try {
+			$email_Id = isset($_REQUEST[Command::$arg1]) ? $_REQUEST[Command::$arg1] : "";
+		
+			if ($email_Id == '') {
+				throw new Exception("Error Processing Request.");
+			}
+		
+			NoteItDB::do_forgot_password($email_Id);
+			$noteit_db = NULL;
+		
+			$arr = array(
+					JSONCodes::kRetVal 		=> HandlerExitStatus::kCommandStatus_OK,
+					JSONCodes::kRetMessage	=> "");
+		
+			echo(json_encode($arr));
+		
+		} catch (exception $e) {
+			$arr = array(
+					JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
+					JSONCodes::kRetMessage => $e->getMessage());
+		
+			echo(json_encode($arr));
+		}
+	}
+	
+	public static function do_reset_password() {
+		
+		try {
+			$userID = isset($_REQUEST[Command::$arg1]) ? intval($_REQUEST[Command::$arg1]) : 0;
+			$token = isset($_REQUEST[Command::$arg2]) ? $_REQUEST[Command::$arg2] : "";
+			$new_password = isset($_REQUEST[Command::$arg3]) ? $_REQUEST[Command::$arg3] : "";
+			
+			if ($userID <= 0 || $token == '') {
+				throw new Exception("Error Processing Request.");
+			}
+		
+			NoteItDB::do_reset_password($userID, $token, $new_password);
+			$noteit_db = NULL;
+		
+			$arr = array(
+					JSONCodes::kRetVal 		=> HandlerExitStatus::kCommandStatus_OK,
+					JSONCodes::kRetMessage	=> "");
+		
+			echo(json_encode($arr));
+		
+		} catch (exception $e) {
+			$arr = array(
+					JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_Error,
+					JSONCodes::kRetMessage => $e->getMessage());
+		
+			echo(json_encode($arr));
+		}
+	}
 } // class CommandHandler
 	
 	

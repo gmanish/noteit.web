@@ -2,12 +2,13 @@
 if (true) {
 	// Local Host
 	$config = array(
+		'SERVER_ADDRESS'		=> 'http://127.0.0.1', // Without ending slash
 		'APP_DIR'       		=> 'noteit.web',
 		'MYSQL_SERVER'  		=> '127.0.0.1',
 		'MYSQL_USER'    		=> 'root',
 		'MYSQL_PASSWD'  		=> 'pass123',
 		'MYSQL_DB'      		=> 'noteitdb',
-		'GEOIP_DB'				=> '/Users/gmanish/Sites/noteit.web/data/GeoIP.dat',
+		'GEOIP_DB'				=> '/Users/gmanish/Sites/noteit.web/data/GeoIP.dat', // Full path to GeoIP.dat file from root
 		'SALT'					=> 'G3480BFA037EE',
 		'USE_STORED_PROCS'		=> FALSE);
 } else {
