@@ -418,7 +418,7 @@ class ShopItems extends TableBase
       			intval($thisItem->_list_id),
        			parent::GetUserID());
         	
-       	if (!Permissions::can_write(parent::GetUserID(), $parentList)) {
+       	if (Permissions::can_write(parent::GetUserID(), $parentList)) {
     	
 	       	$sql = sprintf('UPDATE %s SET', self::kTableName);
 	        $prev_column_added = FALSE;

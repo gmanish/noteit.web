@@ -1025,7 +1025,7 @@ class CommandHandler extends CommandHandlerBase {
 			
 			$noteit_db = NoteItDB::login_user_id($user_ID);
 			$noteit_db->get_shopitems_table()->edit_item(
-					$item->_item_id, 
+					$item->_instance_id, 
 					$item, 
 					$edit_flags);
             $noteit_db = NULL;
