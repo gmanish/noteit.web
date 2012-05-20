@@ -1021,7 +1021,8 @@ class NoteItDB extends DbBase
 		$url .= "&arg2=";
 		$url .= $hashed_password;
 		
-		$message = sprintf("Hello! 
+		$message = sprintf("
+					Hello! 
 					
 					We received a request for a lost password for this email ID. If you
 					did not initiate the request, please ignore this email.

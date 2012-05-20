@@ -169,8 +169,9 @@ class ShopItems extends TableBase
 				
 				$instance_id = $this->get_db_con()->insert_id; 
 
-				$this->add_price(
+				$this->log_price(
 						$class_ID,
+						$instance_id,
 						$this->user_pref->currencyId,
 						$unit_id,
 						$unit_cost,
@@ -410,7 +411,7 @@ class ShopItems extends TableBase
 		}
 	}
 	
-    function edit_item($instance_id, $item, $item_flags /* one of SHOPITEM_* flags */)
+    function edit_item($instance_id, ShopItem $item, $item_flags /* one of SHOPITEM_* flags */)
     {
     	$thisItem = $this->get_item($instance_id);
        	$parentList = ShoppingList::create_from_db(
@@ -496,6 +497,20 @@ class ShopItems extends TableBase
 	        $result = $this->get_db_con()->query($sql);
 	        if ($result == FALSE)
 	            throw new Exception('SQL exec failed ('. __FILE__ . __LINE__ . '): ' . $this->get_db_con()->error);
+	        
+	        if (($item_flags & ShopItem::SHOPITEM_UNITCOST) && 
+	        		($item->_unit_cost > 0) && 
+	        		($item_flags & ShopItem::SHOPITEM_QUANTITY) && 
+	        		($item->_quantity > 0)) {
+	        	
+	        	$this->log_price(
+	        			0, 								// We don't have class id here
+	        			$item->_instance_id,
+	        			$this->user_pref->currencyId, 	// For now we use user prefs for currency id
+	        			$item->_unit_id, 
+	        			$item->_unit_cost, 
+	        			$item->_quantity);
+	        }
        	} else {
        		throw new Exception("You don't have permissions to perform this operation.");
        	}
@@ -863,36 +878,68 @@ class ShopItems extends TableBase
         	$result->free();
 	}
 	
-	private function add_price(
+	/*
+	 * Either of $classID or instance_id must be supplied to this function. 
+	 */
+	private function log_price(
 		$classID, 
+		$instance_id,
 		$currencyId, 
 		$unitID, 
 		$itemPrice,
 		$itemQuantity) {
 		
-		if ($classID > 0 && 
-			$currencyId > 0 && 
+		if ($currencyId > 0 && 
 			$unitID > 0 && 
 			$itemPrice > 0) {
 			
-			$sql = sprintf("
-						INSERT INTO
-							`shopitems_price` (
-							`classID_FK`,
-							`currencyId_FK`,
-							`unitID_FK`,
-							`date_added`,
-							`itemPrice`)
-						VALUES
-							(%d, %d, %d, CURDATE(), %f)",
-						$classID, 
-						$currencyId,
-						$unitID,
-						$itemPrice);
-
+			if ($classID > 0) {
+			
+				$sql = sprintf("
+							INSERT IGNORE INTO
+								`shopitems_price` (
+								`classID_FK`,
+								`currencyId_FK`,
+								`unitID_FK`,
+								`date_added`,
+								`itemPrice`)
+							VALUES
+								(%d, %d, %d, CURDATE(), %f)",
+							$classID, 
+							$currencyId,
+							$unitID,
+							$itemPrice);
+			} else if ($instance_id > 0) {
+				
+				// Caller does not have a class id, check instance id
+				$sql = sprintf("
+							INSERT IGNORE INTO
+								`shopitems_price` (
+									`classID_FK`,
+									`currencyId_FK`,
+									`unitID_FK`,
+									`date_added`,
+									`itemPrice`)
+								SELECT 
+									sic.`itemID`,
+									si.`currencyId`,
+									si.`unitID_FK`,
+									CURDATE(),
+									%f
+								FROM 
+									`shopitemscatalog` sic
+								INNER JOIN
+									`shopitems` si
+								ON
+									sic.`itemID` = si.`itemID_FK`
+								WHERE 
+									si.`instanceID`=%d",
+							$itemPrice,
+							$instance_id);
+				
+			}
 			$result = $this->get_db_con()->query($sql);
-			if ($result == FALSE && $this->get_db_con()->errno != 1062) {	
-				// Ignore Duplicate PK Error since by design, we insert only one record of price per (item, currencyId, unitId, date)
+			if ($result == FALSE) {	
 				throw new Exception("Error updating item price. (" . $this->get_db_con()->errno . ")");
 			}
 		}
