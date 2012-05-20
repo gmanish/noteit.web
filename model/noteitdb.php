@@ -851,10 +851,8 @@ class NoteItDB extends DbBase
 					if ($result == TRUE) {
 						// Don't return failure of error. We don't want people trying to guess what emails
 						// are registered with us. This just adds a little more security at cost of usability.
- 						if (self::send_reset_email($email_id, $userID, $salted_hash))
-							echo "Message Sent";
-						else
-							echo "Falied to send message";
+ 						if (!self::send_reset_email($email_id, $userID, $salted_hash))
+							throw new Exception("Falied to send message");
 					}
 				}
 			}
@@ -1037,7 +1035,7 @@ class NoteItDB extends DbBase
 					$url);
 		
 		$headers = "From:" . $from;
-		echo $message;
+// 		echo $message;
 		return mail($to, $subject, $message, $headers);
 	}
 	
