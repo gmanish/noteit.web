@@ -1050,4 +1050,3 @@ class NoteItDB extends DbBase
 }
 
 ?>
-	

@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS `noteitdb` CHARSET = utf8;
-USE noteitdb;
+#CREATE DATABASE IF NOT EXISTS `noteitdb` CHARSET = utf8;
+#USE geekjgsf_noteitdb;
 
 # -----------------------------------------------------------------
 # Create the currencytable

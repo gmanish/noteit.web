@@ -964,8 +964,11 @@ class ShopItems extends TableBase
 		// Calculate the mean and sample variance for the samples recorded in the last 6 months
 		$date_today = new DateTime();
 		$date_to = $date_today->format("Y-m-d");
+
+		// DateTime::sub only available in php >= 5.3.0
+//		$date_today->sub(new DateInterval('P6M')); // Six months before today
+		$date_today->modify('-6 months');
 		
-		$date_today->sub(new DateInterval('P6M')); // Six months before today
 		$date_from = $date_today->format("Y-m-d");
 		
 		// itemPrice maintains a running sum of all itemPrices seen on a given day 

@@ -15,6 +15,7 @@ if (true) {
 } else {
 	// geekjamboree.com
 	$config = array(
+		'SERVER_ADDRESS'		=> 'http://geekjamboree.com', // Without ending slash
 		'APP_DIR'       		=> '',
 		'MYSQL_SERVER'  		=> 'localhost',
 		'MYSQL_USER'    		=> 'geekjgsf_root',
