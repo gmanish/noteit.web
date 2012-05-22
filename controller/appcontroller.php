@@ -12,7 +12,7 @@
 	
 	try {
 		if ($command == "" || !is_callable("CommandHandler::$command")) {
-			throw new Exception("Handler Not Found");
+			throw new Exception("Handler Not Found: " . $command);
 		} else {
 			CommandHandler::$command();	
 		}

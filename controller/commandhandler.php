@@ -4,7 +4,7 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . ("controllerdefines.php")
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . ("../model/noteitdb.php");
 
 // [TODO] : Research if there is a better way to do this
-function shopitem_obj_to_array($shop_item_obj) {
+function shopitem_obj_to_array(ShopItem $shop_item_obj) {
 	
     $shop_item_array = array(
         ShopItems::kColInstanceID       => $shop_item_obj->_instance_id,
@@ -23,7 +23,13 @@ function shopitem_obj_to_array($shop_item_obj) {
 		ShopItems::kColBarcode			=> $shop_item_obj->_barcode,
 		ShopItems::kColBarcodeFormat	=> $shop_item_obj->_barcode_format,
 		ShopItems::kColVoteCount		=> $shop_item_obj->_voteCount);
-
+    
+		if (get_class($shop_item_obj) == "ShopItemAndStats") {
+			
+			$shop_item_array[ShopItemsPrice::kStats_Mean] 				= $shop_item_obj->mean;
+			$shop_item_array[ShopItemsPrice::kStats_SampleDeviation] 	= $shop_item_obj->sampleDeviation;
+		}
+		
     return $shop_item_array;
 }
 
@@ -1024,15 +1030,20 @@ class CommandHandler extends CommandHandlerBase {
 				throw new Exception ("Nothing to Edit");
 			
 			$noteit_db = NoteItDB::login_user_id($user_ID);
-			$noteit_db->get_shopitems_table()->edit_item(
+			$edited_item = $noteit_db->get_shopitems_table()->edit_item(
 					$item->_instance_id, 
 					$item, 
 					$edit_flags);
             $noteit_db = NULL;
-			$arr = array(
-				JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
-				JSONCodes::kRetMessage => "");
+            
+			$item_array = array();
+			$item_array[] = shopitem_obj_to_array($edited_item);
 
+            $arr = array(
+					JSONCodes::kRetVal => HandlerExitStatus::kCommandStatus_OK,
+                    JSONCodes::kRetMessage => "",
+                    Command::$arg1 => $item_array);
+            
 			echo(json_encode($arr));
         }
         catch(Exception $e)

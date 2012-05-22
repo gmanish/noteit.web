@@ -48,7 +48,7 @@ if (!class_exists('ShopItem')) {
 				$item_name = '',
 				$unit_cost = 0.00,
 				$quantity = 1.00,
-				$unit_id = 3 /* General Unit */,
+				$unit_id = 1 /* General Unit */,
 				$is_purchased = FALSE,
 				$is_asklater = FALSE,
 				$barcode = "",
@@ -72,4 +72,60 @@ if (!class_exists('ShopItem')) {
 		}
 	}
 }
+
+if (!class_exists("ShopItemStats")) {
+	
+	class ShopItemStats {
+		
+		public $mean 			= 0.0;
+		public $sampleDeviation = 0.0;
+	
+		function __construct($mean, $sampleDeviation) {
+			$this->mean 			= $mean;
+			$this->sampleDeviation 	= $sampleDeviation;
+		}
+	}
+}
+
+if (!class_exists("ShopItemAndStats")) {
+	
+	/*
+	 * TODO: Ideally ShopItemAndStats should extend ShopItem and contain ShopItemStats
+	 */
+	class ShopItemAndStats extends ShopItem {
+		
+		public $mean 				= 0.0;
+		public $sampleDeviation 	= 0.0;
+	
+		function __construct(
+				ShopItem $item,
+				$item_stats /* ShopItemStats */) {
+	
+			if (is_null($item))
+				throw new Exception("Invalid item reference.");
+			
+			parent::__construct(
+					$item->_instance_id,
+					$item->_item_id,
+					$item->_user_id,
+					$item->_list_id,
+					$item->_category_id,
+					$item->_item_name,
+					$item->_unit_cost,
+					$item->_quantity,
+					$item->_unit_id,
+					$item->_is_purchased,
+					$item->_is_asklater,
+					$item->_barcode,
+					$item->_barcode_format,
+					$item->_voteCount);
+			
+			if (!is_null($item_stats)) {
+				$this->mean 			= $item_stats->mean;
+				$this->sampleDeviation 	= $item_stats->sampleDeviation;
+			}
+		}
+	}
+}
+
 ?>

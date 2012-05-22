@@ -32,6 +32,9 @@ class ShopItemsPrice
 	const kColUnitID		= 'unitID_FK';
 	const kColDateAdded		= 'date_added';
 	const kColItemPrice		= 'itemPrice';
+	
+	const kStats_Mean				= 'mean';
+	const kStats_SampleDeviation	= 'sampleDeviation';
 }
 
 class ShopItems extends TableBase
@@ -169,21 +172,22 @@ class ShopItems extends TableBase
 				
 				$instance_id = $this->get_db_con()->insert_id; 
 
-				$this->log_price(
+				$item_stats = $this->log_price(
 						$class_ID,
 						$instance_id,
 						$this->user_pref->currencyId,
 						$unit_id,
-						$unit_cost,
-						$item_quantity);
+						$unit_cost);
 				
 				if ($isTransactional == TRUE) {
 					$this->get_db_con()->commit();
 					$this->get_db_con()->autocommit(TRUE);
 				}
 				
-				return $this->get_item($instance_id);
-				
+				return new ShopItemAndStats(
+						$this->get_item($instance_id), 
+						$item_stats);
+								
 			} catch (Exception $e) {
 				if ($isTransactional) {
 					$this->get_db_con()->rollback();
@@ -363,20 +367,20 @@ class ShopItems extends TableBase
 
 	        	NI::TRACE('ShopItems::get_item() returned row: ' . print_r($row, TRUE), __FILE__, __LINE__);
 	            $thisItem = new ShopItem(
-	                $row[self::kColInstanceID],
-	                $row[self::kColItemID],
-	                $row[self::kColUserID],
-	                $row[self::kColListID],
-	                $row[self::kColCategoryID],
+	                intval($row[self::kColInstanceID]),
+	                intval($row[self::kColItemID]),
+	                intval($row[self::kColUserID]),
+	                intval($row[self::kColListID]),
+	                intval($row[self::kColCategoryID]),
 	                $row[self::kColItemName],
-	                $row[self::kColUnitCost],  // unit cost
-	                $row[self::kColQuantity],
-	                $row[self::kColUnitID],
-					$row[self::kColIsPurchased],
-					$row[self::kColIsAskLater],
+	                floatval($row[self::kColUnitCost]),  // unit cost
+	                floatval($row[self::kColQuantity]),
+	                intval($row[self::kColUnitID]),
+					intval($row[self::kColIsPurchased]),
+					intval($row[self::kColIsAskLater]),
 					is_null($row[self::kColBarcode]) ? "" : $row[self::kColBarcode],
-					is_null($row[self::kColBarcodeFormat]) ? BarcodeFormat::BARCODE_FORMAT_UNKNOWN : $row[self::kColBarcodeFormat],
-					is_null($row['voteCount']) ? 0 : $row['voteCount']);
+					is_null($row[self::kColBarcodeFormat]) ? BarcodeFormat::BARCODE_FORMAT_UNKNOWN : intval($row[self::kColBarcodeFormat]),
+					is_null($row['voteCount']) ? 0 : intval($row['voteCount']));
 	            	
 	            	return $thisItem;
         	} else {
@@ -498,20 +502,24 @@ class ShopItems extends TableBase
 	        if ($result == FALSE)
 	            throw new Exception('SQL exec failed ('. __FILE__ . __LINE__ . '): ' . $this->get_db_con()->error);
 	        
+	        $item_stats = NULL;
+	        
 	        if (($item_flags & ShopItem::SHOPITEM_UNITCOST) && 
-	        		($item->_unit_cost > 0) && 
-	        		($item_flags & ShopItem::SHOPITEM_QUANTITY) && 
-	        		($item->_quantity > 0)) {
+	        		$item->_unit_cost > 0) {
 	        	
-	        	$this->log_price(
+	        	$item_stats = $this->log_price(
 	        			0, 								// We don't have class id here
-	        			$item->_instance_id,
+	        			$instance_id,
 	        			$this->user_pref->currencyId, 	// For now we use user prefs for currency id
-	        			$item->_unit_id, 
-	        			$item->_unit_cost, 
-	        			$item->_quantity);
+	        			($item_flags & ShopItem::SHOPITEM_UNITID) > 0 ? $item->_unit_id : $thisItem->_unit_id, 
+	        			($item_flags & ShopItem::SHOPITEM_UNITCOST) > 0 ? $item->_unit_cost : $thisItem->_unit_cost);
 	        }
-       	} else {
+	        
+	        // Fetch Item details from db and send back
+			return new ShopItemAndStats(
+					$this->get_item($instance_id), 
+					$item_stats);
+		} else {
        		throw new Exception("You don't have permissions to perform this operation.");
        	}
     }
@@ -731,7 +739,7 @@ class ShopItems extends TableBase
 		$new_itemid = 0;
 		$sql = sprintf("SELECT `itemID` 
 				FROM `shopitemscatalog` 
-				WHERE `itemName`='%s' LIMIT 1", 
+				WHERE `itemName`='%s'", 
 				$this->get_db_con()->escape_string($item->_item_name));
 
 		if (!empty($item->_barcode)) {
@@ -886,63 +894,69 @@ class ShopItems extends TableBase
 		$instance_id,
 		$currencyId, 
 		$unitID, 
-		$itemPrice,
-		$itemQuantity) {
+		$itemPrice) {
+		
+		$item_stats = NULL;
 		
 		if ($currencyId > 0 && 
 			$unitID > 0 && 
 			$itemPrice > 0) {
 			
-			if ($classID > 0) {
-			
-				$sql = sprintf("
-							INSERT IGNORE INTO
-								`shopitems_price` (
-								`classID_FK`,
-								`currencyId_FK`,
-								`unitID_FK`,
-								`date_added`,
-								`itemPrice`)
-							VALUES
-								(%d, %d, %d, CURDATE(), %f)",
-							$classID, 
-							$currencyId,
-							$unitID,
-							$itemPrice);
-			} else if ($instance_id > 0) {
-				
-				// Caller does not have a class id, check instance id
-				$sql = sprintf("
-							INSERT IGNORE INTO
-								`shopitems_price` (
-									`classID_FK`,
-									`currencyId_FK`,
-									`unitID_FK`,
-									`date_added`,
-									`itemPrice`)
-								SELECT 
-									sic.`itemID`,
-									si.`currencyId`,
-									si.`unitID_FK`,
-									CURDATE(),
-									%f
-								FROM 
-									`shopitemscatalog` sic
-								INNER JOIN
-									`shopitems` si
-								ON
-									sic.`itemID` = si.`itemID_FK`
-								WHERE 
-									si.`instanceID`=%d",
-							$itemPrice,
-							$instance_id);
-				
+			if ($classID <= 0 && $instance_id <= 0) {
+				throw new Exception("Error processing request.");
 			}
+			
+			if ($classID <= 0) {
+				$sql = sprintf("SELECT `itemID_FK` 
+								FROM `shopitems`
+								WHERE `instanceID`=%d",
+								$instance_id);
+				$result = $this->get_db_con()->query($sql);
+				if ($result == FALSE) {
+					throw new Exception("Could not find Item (" . $this->get_db_con()->errno . ")");
+				}
+				
+				if ($row = mysqli_fetch_assoc($result)) {
+					$classID = $row['itemID_FK'];
+				} else {
+					throw new Exception("Could not find Item");
+				}
+			}
+			
+			// itemPrice maintains a running sum of all itemPrices seen on a given day 
+			// while itemCount maintains the running total of the number of items seen
+			// for a given PK combination
+			$sql = sprintf("
+						INSERT INTO 
+							shopitems_price (`classID_FK`, `currencyId_FK`, `unitID_FK`, `date_added`, `itemPrice`, `itemCount`) 
+						VALUES 
+							(%d, %d, %d, CURDATE(), %f, 1)
+						ON DUPLICATE KEY UPDATE
+							`itemPrice`=`itemPrice` + %f, `itemCount`=`itemCount`+1",
+						$classID, 
+						$currencyId,
+						$unitID,
+						$itemPrice,
+						$itemPrice);
+			
 			$result = $this->get_db_con()->query($sql);
 			if ($result == FALSE) {	
-				throw new Exception("Error updating item price. (" . $this->get_db_con()->errno . ")");
+				throw new Exception("Error logging item price. (" . $this->get_db_con()->errno . ")");
+			}
+
+			$sample_variance = $this->calculate_stats(
+					$classID, 
+					$currencyId, 
+					$unitID);
+			
+			if ($sample_variance != NULL) {
+				$item_stats = new ShopItemStats(
+						$sample_variance->mean(), 
+						$sample_variance->sample_deviation());
 			}
 		}
+		
+		return $item_stats;
 	}
 	
 	public function calculate_stats($classId, $currencyId, $unitId) {
@@ -954,21 +968,33 @@ class ShopItems extends TableBase
 		$date_today->sub(new DateInterval('P6M')); // Six months before today
 		$date_from = $date_today->format("Y-m-d");
 		
-		$sql = sprintf("SELECT `itemPrice` 
-						FROM `shopitems_price`
-						WHERE `classID_FK`=%d AND `currencyId_FK`=%d AND `unitID_FK`=%d",
+		// itemPrice maintains a running sum of all itemPrices seen on a given day 
+		// while itemCount maintains the running total of the number of items seen
+		// for a given PK combination. We take the average of any given day.
+		$sql = sprintf("SELECT 
+							`itemPrice`/`itemCount` AS `itemPrice`
+						FROM 
+							`shopitems_price`
+						WHERE 
+							`classID_FK`=%d AND 
+							`currencyId_FK`=%d AND 
+							`unitID_FK`=%d AND 
+							`date_added` BETWEEN CAST('%s' AS DATE) AND CAST('%s' AS DATE)",
 						$classId,
 						$currencyId,
-						$unitId);
+						$unitId,
+						$date_from,
+						$date_to);
+		
 		$result = $this->get_db_con()->query($sql);
 		if ($result) {
 			$variance = new SampleVariance();
 			while ($row = mysqli_fetch_array($result)) {
-				$variance->push($row['itemPrice']);
+				$variance->push(floatval($row['itemPrice']));
 			}
 			return $variance;			
 		} else {
-			return NULL;
+			throw new Exception("No data for item."); // No sample
 		}
 	}
 }

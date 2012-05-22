@@ -165,6 +165,7 @@ CREATE TABLE `shopitems_price` (
   `unitID_FK` int(10) unsigned NOT NULL,
   `date_added` date NOT NULL,
   `itemPrice` decimal(11,2) unsigned NOT NULL,
+  `itemCount` int(11) unsigned NOT NULL DEFAULT '1',
   PRIMARY KEY (`classID_FK`,`currencyId_FK`,`unitID_FK`,`date_added`),
   UNIQUE KEY `Ref_UNIQUE` (`classID_FK`,`currencyId_FK`,`unitID_FK`,`date_added`),
   KEY `SIC_Ref_itemID` (`classID_FK`),
