@@ -58,6 +58,7 @@ class ShopItems extends TableBase
 	const kColBarcode		= 'itemBarcode';
 	const kColBarcodeFormat = 'itemBarcodeFormat';
 	const kColVoteCount		= 'voteCount';
+	const kColCurrencyId	= 'currencyId';
 	
 	protected $user_pref;
 
@@ -156,6 +157,7 @@ class ShopItems extends TableBase
 						self::kColUnitID,
 						self::kColCategoryID,
 						self::kColIsAskLater,
+						self::kColCurrencyId,
 						parent::GetUserID(),
 						$class_ID,
 						$list_id,
@@ -163,7 +165,8 @@ class ShopItems extends TableBase
 						$item_quantity,
 						$unit_id,
 						$category_id,
-						$is_asklater);
+						$is_asklater,
+						$this->get_user_currency());
 				
 				$result = $this->get_db_con()->query($sql);
 				if ($result == FALSE) {
