@@ -1844,7 +1844,7 @@ class CommandHandler extends CommandHandlerBase {
 		
 			$arr = array(
 					JSONCodes::kRetVal 		=> HandlerExitStatus::kCommandStatus_OK,
-					JSONCodes::kRetMessage	=> "");
+					JSONCodes::kRetMessage	=> "A mail has been sent to your email ID.");
 		
 			echo(json_encode($arr));
 		

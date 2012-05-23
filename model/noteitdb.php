@@ -852,7 +852,7 @@ class NoteItDB extends DbBase
 						// Don't return failure of error. We don't want people trying to guess what emails
 						// are registered with us. This just adds a little more security at cost of usability.
  						if (!self::send_reset_email($email_id, $userID, $salted_hash))
-							throw new Exception("Falied to send message");
+							throw new Exception("Failed to send message");
 					}
 				}
 			}
@@ -1009,9 +1009,9 @@ class NoteItDB extends DbBase
 		
 		global $config;
 		
-		$from = "NoteIt! <no-reply@geekjamboree.com>rn";
+		$from = "NoteIt! <no-reply@geekjamboree.com>";
 		$to = $email_id;
-		$subject = "[NoteIt!] Please reset your password";
+		$subject = "Please reset your password";
 		
 		$url = $config['SERVER_ADDRESS'];
 		$url .= "/";
@@ -1032,11 +1032,10 @@ class NoteItDB extends DbBase
 		
 					%s
 				
-					-- This is an automated email, please don’t reply --",
+					-- This is an automated email, please do not reply --",
 					$url);
 		
 		$headers = "From:" . $from;
-// 		echo $message;
 		return mail($to, $subject, $message, $headers);
 	}
 	
