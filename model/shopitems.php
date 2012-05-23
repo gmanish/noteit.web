@@ -145,8 +145,8 @@ class ShopItems extends TableBase
 			
 			
 			try {
-				$sql = sprintf("INSERT INTO `%s` (`%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`)
-						VALUES(%d, %d, curDate(), %d, %f, %f, %d, %d, %d)",
+				$sql = sprintf("INSERT INTO `%s` (`%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`)
+						VALUES(%d, %d, curDate(), %d, %f, %f, %d, %d, %d, %d)",
 						self::kTableName,
 						self::kColUserID,
 						self::kColItemID,
