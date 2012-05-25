@@ -106,7 +106,7 @@ class UserPreference {
 	public function get_currencycode() {
 		
 		if ($this->currencyCode == "") {
-			return $this->currencyCode = NoteItDB::get_currencycode_for_id($currencyId);
+			return $this->currencyCode = NoteItDB::get_currencycode_for_id($this->currencyId);
 		} else {
 			return $this->currencyCode;
 		}
@@ -1024,13 +1024,21 @@ class NoteItDB extends DbBase
 		$message = sprintf("
 					Hello! 
 					
-					We received a request for a lost password for this email ID. If you
+					We received a request for lost password for this email ID. If you
 					did not initiate the request, please ignore this email.
 		
 					If you wish to reset your password, please use the following link 
 					within the next 24 hours:
 		
 					%s
+				
+					If you're unable to click on the link above, copy and paste the URL 
+					into a new browser window instead.
+				
+					Sincerely,
+					NoteIt! Team
+					www.noteit-web.com
+				
 				
 					-- This is an automated email, please do not reply --",
 					$url);

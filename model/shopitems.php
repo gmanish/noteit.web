@@ -695,6 +695,7 @@ class ShopItems extends TableBase
 			    		$inventories = $product->inventories;
 			    		
 			    		if (!is_null($product->inventories)) {
+			    			
 			    			$item_price = 0; 
 			    			$inventory = $inventories[0];
 			    			if (!is_null($inventory->currency) && 
