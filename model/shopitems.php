@@ -711,7 +711,7 @@ class ShopItems extends TableBase
 				                1, // Uncategorized
 				                !is_null($product->title) ? $product->title : "", 
 				                $item_price,
-				                1, // quantity
+				                0, // quantity
 				                1, // unit
 								0, // isPurchased is not yet, so 0
 								0, // isAskLater
