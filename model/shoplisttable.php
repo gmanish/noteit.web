@@ -267,7 +267,10 @@ class ShopListTable extends TableBase
 			
 			$result = $this->get_db_con()->query($sql);
 			if ($result == FALSE || mysqli_num_rows($result) == 0) {
-				throw new Exception("The supplied email ID is not registered with NoteIt!.");
+				$userName = $this->get_db_object()->get_db_username();
+				$userName = !empty($userName) ? $userName : $user_email;
+				$this->get_db_object()->send_invitation_email($user_email, $userName);
+				throw new Exception("The supplied email ID is not registered with NoteIt!. We have sent an invitation email to the supplied email ID.");
 			}
 			
 			if ($row = mysqli_fetch_assoc($result)) {

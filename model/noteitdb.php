@@ -1047,6 +1047,35 @@ class NoteItDB extends DbBase
 		return mail($to, $subject, $message, $headers);
 	}
 	
+	public static function send_invitation_email($email_id, $userName) {
+		
+		global $config;
+		
+		$from = "NoteIt! <no-reply@geekjamboree.com>";
+		$to = $email_id;
+		$subject = $userName;
+		$subject .= " invites you";
+				
+		$message = sprintf("
+				Hello!
+					
+				%s would like to invite you to use Note It - The most dynamic grocery 
+				list management application available for Android devices.
+
+				http://www.noteit-web.com
+		
+				If you're unable to click on the link above, copy and paste the URL
+				into a new browser window instead.
+		
+				Sincerely,
+				NoteIt! Team
+				www.noteit-web.com",
+				$userName);
+		
+		$headers = "From:" . $from;
+		return mail($to, $subject, $message, $headers);
+	}
+	
 	static function is_valid_password($password) {
 		
 		if (strlen($password) < self::kMIN_PASSWORD_LENGTH) {
