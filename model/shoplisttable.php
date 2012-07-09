@@ -105,6 +105,10 @@ class ShopListTable extends TableBase
 
 			if (Permissions::can_read(parent::GetUserID(), $thisList)) {
 				
+				if ($thisList->isListShared()) {
+					$thisList->listName = $this->getSharedListName($thisList);	
+				}
+				
 				call_user_func(
 					array($functor_obj, $function_name), // invoke the callback function
 					$thisList);
@@ -297,6 +301,31 @@ class ShopListTable extends TableBase
 			}
 		}
 	}
+	
+	private function getSharedListName(ShoppingList $list) {
+
+		if ($list->isListShared() && $list->getOwnerId() != $this->GetUserID()) {
+			
+			$sql = sprintf("SELECT `firstName`, `lastName`, `emailID` from `users` WHERE `userID`='%d'", $list->getOwnerId());
+			$result = $this->get_db_con()->query($sql);
+			if ($result == FALSE || mysqli_num_rows($result) == 0) {
+				throw new Exception("Invalid User Id.");
+			}
+	
+			if ($row = mysqli_fetch_assoc($result)) {
+				
+				$result->free();
+				if (!empty($row['firstName']))
+					return $list->listName . " (" . $row['firstName'] . ")";
+				else if (!empty($row['lastName']))
+					return $list->listName . " (" . $row['lastName'] . ")";
+				else 
+					return $list->listName . " (" . $row['emailID'] . ")";
+			}
+		} else 
+			return $list->listName;
+	}
 }
 }
+
 ?>

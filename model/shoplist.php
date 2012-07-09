@@ -89,6 +89,11 @@ if (!class_exists('ShoppingList')) {
 		public function getSharedUserId() {
 			return $this->shared_user_id;
 		}
+		
+		public function isListShared() {
+			return $this->getSharedUserId() != 0 && 
+				$this->getSharedUserId() != $this->getOwnerId();
+		}
 	}
 } 
 
